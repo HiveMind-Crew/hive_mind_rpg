@@ -11,6 +11,14 @@ signal melee_swing_started(direction: Vector2)
 signal melee_swing_ended()
 signal relic_ability_fired(direction: Vector2)
 signal relic_ability_blocked()
+signal skill_effects_refreshed()
+
+## Ability id the starter bolt's ABILITY_MODIFIER skill nodes target.
+const RELIC_BOLT_ABILITY_ID: StringName = &"starter_relic_bolt"
+const ATTACK_STAT: StringName = &"attack"
+const BOLT_DAMAGE_STAT: StringName = &"damage"
+const MAX_HP_STAT: StringName = &"max_hp"
+const MAX_ENERGY_STAT: StringName = &"max_energy"
 
 @export_range(1.0, 1000.0, 1.0) var move_speed: float = 120.0
 @export_range(1.0, 10000.0, 1.0) var acceleration: float = 1400.0
@@ -40,6 +48,11 @@ var movement_state: PlayerMovementStateMachine.State:
 
 var _movement: PlayerMovementStateMachine
 var _melee: PlayerMeleeAttack
+# Pre-skill baselines captured in _ready; skill effects derive from these so
+# unlock → respec always round-trips back to the authored values (issue #17).
+var _base_max_health: int = 0
+var _base_max_energy: float = 0.0
+var _effective_bolt_damage: int = 1
 var _hitstop_token: int = TimeScaleManager.INVALID_TOKEN
 # SceneTreeTimers outlive this node leaving/re-entering the tree; a timeout
 # only ends the hitstop whose generation it captured.
@@ -65,6 +78,14 @@ func _ready() -> void:
 	_melee_hitbox.area_entered.connect(_on_melee_hitbox_area_entered)
 	_hurtbox.hit_received.connect(health.apply_hit)
 	_hud.bind(health, energy)
+	_base_max_health = health.max_health
+	_base_max_energy = energy.max_energy
+	# Signal arities differ (StringName / int / none); unbind normalizes them
+	# onto the same zero-argument refresh.
+	GameState.skill_unlocked.connect(_refresh_skill_effects.unbind(1))
+	GameState.skills_respecced.connect(_refresh_skill_effects.unbind(1))
+	GameState.progress_reset.connect(_refresh_skill_effects)
+	_refresh_skill_effects()
 
 
 func _physics_process(delta: float) -> void:
@@ -104,12 +125,50 @@ func try_relic_ability() -> bool:
 		return false
 	var aim_direction: Vector2 = snap_to_eight_directions(_movement.last_move_direction)
 	bolt.direction = aim_direction
-	bolt.damage = energy_bolt_damage
+	bolt.damage = _effective_bolt_damage
 	var projectile_parent: Node = get_parent()
 	projectile_parent.add_child(bolt)
 	bolt.global_position = global_position + aim_direction * energy_bolt_spawn_offset
 	relic_ability_fired.emit(aim_direction)
 	return true
+
+
+func get_effective_melee_damage() -> int:
+	return _melee_hitbox.damage
+
+
+func get_effective_bolt_damage() -> int:
+	return _effective_bolt_damage
+
+
+func _refresh_skill_effects() -> void:
+	# Effect layer (issue #17): re-derive every skill-affected stat from the
+	# authored baselines + currently unlocked nodes. Runs on unlock, respec,
+	# and reset, so gameplay changes immediately and respec fully reverts.
+	var tree: SkillTree = GameState.skill_tree
+	var unlocked_ids: Array[StringName] = GameState.get_unlocked_skill_ids()
+
+	var attack_multiplier: float = PlayerStatCalculator.get_stat_multiplier(
+		tree, unlocked_ids, ATTACK_STAT
+	)
+	_melee_hitbox.damage = maxi(1, roundi(melee_damage * attack_multiplier))
+
+	var bolt_multiplier: float = PlayerStatCalculator.get_ability_multiplier(
+		tree, unlocked_ids, RELIC_BOLT_ABILITY_ID, BOLT_DAMAGE_STAT
+	)
+	_effective_bolt_damage = maxi(1, roundi(energy_bolt_damage * bolt_multiplier))
+
+	var max_hp_bonus: float = PlayerStatCalculator.get_stat_bonus(
+		tree, unlocked_ids, MAX_HP_STAT
+	)
+	health.set_max_health(_base_max_health + roundi(max_hp_bonus))
+
+	var max_energy_bonus: float = PlayerStatCalculator.get_stat_bonus(
+		tree, unlocked_ids, MAX_ENERGY_STAT
+	)
+	energy.set_max_energy(_base_max_energy + max_energy_bonus)
+
+	skill_effects_refreshed.emit()
 
 
 static func snap_to_eight_directions(direction: Vector2) -> Vector2:

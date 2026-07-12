@@ -77,3 +77,43 @@ func test_restore_full_health_revives_and_clears_invulnerability() -> void:
 	assert_eq(_health.current_health, 10)
 	assert_false(_health.is_dead)
 	assert_false(_health.is_invulnerable)
+
+
+func test_raising_max_health_grants_the_new_health_and_emits() -> void:
+	_health.take_damage(4)
+	watch_signals(_health)
+
+	_health.set_max_health(15)
+
+	assert_eq(_health.max_health, 15)
+	assert_eq(_health.current_health, 11)
+	assert_signal_emit_count(_health, "health_changed", 1)
+
+
+func test_lowering_max_health_clamps_current_but_never_kills() -> void:
+	_health.set_max_health(3)
+
+	assert_eq(_health.max_health, 3)
+	assert_eq(_health.current_health, 3)
+
+	_health.set_max_health(1)
+	assert_eq(_health.current_health, 1)
+	assert_false(_health.is_dead)
+
+
+func test_max_health_changes_never_resurrect_the_dead() -> void:
+	_health.take_damage(10)
+	assert_true(_health.is_dead)
+
+	_health.set_max_health(20)
+
+	assert_eq(_health.current_health, 0)
+	assert_true(_health.is_dead)
+
+
+func test_setting_the_same_max_health_is_a_silent_no_op() -> void:
+	watch_signals(_health)
+
+	_health.set_max_health(10)
+
+	assert_signal_emit_count(_health, "health_changed", 0)

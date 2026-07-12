@@ -31,6 +31,22 @@ func _ready() -> void:
 	health_changed.emit(_current_health, max_health)
 
 
+func set_max_health(new_max_health: int) -> void:
+	# Runtime max-HP changes (skill unlocks/respec, issue #17). Growth also
+	# grants the new health immediately; shrinking clamps. Death state is
+	# never changed here — a dead actor stays dead until respawn heals it.
+	new_max_health = maxi(new_max_health, 1)
+	if new_max_health == max_health:
+		return
+	var gained_health: int = new_max_health - max_health
+	max_health = new_max_health
+	if not is_dead:
+		if gained_health > 0:
+			_current_health += gained_health
+		_current_health = clampi(_current_health, 1, max_health)
+	health_changed.emit(_current_health, max_health)
+
+
 func take_damage(amount: int) -> bool:
 	if amount <= 0 or is_dead or is_invulnerable:
 		return false
