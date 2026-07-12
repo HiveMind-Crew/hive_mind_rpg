@@ -1,0 +1,148 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/skill_tree_screen.gd" id="1_screen"]
+
+[node name="SkillTreeScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_screen")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.09, 0.09, 0.13, 1)
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 8
+
+[node name="Layout" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Header" type="HBoxContainer" parent="Margin/Layout"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TitleLabel" type="Label" parent="Margin/Layout/Header"]
+layout_mode = 2
+text = "Skill Tree"
+
+[node name="HeaderSpacer" type="Control" parent="Margin/Layout/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PointsLabel" type="Label" parent="Margin/Layout/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Points: 0"
+
+[node name="RespecButton" type="Button" parent="Margin/Layout/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 2
+text = "Respec"
+
+[node name="Columns" type="HBoxContainer" parent="Margin/Layout"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+[node name="SteelBranch" type="VBoxContainer" parent="Margin/Layout/Columns"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SteelTitle" type="Label" parent="Margin/Layout/Columns/SteelBranch"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "Steel"
+
+[node name="SteelColumn" type="VBoxContainer" parent="Margin/Layout/Columns/SteelBranch"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 4
+
+[node name="RelicBranch" type="VBoxContainer" parent="Margin/Layout/Columns"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RelicTitle" type="Label" parent="Margin/Layout/Columns/RelicBranch"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "Relic"
+
+[node name="RelicColumn" type="VBoxContainer" parent="Margin/Layout/Columns/RelicBranch"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 4
+
+[node name="BodyBranch" type="VBoxContainer" parent="Margin/Layout/Columns"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BodyTitle" type="Label" parent="Margin/Layout/Columns/BodyBranch"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "Body"
+
+[node name="BodyColumn" type="VBoxContainer" parent="Margin/Layout/Columns/BodyBranch"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 4
+
+[node name="DetailPanel" type="PanelContainer" parent="Margin/Layout/Columns"]
+layout_mode = 2
+custom_minimum_size = Vector2(190, 0)
+
+[node name="DetailMargin" type="MarginContainer" parent="Margin/Layout/Columns/DetailPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="DetailBox" type="VBoxContainer" parent="Margin/Layout/Columns/DetailPanel/DetailMargin"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="DetailNameLabel" type="Label" parent="Margin/Layout/Columns/DetailPanel/DetailMargin/DetailBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Select a skill"
+
+[node name="DetailCostLabel" type="Label" parent="Margin/Layout/Columns/DetailPanel/DetailMargin/DetailBox"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="DetailStatusLabel" type="Label" parent="Margin/Layout/Columns/DetailPanel/DetailMargin/DetailBox"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="DetailPrereqLabel" type="Label" parent="Margin/Layout/Columns/DetailPanel/DetailMargin/DetailBox"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="DetailDescriptionLabel" type="Label" parent="Margin/Layout/Columns/DetailPanel/DetailMargin/DetailBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+autowrap_mode = 2
