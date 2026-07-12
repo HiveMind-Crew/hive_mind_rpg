@@ -16,6 +16,9 @@ var velocity: Vector2 = Vector2.ZERO
 var dash_cooldown_remaining: float:
 	get:
 		return _dash_cooldown_remaining
+var last_move_direction: Vector2:
+	get:
+		return _last_move_direction
 
 var _move_speed: float
 var _acceleration: float
