@@ -129,6 +129,7 @@ func try_relic_ability() -> bool:
 	var projectile_parent: Node = get_parent()
 	projectile_parent.add_child(bolt)
 	bolt.global_position = global_position + aim_direction * energy_bolt_spawn_offset
+	AudioManager.play_sfx(&"relic_cast")
 	relic_ability_fired.emit(aim_direction)
 	return true
 
@@ -195,6 +196,7 @@ func _on_movement_state_changed(
 
 func _on_dash_started() -> void:
 	_hurtbox.set_enabled(false)
+	AudioManager.play_sfx(&"dash")
 	dash_started.emit()
 
 
@@ -208,6 +210,7 @@ func _on_melee_swing_started(direction: Vector2) -> void:
 	_melee_hitbox.position = direction * melee_hitbox_offset
 	# Deferred: physics properties cannot safely change while an overlap query is flushing.
 	_melee_hitbox.set_deferred("monitoring", true)
+	AudioManager.play_sfx(&"melee_swing")
 	melee_swing_started.emit(direction)
 
 

@@ -18,6 +18,7 @@ run/main_scene="res://scenes/main/main.tscn"
 GameState="*res://scripts/autoload/game_state.gd"
 TimeScaleManager="*res://scripts/autoload/time_scale_manager.gd"
 SaveManager="*res://scripts/autoload/save_manager.gd"
+AudioManager="*res://scripts/autoload/audio_manager.gd"
 
 [display/window]
 
