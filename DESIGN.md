@@ -1,6 +1,6 @@
 # hive_mind_rpg — Game Design Document
 
-> **Status:** Draft v0.2 — core decisions locked via design interview 2026-07-10.
+> **Status:** Draft v0.3 — core decisions locked through 2026-07-11.
 > **Engine:** Godot 4.x (2D) · **Language:** GDScript
 > **Repo:** https://github.com/MeanGreen256/hive_mind_rpg
 > Note: "hive_mind" is the **team/repo name**, not a game mechanic. Working title for the game itself: `[TBD]`.
@@ -54,7 +54,7 @@ Unlock skill tree branches → develop a distinct build → clear zone boss → 
 ## 4. Player Character & Progression
 
 - **Who:** A silent (or near-silent) wanderer in a medieval realm where crashed/buried sci-fi relics are treated as sorcery. `[Backstory TBD — keep thin]`
-- **Core stats:** HP, Energy (fuels tech-magic abilities), Attack, Speed. Keep the stat sheet small — depth lives in abilities, not numbers.
+- **Core stats:** HP, Energy (passively regenerates and fuels tech-magic abilities), Attack, Speed. Keep the stat sheet small — depth lives in abilities, not numbers.
 - **Progression model:** Skill tree with three branches (working names):
   - **Steel** — melee: combos, parry, charged strikes, mobility attacks
   - **Relic** — tech-magic: projectiles, area bursts, weird utility (short teleport, time-stutter, gravity pulse)
@@ -64,7 +64,8 @@ Unlock skill tree branches → develop a distinct build → clear zone boss → 
 
 ## 5. Combat & Encounters
 
-- **Style:** Real-time action, 8-direction (or free-angle) top-down movement. Dodge roll/dash with i-frames from the start.
+- **Style:** Real-time action with free-angle top-down movement. Relic abilities aim in a fixed 8 directions. Dodge roll/dash has i-frames from the start.
+- **Energy:** Regenerates passively. Exact capacity, regeneration rate, and ability costs are tuning values rather than separate progression rules.
 - **Baseline kit (pre-tree):** basic melee swing, dash, one starter relic ability — the tree expands from this.
 - **Enemy design philosophy:** Few enemy types, each with a readable tell and a distinct counter. Encounters are hand-placed combinations, not random mobs. Surreal designs (wrong geometry, glitching knights, machine-fauna) serve pillar 3.
 - **Difficulty & death:** Moderate. Death respawns you at the last checkpoint (shrine/beacon). No XP/currency loss; enemies in the area reset. Checkpoints are placed generously enough that retries stay fun.
@@ -141,6 +142,8 @@ Unlock skill tree branches → develop a distinct build → clear zone boss → 
 | Tilemaps | Godot TileMapLayer | Native, well-documented |
 | Content data | Custom Resources (`.tres`) | Type-safe in-editor editing for skills/enemies; diffs OK in git |
 | Combat architecture | Hitbox/Hurtbox component scenes + state-machine actors | Composable across player/enemies (see AGENTS.md §5) |
+| Energy regeneration | Passive | Keeps relic abilities available without requiring melee attacks to recharge them |
+| Relic aiming | Fixed 8-direction | Predictable aiming that fits the top-down pixel-art combat presentation |
 | Skill tree data | One Resource per node (id, branch, cost, prereqs, effect) | Agents can add nodes without touching UI code |
 | Save format | JSON via `FileAccess` in `user://` | Simple, debuggable |
 
@@ -161,8 +164,6 @@ Unlock skill tree branches → develop a distinct build → clear zone boss → 
 | 1 | Game's actual title (repo stays hive_mind_rpg) | No | Team |
 | 2 | Story seed — what is the buried thing? | No (v1 barks only) | Team |
 | 3 | Theme of zone 1 (forest? battlefield? relic excavation?) | Yes — blocks zone art & enemy design | Team |
-| 4 | Energy regen model: passive vs. earned-by-melee (melee ↔ magic rhythm) | Yes — shapes combat feel | Combat owner |
-| 5 | Free-angle vs. 8-direction aiming for relic abilities | Yes — prototype both in graybox | Combat owner |
 
 ---
 
@@ -172,3 +173,4 @@ Unlock skill tree branches → develop a distinct build → clear zone boss → 
 |---|---|---|---|
 | 2026-07-10 | 0.1 | Initial scaffold | Claude + MeanGreen256 |
 | 2026-07-10 | 0.2 | Filled from design interview: pillars, loops, combat, tree, world, v1 slice, tech decisions | Claude + MeanGreen256 |
+| 2026-07-11 | 0.3 | Locked passive Energy regeneration and fixed 8-direction relic aiming | Codex + MeanGreen256 |
