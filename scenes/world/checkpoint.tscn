@@ -1,0 +1,22 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/checkpoint.gd" id="1_checkpoint"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_cp"]
+size = Vector2(24, 24)
+
+[node name="Checkpoint" type="Area2D"]
+monitorable = false
+script = ExtResource("1_checkpoint")
+
+[node name="Visual" type="Polygon2D" parent="."]
+unique_name_in_owner = true
+polygon = PackedVector2Array(-12, -12, 12, -12, 12, 12, -12, 12)
+color = Color(0.4, 0.42, 0.5, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_cp")
+
+[node name="RespawnPoint" type="Marker2D" parent="."]
+unique_name_in_owner = true
+position = Vector2(0, 22)
