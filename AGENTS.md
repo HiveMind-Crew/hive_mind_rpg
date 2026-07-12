@@ -69,25 +69,56 @@ hive_mind_rpg/
 - Shared state lives in autoload singletons (`scripts/autoload/`) — keep these few and documented in section 9.
 - Content (items, enemies, dialogue) is **data-driven** via custom Resources in `data/`, not hardcoded in scripts.
 
-## 6. Git Workflow
+## 6. Issue Priorities and Relationships
 
-- **Branch naming:** `feature/<short-desc>`, `fix/<short-desc>`, `docs/<short-desc>`
-  - e.g., `feature/player-movement`, `fix/inventory-crash`
-- **Commit messages:** imperative mood, scoped prefix:
-  - `player: add dash ability with cooldown`
-  - `ui: fix health bar not updating on heal`
-- **PRs must include:**
-  1. What changed and why (link the GitHub Issue)
-  2. How to test it manually in the editor
-  3. Which agent/human authored it (e.g., `Author: Claude Code session w/ @MeanGreen256`)
-- **Merge conflicts on `.tscn`/`.tres` files are painful.** Avoid two people/agents editing the same scene simultaneously — claim scenes via Issues (see section 7).
+Every bug fix, feature, enhancement, infrastructure change, and design decision starts with a focused GitHub Issue. Apply one or more system labels (`system:player`, `system:combat`, `system:ui`, `system:world`, `system:data`, `docs`) and, when gameplay priority applies, exactly one priority label.
 
-## 7. Task Claiming (avoiding agent collisions)
+| Priority | Meaning | Use when |
+|---|---|---|
+| `P0` | Vertical-slice blocker | Required to make the v1 core loop playable, testable, or shippable, or directly blocks another P0 system. |
+| `P1` | Important follow-up | Materially improves the slice, usability, presentation, reliability, or development workflow without blocking the core loop. |
+| `P2` | Optional slice content/polish | Valuable flavor, polish, or secondary functionality that can be omitted without invalidating the slice. |
+| `P3` | Backlog/post-slice | Experiments, future scope, optimizations, and work intentionally deferred until after the slice. |
 
-1. All work is tracked as **GitHub Issues** with labels: `system:player`, `system:combat`, `system:ui`, `system:world`, `system:data`, `docs`.
-2. Before starting, an agent/human **assigns themselves the Issue** and comments which files/scenes they expect to touch.
-3. If your task needs a file someone else has claimed, coordinate in the Issue thread first.
-4. Close the Issue via the PR (`Closes #12`).
+Infrastructure and decision Issues may use `infra` or `decision` without a gameplay priority when P0–P3 does not meaningfully apply. Do not label convenience work P0 merely because another Issue mentions it.
+
+### Blocker relationships
+
+- Use GitHub's native **Blocked by** / **Blocking** relationships for actual execution prerequisites. Markdown references alone do not create a dependency.
+- If A must finish before B, set **B blocked by A**; GitHub should show the reciprocal **A blocking B** relationship.
+- Use a plain `Related: #123` reference for useful context that does not prevent parallel work.
+- Do not make an umbrella Issue block independent child Issues that can proceed in parallel.
+- Before claiming work, verify every native blocker. A closed blocker is satisfied; an open blocker means the dependent Issue is not ready.
+- Keep dependency prose and native relationships consistent. Remove or correct stale, reversed, self-referential, and circular edges.
+- If the prerequisite is questionable or requires design judgment, discuss it in the Issue before changing the native relationship.
+
+## 7. Mandatory Issue-to-Merge Workflow
+
+Use this lifecycle for every upcoming bug fix, feature, or enhancement:
+
+1. **Create the Issue.** Describe the goal, acceptance criteria, expected files/scenes, manual test path, and known dependencies before implementation begins.
+2. **Label and relate it.** Apply system/type labels, the appropriate P0–P3 label when applicable, and native blocker relationships using section 6.
+3. **Claim it.** Assign yourself and comment the expected files/scenes and intended branch. If another claim overlaps, coordinate in the Issue before editing.
+4. **Create a scoped branch from current `main`.** Use `feature/<short-desc>`, `fix/<short-desc>`, or `docs/<short-desc>`. Never implement directly on `main`.
+5. **Implement only the claimed change.** Add tests, update relevant documentation, and open follow-up Issues instead of silently expanding scope.
+6. **Validate.** Run focused tests, the full suite, and relevant manual Godot checks. Leave the project green.
+7. **Open a PR that closes the Issue.** Include `Closes #123`, what changed and why, manual test steps, automated results, authorship, and any files touched outside the claimed module.
+8. **Obtain an independent review.** A separate agent/session reviews design alignment, scope, typing, tests, scene ownership, regressions, and dependency readiness. The implementation session must not self-approve.
+9. **Merge only after approval and green checks.** Then verify the PR is merged and its Issue is closed.
+
+“Separate agent/session” means the implementation and review happen in distinct sessions with independent review context, even when one human coordinates both. Integration sandboxes may combine branches locally for testing, but must never be submitted as a bundled feature PR.
+
+### Git and PR conventions
+
+- **Commit messages:** use imperative mood with a scoped prefix, such as `player: add dash cooldown` or `ui: fix health bar healing update`.
+- Stage only claimed files. Do not bundle unrelated Issues into one branch or PR.
+- Merge conflicts on `.tscn` and `.tres` files are painful; never edit a claimed scene/resource without coordination in the Issue.
+- PR descriptions must identify the author, for example: `Author: Codex session w/ @MeanGreen256`.
+
+### Lifecycle examples
+
+- **Feature:** Create “Add pause menu,” label it `system:ui` + `P0`, set it blocked by the playable startup Issue if return-to-hub integration requires that flow, claim `scenes/ui/pause_menu.tscn`, implement on `feature/pause-menu`, test, and open a PR with `Closes #69` for independent review.
+- **Bug fix:** Create “Health bar does not update after healing,” label it `bug` + `system:ui` + the appropriate priority, record any real blocker, claim the HUD script/test, implement on `fix/health-bar-heal`, add a regression test, and open a focused closing PR.
 
 ## 8. Testing & Definition of Done
 
