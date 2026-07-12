@@ -1,0 +1,84 @@
+extends Node
+
+
+signal skill_points_changed(current_points: int)
+signal skill_unlocked(skill_id: StringName)
+signal skills_respecced(refunded_points: int)
+signal progress_reset()
+
+const SKILL_TREE_PATH := "res://data/skills/skill_tree.tres"
+
+var skill_tree: SkillTree
+var _skill_points: int = 0
+var _unlocked_skill_ids: Array[StringName] = []
+
+
+func _init() -> void:
+	skill_tree = load(SKILL_TREE_PATH) as SkillTree
+	assert(skill_tree != null, "GameState could not load the authored skill tree.")
+	assert(skill_tree.is_graph_valid(), "GameState requires a valid authored skill tree.")
+
+
+func get_skill_points() -> int:
+	return _skill_points
+
+
+func get_unlocked_skill_ids() -> Array[StringName]:
+	# Callers receive a copy so progression can only change through validated operations.
+	return _unlocked_skill_ids.duplicate()
+
+
+func is_skill_unlocked(skill_id: StringName) -> bool:
+	return _unlocked_skill_ids.has(skill_id)
+
+
+func award_skill_points(amount: int) -> bool:
+	if amount <= 0:
+		return false
+	_skill_points += amount
+	skill_points_changed.emit(_skill_points)
+	return true
+
+
+func can_spend_points(skill_id: StringName) -> bool:
+	return skill_tree.can_unlock(skill_id, _unlocked_skill_ids, _skill_points)
+
+
+func spend_points(skill_id: StringName) -> bool:
+	if not can_spend_points(skill_id):
+		return false
+	var skill: SkillNode = skill_tree.get_node(skill_id)
+	_skill_points -= skill.cost
+	_unlocked_skill_ids.append(skill_id)
+	skill_points_changed.emit(_skill_points)
+	skill_unlocked.emit(skill_id)
+	return true
+
+
+func get_spent_skill_points() -> int:
+	var spent_points: int = 0
+	for skill_id: StringName in _unlocked_skill_ids:
+		var skill: SkillNode = skill_tree.get_node(skill_id)
+		if skill != null:
+			spent_points += skill.cost
+	return spent_points
+
+
+func respec_skills() -> int:
+	var refunded_points: int = get_spent_skill_points()
+	if _unlocked_skill_ids.is_empty():
+		return 0
+	_unlocked_skill_ids.clear()
+	_skill_points += refunded_points
+	skill_points_changed.emit(_skill_points)
+	skills_respecced.emit(refunded_points)
+	return refunded_points
+
+
+func reset_progress() -> void:
+	var state_changed: bool = _skill_points != 0 or not _unlocked_skill_ids.is_empty()
+	_skill_points = 0
+	_unlocked_skill_ids.clear()
+	if state_changed:
+		skill_points_changed.emit(_skill_points)
+		progress_reset.emit()

@@ -103,7 +103,7 @@ Keep this table current. Agents: do NOT add autoloads without updating this tabl
 
 | Autoload | File | Purpose |
 |---|---|---|
-| `[none yet]` | | |
+| `GameState` | `scripts/autoload/game_state.gd` | Owns skill points, unlocked skills, and respec state. |
 
 ## 10. Current Module Owners
 

@@ -13,6 +13,10 @@ config_version=5
 config/name="hive_mind_rpg"
 run/main_scene="res://scenes/main/main.tscn"
 
+[autoload]
+
+GameState="*res://scripts/autoload/game_state.gd"
+
 [display/window]
 
 size/viewport_width=640
