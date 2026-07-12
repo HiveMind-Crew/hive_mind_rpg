@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillNode" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/skill_node.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"relic_resonant_spark"
+branch = 1
+cost = 1
+effect_type = 1
+effect_parameters = {&"ability_id": &"starter_relic_bolt", &"damage_multiplier": 1.15}
+display_name = "Resonant Spark"
+description = "Tune the starter relic bolt to strike with greater force."

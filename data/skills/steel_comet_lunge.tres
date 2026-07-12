@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillNode" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/skill_node.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"steel_comet_lunge"
+branch = 0
+cost = 3
+prerequisite_ids = Array[StringName]([&"steel_guard_breaker", &"steel_reversal"])
+effect_type = 2
+effect_parameters = {&"ability_id": &"dash_lunge", &"damage_multiplier": 1.4}
+display_name = "Comet Lunge"
+description = "Attack during a dash to drive through a target with a luminous thrust."

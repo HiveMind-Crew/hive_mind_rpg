@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillNode" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/skill_node.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"body_conductive_blood"
+branch = 2
+cost = 2
+prerequisite_ids = Array[StringName]([&"body_scar_tissue"])
+effect_type = 0
+effect_parameters = {&"relic_energy_efficiency": 0.9}
+display_name = "Conductive Blood"
+description = "Let relic currents pass through the body with less energy loss."

@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="SkillTree" load_steps=17 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/skill_tree.gd" id="1"]
+[ext_resource type="Resource" path="res://data/skills/steel_tempered_edge.tres" id="2"]
+[ext_resource type="Resource" path="res://data/skills/steel_follow_through.tres" id="3"]
+[ext_resource type="Resource" path="res://data/skills/steel_guard_breaker.tres" id="4"]
+[ext_resource type="Resource" path="res://data/skills/steel_reversal.tres" id="5"]
+[ext_resource type="Resource" path="res://data/skills/steel_comet_lunge.tres" id="6"]
+[ext_resource type="Resource" path="res://data/skills/relic_resonant_spark.tres" id="7"]
+[ext_resource type="Resource" path="res://data/skills/relic_echo_burst.tres" id="8"]
+[ext_resource type="Resource" path="res://data/skills/relic_fold_step.tres" id="9"]
+[ext_resource type="Resource" path="res://data/skills/relic_gravity_fault.tres" id="10"]
+[ext_resource type="Resource" path="res://data/skills/relic_stolen_second.tres" id="11"]
+[ext_resource type="Resource" path="res://data/skills/body_scar_tissue.tres" id="12"]
+[ext_resource type="Resource" path="res://data/skills/body_deep_reserves.tres" id="13"]
+[ext_resource type="Resource" path="res://data/skills/body_efficient_motion.tres" id="14"]
+[ext_resource type="Resource" path="res://data/skills/body_conductive_blood.tres" id="15"]
+[ext_resource type="Resource" path="res://data/skills/body_last_nerves.tres" id="16"]
+
+[resource]
+script = ExtResource("1")
+nodes = Array[Resource]([ExtResource("2"), ExtResource("3"), ExtResource("4"), ExtResource("5"), ExtResource("6"), ExtResource("7"), ExtResource("8"), ExtResource("9"), ExtResource("10"), ExtResource("11"), ExtResource("12"), ExtResource("13"), ExtResource("14"), ExtResource("15"), ExtResource("16")])

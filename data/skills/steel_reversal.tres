@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillNode" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/skill_node.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"steel_reversal"
+branch = 0
+cost = 2
+prerequisite_ids = Array[StringName]([&"steel_tempered_edge"])
+effect_type = 2
+effect_parameters = {&"ability_id": &"parry_reversal", &"window_seconds": 0.18}
+display_name = "Reversal"
+description = "A precisely timed guard deflects an attack and opens a counter."

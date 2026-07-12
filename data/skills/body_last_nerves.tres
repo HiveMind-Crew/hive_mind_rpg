@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillNode" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/skill_node.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"body_last_nerves"
+branch = 2
+cost = 3
+prerequisite_ids = Array[StringName]([&"body_efficient_motion", &"body_conductive_blood"])
+effect_type = 0
+effect_parameters = {&"low_health_speed_multiplier": 1.2, &"threshold_ratio": 0.3}
+display_name = "Last Nerves"
+description = "Move faster when health is critically low, turning retreat into a choice."

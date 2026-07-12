@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillNode" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/skill_node.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"relic_gravity_fault"
+branch = 1
+cost = 2
+prerequisite_ids = Array[StringName]([&"relic_echo_burst"])
+effect_type = 2
+effect_parameters = {&"ability_id": &"gravity_pulse", &"energy_cost": 25}
+display_name = "Gravity Fault"
+description = "Collapse a patch of space, pulling nearby foes toward its center."

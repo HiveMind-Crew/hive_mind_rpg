@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="SkillNode" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/skill_node.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"body_scar_tissue"
+branch = 2
+cost = 1
+effect_type = 0
+effect_parameters = {&"max_hp_bonus": 10}
+display_name = "Scar Tissue"
+description = "Increase maximum health without slowing movement."

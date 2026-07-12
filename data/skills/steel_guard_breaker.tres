@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillNode" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/skill_node.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"steel_guard_breaker"
+branch = 0
+cost = 2
+prerequisite_ids = Array[StringName]([&"steel_follow_through"])
+effect_type = 1
+effect_parameters = {&"ability_id": &"melee_combo_finisher", &"stagger_multiplier": 1.5}
+display_name = "Guard Breaker"
+description = "The combo finisher deals increased stagger to armored foes."
