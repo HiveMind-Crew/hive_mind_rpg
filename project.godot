@@ -1,0 +1,14 @@
+; Engine configuration file.
+; Edit through the Godot editor when possible because some values are not
+; self-explanatory.
+;
+; Format:
+;   [section]
+;   param=value
+
+config_version=5
+
+[application]
+
+config/name="hive_mind_rpg"
+run/main_scene="res://scenes/main/main.tscn"

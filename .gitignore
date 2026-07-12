@@ -1,0 +1,11 @@
+# Godot 4 editor-generated files
+.godot/
+
+# Godot C# generated files (kept ignored if C# is introduced later)
+.mono/
+
+# Local export credentials
+export_credentials.cfg
+
+# macOS metadata
+.DS_Store
