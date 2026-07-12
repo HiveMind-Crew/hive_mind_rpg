@@ -9,6 +9,7 @@ var _player: PlayerController
 var _hurtbox: Hurtbox
 var _melee_hitbox: Hitbox
 var _input_sender: GutInputSender
+var _energy: EnergyComponent
 
 
 func before_each() -> void:
@@ -19,12 +20,15 @@ func before_each() -> void:
 	add_child_autofree(_player)
 	_hurtbox = _player.get_node("Hurtbox") as Hurtbox
 	_melee_hitbox = _player.get_node("MeleeHitbox") as Hitbox
+	_energy = _player.get_node("EnergyComponent") as EnergyComponent
 	_input_sender = GutInputSender.new(Input)
 
 
 func after_each() -> void:
 	_input_sender.release_all()
 	_input_sender.clear()
+	for projectile: Node in get_tree().get_nodes_in_group(EnergyBolt.PROJECTILE_GROUP):
+		projectile.free()
 	_reset_hitstop_state()
 
 
@@ -78,6 +82,59 @@ func test_attack_melee_action_starts_swing() -> void:
 	await wait_physics_frames(3)
 
 	assert_true(_player._melee.is_swinging)
+
+
+func test_relic_ability_spends_energy_and_spawns_bolt_in_facing_direction() -> void:
+	_player._movement.update(Vector2(1.0, -0.8), false, 0.016)
+	watch_signals(_player)
+
+	assert_true(_player.try_relic_ability())
+
+	var bolt: EnergyBolt = _player.get_parent().get_node("EnergyBolt") as EnergyBolt
+	assert_not_null(bolt)
+	assert_almost_eq(bolt.direction.distance_to(Vector2(1.0, -1.0).normalized()), 0.0, 0.001)
+	assert_eq(_energy.current_energy, _energy.max_energy - _player.energy_bolt_cost)
+	assert_signal_emitted(_player, "relic_ability_fired")
+
+
+func test_relic_ability_is_blocked_at_zero_energy() -> void:
+	assert_true(_energy.spend(_energy.max_energy))
+	watch_signals(_player)
+
+	assert_false(_player.try_relic_ability())
+	assert_signal_emitted(_player, "relic_ability_blocked")
+	assert_false(_player.get_parent().has_node("EnergyBolt"))
+
+
+func test_relic_action_fires_ability() -> void:
+	_input_sender.action_down("ability_relic")
+
+	await wait_physics_frames(3)
+
+	assert_lt(_energy.current_energy, _energy.max_energy)
+	assert_true(_player.get_parent().has_node("EnergyBolt"))
+
+
+func test_energy_bolt_damages_a_hurtbox_once() -> void:
+	var target: Node2D = _create_target(Vector2(48.0, 0.0))
+	var health: HealthComponent = target.get_node("HealthComponent") as HealthComponent
+	_player._movement.update(Vector2.RIGHT, false, 0.016)
+
+	assert_true(_player.try_relic_ability())
+	await wait_physics_frames(10)
+
+	assert_eq(health.current_health, health.max_health - _player.energy_bolt_damage)
+
+
+func test_relic_aim_snaps_to_eight_directions() -> void:
+	assert_eq(PlayerController.snap_to_eight_directions(Vector2.RIGHT), Vector2.RIGHT)
+	assert_almost_eq(
+		PlayerController.snap_to_eight_directions(Vector2(0.8, 1.0)).distance_to(
+			Vector2(1.0, 1.0).normalized()
+		),
+		0.0,
+		0.001
+	)
 
 
 func test_swing_hits_overlapping_target_once_and_fresh_swing_hits_again() -> void:

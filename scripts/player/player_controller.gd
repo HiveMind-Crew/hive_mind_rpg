@@ -9,6 +9,8 @@ signal dash_started()
 signal dash_ended()
 signal melee_swing_started(direction: Vector2)
 signal melee_swing_ended()
+signal relic_ability_fired(direction: Vector2)
+signal relic_ability_blocked()
 
 @export_range(1.0, 1000.0, 1.0) var move_speed: float = 120.0
 @export_range(1.0, 10000.0, 1.0) var acceleration: float = 1400.0
@@ -21,9 +23,14 @@ signal melee_swing_ended()
 @export_range(1.0, 64.0, 1.0) var melee_hitbox_offset: float = 14.0
 @export_range(0.0, 1.0, 0.01) var melee_hitstop_duration: float = 0.05
 @export_range(0.01, 1.0, 0.01) var melee_hitstop_time_scale: float = 0.05
+@export var energy_bolt_scene: PackedScene
+@export_range(0.01, 1000.0, 0.01) var energy_bolt_cost: float = 25.0
+@export_range(1, 1000, 1) var energy_bolt_damage: int = 1
+@export_range(1.0, 128.0, 1.0) var energy_bolt_spawn_offset: float = 24.0
 
 @onready var _hurtbox: Hurtbox = %Hurtbox
 @onready var _melee_hitbox: Hitbox = %MeleeHitbox
+@onready var energy: EnergyComponent = %EnergyComponent
 
 var movement_state: PlayerMovementStateMachine.State:
 	get:
@@ -69,6 +76,8 @@ func _physics_process(delta: float) -> void:
 	_movement.finish_frame(input_direction)
 	if Input.is_action_just_pressed(&"attack_melee"):
 		try_melee_attack()
+	if Input.is_action_just_pressed(&"ability_relic"):
+		try_relic_ability()
 	_melee.update(delta)
 
 
@@ -78,6 +87,32 @@ func cancel_dash() -> void:
 
 func try_melee_attack() -> bool:
 	return _melee.try_start_swing(_movement.last_move_direction)
+
+
+func try_relic_ability() -> bool:
+	if energy_bolt_scene == null or not energy.spend(energy_bolt_cost):
+		relic_ability_blocked.emit()
+		return false
+	var bolt: EnergyBolt = energy_bolt_scene.instantiate() as EnergyBolt
+	if bolt == null:
+		energy.regenerate(energy_bolt_cost)
+		relic_ability_blocked.emit()
+		return false
+	var aim_direction: Vector2 = snap_to_eight_directions(_movement.last_move_direction)
+	bolt.direction = aim_direction
+	bolt.damage = energy_bolt_damage
+	var projectile_parent: Node = get_parent()
+	projectile_parent.add_child(bolt)
+	bolt.global_position = global_position + aim_direction * energy_bolt_spawn_offset
+	relic_ability_fired.emit(aim_direction)
+	return true
+
+
+static func snap_to_eight_directions(direction: Vector2) -> Vector2:
+	if direction.is_zero_approx():
+		return Vector2.DOWN
+	var octant: int = roundi(direction.angle() / (PI / 4.0))
+	return Vector2.from_angle(float(octant) * PI / 4.0).normalized()
 
 
 func _exit_tree() -> void:

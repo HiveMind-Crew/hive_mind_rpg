@@ -1,8 +1,10 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/combat/hurtbox.tscn" id="2_hurtbox"]
 [ext_resource type="PackedScene" path="res://scenes/combat/hitbox.tscn" id="3_hitbox"]
+[ext_resource type="PackedScene" path="res://scenes/combat/energy_component.tscn" id="4_energy"]
+[ext_resource type="PackedScene" path="res://scenes/player/energy_bolt.tscn" id="5_bolt"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_player"]
 radius = 7.0
@@ -10,6 +12,7 @@ height = 20.0
 
 [node name="Player" type="CharacterBody2D"]
 script = ExtResource("1_player")
+energy_bolt_scene = ExtResource("5_bolt")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, 2)
@@ -23,6 +26,9 @@ unique_name_in_owner = true
 position = Vector2(0, 14)
 collision_mask = 4
 monitorable = false
+
+[node name="EnergyComponent" parent="." instance=ExtResource("4_energy")]
+unique_name_in_owner = true
 
 [node name="Body" type="Polygon2D" parent="."]
 polygon = PackedVector2Array(-7, -8, 7, -8, 9, 6, 0, 11, -9, 6)
