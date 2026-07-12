@@ -31,6 +31,44 @@ func test_can_initialize_outside_the_autoload_runtime() -> void:
 	isolated_game_state.free()
 
 
+func test_missing_skill_tree_falls_back_to_an_empty_tree() -> void:
+	var fallback_tree: SkillTree = GAME_STATE_SCRIPT._validated_skill_tree(null)
+
+	assert_not_null(fallback_tree)
+	assert_true(fallback_tree.nodes.is_empty())
+	assert_push_error("could not load the authored skill tree")
+
+
+func test_invalid_skill_tree_falls_back_to_an_empty_tree() -> void:
+	var broken_tree := SkillTree.new()
+	broken_tree.nodes.append(null)
+
+	var fallback_tree: SkillTree = GAME_STATE_SCRIPT._validated_skill_tree(broken_tree)
+
+	assert_not_null(fallback_tree)
+	assert_true(fallback_tree.nodes.is_empty())
+	assert_push_error("invalid skill tree")
+
+
+func test_valid_skill_tree_passes_validation_unchanged() -> void:
+	var authored_tree: SkillTree = load("res://data/skills/skill_tree.tres")
+
+	assert_eq(GAME_STATE_SCRIPT._validated_skill_tree(authored_tree), authored_tree)
+
+
+func test_public_api_degrades_safely_on_the_fallback_tree() -> void:
+	var isolated_game_state := GAME_STATE_SCRIPT.new()
+	isolated_game_state.skill_tree = SkillTree.new()
+	isolated_game_state.award_skill_points(5)
+
+	assert_false(isolated_game_state.can_spend_points(ROOT_SKILL))
+	assert_false(isolated_game_state.spend_points(ROOT_SKILL))
+	assert_eq(isolated_game_state.get_spent_skill_points(), 0)
+	assert_eq(isolated_game_state.get_skill_points(), 5)
+
+	isolated_game_state.free()
+
+
 func test_awards_positive_skill_points() -> void:
 	assert_true(GameState.award_skill_points(3))
 	assert_eq(GameState.get_skill_points(), 3)

@@ -14,9 +14,27 @@ var _unlocked_skill_ids: Array[StringName] = []
 
 
 func _init() -> void:
-	skill_tree = load(SKILL_TREE_PATH) as SkillTree
-	assert(skill_tree != null, "GameState could not load the authored skill tree.")
-	assert(skill_tree.is_graph_valid(), "GameState requires a valid authored skill tree.")
+	skill_tree = _validated_skill_tree(load(SKILL_TREE_PATH) as SkillTree)
+
+
+static func _validated_skill_tree(loaded_tree: SkillTree) -> SkillTree:
+	# assert() is stripped from exported builds (#36), so a missing or invalid
+	# resource must fail loudly at startup via push_error and degrade to an
+	# empty tree — every public API treats unknown ids as unspendable, so the
+	# game keeps running instead of null-crashing on the first skill query.
+	if loaded_tree == null:
+		push_error(
+			"GameState could not load the authored skill tree at '%s'; skills are disabled."
+			% SKILL_TREE_PATH
+		)
+		return SkillTree.new()
+	if not loaded_tree.is_graph_valid():
+		push_error(
+			"GameState loaded an invalid skill tree from '%s'; skills are disabled."
+			% SKILL_TREE_PATH
+		)
+		return SkillTree.new()
+	return loaded_tree
 
 
 func get_skill_points() -> int:
