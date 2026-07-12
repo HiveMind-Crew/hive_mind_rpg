@@ -33,5 +33,5 @@ func test_disabled_hurtbox_rejects_hits_until_reenabled() -> void:
 	assert_signal_emitted_with_parameters(
 		_hurtbox,
 		"hit_received",
-		[3, Vector2(12.0, 0.0)]
+		[3, Vector2(12.0, 0.0), Hitbox.ImpactType.GENERIC]
 	)

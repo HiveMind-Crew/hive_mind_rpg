@@ -2,6 +2,8 @@ class_name HealthComponent
 extends Node
 
 signal health_changed(current_health: int, max_health: int)
+signal damaged(amount: int, knockback: Vector2, impact_type: int)
+signal invulnerability_changed(is_invulnerable: bool)
 signal died()
 
 @export_range(1, 100000, 1) var max_health: int = 10
@@ -27,6 +29,7 @@ func _ready() -> void:
 	_current_health = max_health
 	_invulnerability_timer = Timer.new()
 	_invulnerability_timer.one_shot = true
+	_invulnerability_timer.timeout.connect(_on_invulnerability_timeout)
 	add_child(_invulnerability_timer)
 	# Deferred (issue #35): children _ready before their parents, so an
 	# immediate emission is lost on every consumer that connects in its own
@@ -56,6 +59,14 @@ func set_max_health(new_max_health: int) -> void:
 
 
 func take_damage(amount: int) -> bool:
+	return _apply_damage(amount, Vector2.ZERO, Hitbox.ImpactType.GENERIC)
+
+
+func apply_hit(damage: int, knockback: Vector2, impact_type: int) -> bool:
+	return _apply_damage(damage, knockback, impact_type)
+
+
+func _apply_damage(amount: int, knockback: Vector2, impact_type: int) -> bool:
 	if amount <= 0 or is_dead or is_invulnerable:
 		return false
 
@@ -65,10 +76,12 @@ func take_damage(amount: int) -> bool:
 		# Placeholder SFX (issue #25) live here so every actor with health —
 		# player, dummies, enemies — reads the same on hit and death.
 		AudioManager.play_sfx(&"death")
+		damaged.emit(amount, knockback, impact_type)
 		died.emit()
 	else:
 		AudioManager.play_sfx(&"hit")
 		_start_invulnerability()
+		damaged.emit(amount, knockback, impact_type)
 	return true
 
 
@@ -83,15 +96,19 @@ func heal(amount: int) -> bool:
 
 func restore_full_health() -> void:
 	_current_health = max_health
+	var was_invulnerable: bool = is_invulnerable
 	_invulnerability_timer.stop()
+	if was_invulnerable:
+		invulnerability_changed.emit(false)
 	health_changed.emit(_current_health, max_health)
-
-
-func apply_hit(damage: int, _knockback: Vector2) -> void:
-	take_damage(damage)
 
 
 func _start_invulnerability() -> void:
 	if invulnerability_duration <= 0.0:
 		return
 	_invulnerability_timer.start(invulnerability_duration)
+	invulnerability_changed.emit(true)
+
+
+func _on_invulnerability_timeout() -> void:
+	invulnerability_changed.emit(false)

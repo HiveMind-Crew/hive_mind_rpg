@@ -67,6 +67,7 @@ Unlock skill tree branches → develop a distinct build → clear zone boss → 
 - **Style:** Real-time action with free-angle top-down movement. Relic abilities aim in a fixed 8 directions. Dodge roll/dash has i-frames from the start.
 - **Energy:** Regenerates passively. Exact capacity, regeneration rate, and ability costs are tuning values rather than separate progression rules.
 - **Baseline kit (pre-tree):** basic melee swing, dash, one starter relic ability — the tree expands from this.
+- **Combat readability:** Accepted hits use short, attack-family-colored flashes; invulnerability pulses visibly; defeated actors retain a clear death tint. These replaceable presentation effects use real-time visual clocks and never control global time scale.
 - **Enemy design philosophy:** Few enemy types, each with a readable tell and a distinct counter. Encounters are hand-placed combinations, not random mobs. Surreal designs (wrong geometry, glitching knights, machine-fauna) serve pillar 3.
 - **Difficulty & death:** Moderate. Death respawns you at the last checkpoint (shrine/beacon). No XP/currency loss; enemies in the area reset. Checkpoints are placed generously enough that retries stay fun.
 - **Bosses:** Each zone ends in a boss that tests that zone's lesson and pays out a large skill-point reward + unlocks a new tree tier.

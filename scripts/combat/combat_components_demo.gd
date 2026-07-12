@@ -41,7 +41,7 @@ func _hide_attack_flash() -> void:
 	attack_visual.visible = false
 
 
-func _on_hit_received(_damage: int, knockback: Vector2) -> void:
+func _on_hit_received(_damage: int, knockback: Vector2, _impact_type: int) -> void:
 	status_label.text = "Hit received — knockback %s" % knockback
 
 

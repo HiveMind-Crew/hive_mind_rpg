@@ -58,6 +58,11 @@ func test_damage_is_bounded_at_zero_and_emits_death_once() -> void:
 	assert_eq(_health.current_health, 0)
 	assert_true(_health.is_dead)
 	assert_signal_emit_count(_health, "health_changed", 1)
+	assert_signal_emitted_with_parameters(
+		_health,
+		"damaged",
+		[50, Vector2.ZERO, Hitbox.ImpactType.GENERIC]
+	)
 	assert_signal_emit_count(_health, "died", 1)
 
 	assert_false(_health.take_damage(1), "A dead component rejects further damage.")
@@ -88,18 +93,35 @@ func test_dead_component_cannot_be_healed_implicitly() -> void:
 
 func test_invulnerability_rejects_damage_until_window_expires() -> void:
 	_health.invulnerability_duration = 0.05
+	watch_signals(_health)
 
 	assert_true(_health.take_damage(2))
 	assert_true(_health.is_invulnerable)
+	assert_signal_emitted_with_parameters(_health, "invulnerability_changed", [true])
 	assert_false(_health.take_damage(2))
 	assert_eq(_health.current_health, 8)
+	assert_signal_emit_count(_health, "damaged", 1)
 
 	# Leave more than one scheduler frame beyond the configured window.
 	await wait_seconds(0.15)
 
 	assert_false(_health.is_invulnerable)
+	assert_signal_emitted_with_parameters(_health, "invulnerability_changed", [false])
 	assert_true(_health.take_damage(2))
 	assert_eq(_health.current_health, 6)
+
+
+func test_apply_hit_preserves_knockback_and_impact_type_in_damage_signal() -> void:
+	watch_signals(_health)
+	var knockback := Vector2(7.0, -3.0)
+
+	assert_true(_health.apply_hit(2, knockback, Hitbox.ImpactType.RELIC))
+
+	assert_signal_emitted_with_parameters(
+		_health,
+		"damaged",
+		[2, knockback, Hitbox.ImpactType.RELIC]
+	)
 
 
 func test_restore_full_health_revives_and_clears_invulnerability() -> void:

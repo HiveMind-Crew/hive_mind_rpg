@@ -11,6 +11,8 @@ var _melee_hitbox: Hitbox
 var _input_sender: GutInputSender
 var _energy: EnergyComponent
 var _health: HealthComponent
+var _feedback: CombatFeedback
+var _body_visual: Polygon2D
 
 
 func before_each() -> void:
@@ -23,6 +25,8 @@ func before_each() -> void:
 	_melee_hitbox = _player.get_node("MeleeHitbox") as Hitbox
 	_energy = _player.get_node("EnergyComponent") as EnergyComponent
 	_health = _player.get_node("HealthComponent") as HealthComponent
+	_feedback = _player.get_node("CombatFeedback") as CombatFeedback
+	_body_visual = _player.get_node("Body") as Polygon2D
 	_input_sender = GutInputSender.new(Input)
 
 
@@ -52,6 +56,7 @@ func test_dash_toggles_hurtbox_for_iframe_window() -> void:
 func test_player_hurtbox_applies_damage_to_health_and_hud() -> void:
 	var hitbox := Hitbox.new()
 	hitbox.damage = 2
+	hitbox.impact_type = Hitbox.ImpactType.ENEMY
 	add_child_autofree(hitbox)
 
 	_hurtbox.receive_hit(hitbox)
@@ -59,6 +64,8 @@ func test_player_hurtbox_applies_damage_to_health_and_hud() -> void:
 	assert_eq(_health.current_health, _health.max_health - 2)
 	var hud: PlayerHud = _player.get_node("PlayerHud") as PlayerHud
 	assert_eq(hud.health_value, float(_health.current_health))
+	assert_eq(_feedback._active_hit_tint, _feedback.enemy_hit_tint)
+	assert_ne(_body_visual.self_modulate, Color.WHITE)
 
 
 func test_cancel_dash_restores_hurtbox() -> void:
@@ -71,6 +78,8 @@ func test_cancel_dash_restores_hurtbox() -> void:
 func test_melee_hitbox_is_disabled_by_default() -> void:
 	assert_false(_melee_hitbox.monitoring)
 	assert_false(_melee_hitbox.monitorable)
+	assert_eq(_melee_hitbox.impact_type, Hitbox.ImpactType.MELEE)
+	assert_gt(_melee_hitbox.knockback_strength, 0.0)
 
 
 func test_melee_attack_opens_hitbox_toward_facing_then_closes_it() -> void:
@@ -106,6 +115,8 @@ func test_relic_ability_spends_energy_and_spawns_bolt_in_facing_direction() -> v
 
 	var bolt: EnergyBolt = _player.get_parent().get_node("EnergyBolt") as EnergyBolt
 	assert_not_null(bolt)
+	assert_eq(bolt.impact_type, Hitbox.ImpactType.RELIC)
+	assert_gt(bolt.knockback_strength, _melee_hitbox.knockback_strength)
 	assert_almost_eq(bolt.direction.distance_to(Vector2(1.0, -1.0).normalized()), 0.0, 0.001)
 	assert_eq(_energy.current_energy, _energy.max_energy - _player.energy_bolt_cost)
 	assert_signal_emitted(_player, "relic_ability_fired")

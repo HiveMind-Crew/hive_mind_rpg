@@ -1,10 +1,11 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/enemy_base.gd" id="1_enemy"]
 [ext_resource type="Resource" path="res://data/enemies/melee_chaser.tres" id="2_stats"]
 [ext_resource type="PackedScene" path="res://scenes/combat/health_component.tscn" id="3_health"]
 [ext_resource type="PackedScene" path="res://scenes/combat/hurtbox.tscn" id="4_hurtbox"]
 [ext_resource type="PackedScene" path="res://scenes/combat/hitbox.tscn" id="5_hitbox"]
+[ext_resource type="PackedScene" path="res://scenes/combat/combat_feedback.tscn" id="6_feedback"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
 radius = 10.0
@@ -36,7 +37,14 @@ unique_name_in_owner = true
 [node name="HealthComponent" parent="." instance=ExtResource("3_health")]
 unique_name_in_owner = true
 
+[node name="CombatFeedback" parent="." instance=ExtResource("6_feedback")]
+unique_name_in_owner = true
+health_path = NodePath("../HealthComponent")
+visual_path = NodePath("../BodyVisual")
+
 [node name="AttackHitbox" parent="." instance=ExtResource("5_hitbox")]
 unique_name_in_owner = true
 collision_mask = 4
 monitorable = false
+knockback_strength = 8.0
+impact_type = 3

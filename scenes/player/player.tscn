@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/combat/hurtbox.tscn" id="2_hurtbox"]
@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" path="res://scenes/player/energy_bolt.tscn" id="5_bolt"]
 [ext_resource type="PackedScene" path="res://scenes/combat/health_component.tscn" id="6_health"]
 [ext_resource type="PackedScene" path="res://scenes/ui/player_hud.tscn" id="7_hud"]
+[ext_resource type="PackedScene" path="res://scenes/combat/combat_feedback.tscn" id="8_feedback"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_player"]
 radius = 7.0
@@ -28,6 +29,8 @@ unique_name_in_owner = true
 position = Vector2(0, 14)
 collision_mask = 4
 monitorable = false
+knockback_strength = 6.0
+impact_type = 1
 
 [node name="EnergyComponent" parent="." instance=ExtResource("4_energy")]
 unique_name_in_owner = true
@@ -35,10 +38,16 @@ unique_name_in_owner = true
 [node name="HealthComponent" parent="." instance=ExtResource("6_health")]
 unique_name_in_owner = true
 
+[node name="CombatFeedback" parent="." instance=ExtResource("8_feedback")]
+unique_name_in_owner = true
+health_path = NodePath("../HealthComponent")
+visual_path = NodePath("../Body")
+
 [node name="PlayerHud" parent="." instance=ExtResource("7_hud")]
 unique_name_in_owner = true
 
 [node name="Body" type="Polygon2D" parent="."]
+unique_name_in_owner = true
 polygon = PackedVector2Array(-7, -8, 7, -8, 9, 6, 0, 11, -9, 6)
 color = Color(0.12, 0.82, 0.76, 1)
 

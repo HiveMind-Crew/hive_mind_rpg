@@ -137,8 +137,8 @@ func _transition_to(new_state: State) -> void:
 	state_changed.emit(previous_state, state)
 
 
-func _on_hit_received(damage: int, knockback: Vector2) -> void:
-	if not health.take_damage(damage) or health.is_dead:
+func _on_hit_received(damage: int, knockback: Vector2, impact_type: int) -> void:
+	if not health.apply_hit(damage, knockback, impact_type) or health.is_dead:
 		return
 	global_position += knockback
 	_transition_to(State.STAGGER)

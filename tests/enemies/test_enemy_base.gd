@@ -4,11 +4,13 @@ const CHASER_SCENE: PackedScene = preload("res://scenes/enemies/melee_chaser.tsc
 const HURTBOX_SCENE: PackedScene = preload("res://scenes/combat/hurtbox.tscn")
 
 var _enemy: EnemyBase
+var _feedback: CombatFeedback
 
 
 func before_each() -> void:
 	_enemy = CHASER_SCENE.instantiate() as EnemyBase
 	add_child_autofree(_enemy)
+	_feedback = _enemy.get_node("CombatFeedback") as CombatFeedback
 
 
 func test_authored_stats_configure_composed_combat_components() -> void:
@@ -63,14 +65,29 @@ func test_hit_staggers_and_lethal_hit_dies() -> void:
 	var hitbox := Hitbox.new()
 	hitbox.damage = 1
 	add_child_autofree(hitbox)
-	_enemy._on_hit_received(hitbox.damage, Vector2.ZERO)
+	_enemy._on_hit_received(
+		hitbox.damage,
+		Vector2.ZERO,
+		Hitbox.ImpactType.MELEE
+	)
 	assert_eq(_enemy.state, EnemyBase.State.STAGGER)
+	assert_eq(_feedback._active_hit_tint, _feedback.melee_hit_tint)
 
 	hitbox.damage = _enemy.health.current_health
-	_enemy._on_hit_received(hitbox.damage, Vector2.ZERO)
+	_enemy._on_hit_received(
+		hitbox.damage,
+		Vector2.ZERO,
+		Hitbox.ImpactType.MELEE
+	)
 	assert_eq(_enemy.state, EnemyBase.State.DEAD)
 	assert_true(_enemy.health.is_dead)
 	assert_false(_enemy.hurtbox.enabled)
+	assert_eq(_enemy._body_visual.self_modulate, _feedback.death_tint)
+
+
+func test_authored_enemy_attack_has_readable_impact_metadata() -> void:
+	assert_eq(_enemy.attack_hitbox.impact_type, Hitbox.ImpactType.ENEMY)
+	assert_gt(_enemy.attack_hitbox.knockback_strength, 0.0)
 
 
 func _make_target(offset: Vector2, with_health: bool = false) -> Node2D:

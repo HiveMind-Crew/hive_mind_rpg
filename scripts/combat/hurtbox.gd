@@ -1,7 +1,7 @@
 class_name Hurtbox
 extends Area2D
 
-signal hit_received(damage: int, knockback: Vector2)
+signal hit_received(damage: int, knockback: Vector2, impact_type: int)
 
 var enabled: bool:
 	get:
@@ -26,7 +26,11 @@ func set_enabled(value: bool) -> void:
 func receive_hit(hitbox: Hitbox) -> void:
 	if not _enabled or not is_instance_valid(hitbox):
 		return
-	hit_received.emit(hitbox.damage, hitbox.get_knockback(global_position))
+	hit_received.emit(
+		hitbox.damage,
+		hitbox.get_knockback(global_position),
+		hitbox.impact_type
+	)
 
 
 func _on_area_entered(area: Area2D) -> void:

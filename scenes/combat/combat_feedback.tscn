@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/combat/combat_feedback.gd" id="1_feedback"]
+
+[node name="CombatFeedback" type="Node"]
+script = ExtResource("1_feedback")
