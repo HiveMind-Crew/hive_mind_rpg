@@ -21,7 +21,6 @@ func _ready() -> void:
 	_hurtbox.hit_received.connect(_health.apply_hit)
 	_health.health_changed.connect(_on_health_changed)
 	_health.died.connect(_on_died)
-	_on_health_changed(_health.current_health, _health.max_health)
 
 
 func _on_health_changed(current_health: int, maximum_health: int) -> void:

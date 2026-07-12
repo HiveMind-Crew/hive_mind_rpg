@@ -20,7 +20,8 @@ func _ready() -> void:
 	health.died.connect(_on_died)
 	attack_timer.timeout.connect(_attack_dummy)
 	attack_flash_timer.timeout.connect(_hide_attack_flash)
-	_on_health_changed(health.current_health, health.max_health)
+	# No manual resync needed: HealthComponent defers its initial
+	# health_changed broadcast, so the connection above catches it (#35).
 
 
 func _unhandled_input(event: InputEvent) -> void:
