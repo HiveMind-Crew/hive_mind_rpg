@@ -54,8 +54,12 @@ func take_damage(amount: int) -> bool:
 	_current_health = maxi(_current_health - amount, 0)
 	health_changed.emit(_current_health, max_health)
 	if is_dead:
+		# Placeholder SFX (issue #25) live here so every actor with health —
+		# player, dummies, enemies — reads the same on hit and death.
+		AudioManager.play_sfx(&"death")
 		died.emit()
 	else:
+		AudioManager.play_sfx(&"hit")
 		_start_invulnerability()
 	return true
 
