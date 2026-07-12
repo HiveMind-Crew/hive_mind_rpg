@@ -60,6 +60,7 @@ hive_mind_rpg/
 - **Prefer composition** (child nodes, components) over deep inheritance.
 - **No magic numbers** — use `@export` vars or constants.
 - **Comment the why, not the what.**
+- **Global time scale:** only `TimeScaleManager` writes `Engine.time_scale`; pause, cinematic, accessibility, and combat systems call its base-scale/modifier API instead.
 
 ## 5. Scene Architecture
 
@@ -104,6 +105,7 @@ Keep this table current. Agents: do NOT add autoloads without updating this tabl
 | Autoload | File | Purpose |
 |---|---|---|
 | `GameState` | `scripts/autoload/game_state.gd` | Owns skill points, unlocked skills, and respec state. |
+| `TimeScaleManager` | `scripts/autoload/time_scale_manager.gd` | Coordinates base time scale and temporary modifiers so combat hitstop composes with pause, cinematic, and accessibility systems. |
 
 ## 10. Current Module Owners
 

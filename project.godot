@@ -16,6 +16,7 @@ run/main_scene="res://scenes/main/main.tscn"
 [autoload]
 
 GameState="*res://scripts/autoload/game_state.gd"
+TimeScaleManager="*res://scripts/autoload/time_scale_manager.gd"
 
 [display/window]
 
