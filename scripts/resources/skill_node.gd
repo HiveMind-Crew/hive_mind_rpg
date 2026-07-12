@@ -145,10 +145,11 @@ func _validate_ability_id(errors: PackedStringArray, id_text: String) -> void:
 		errors.append("Skill '%s' effect requires an 'ability_id' parameter." % id_text)
 		return
 	var value: Variant = effect_parameters[ABILITY_ID_KEY]
-	var value_type: int = typeof(value)
-	if value_type != TYPE_STRING_NAME and value_type != TYPE_STRING:
+	# #17's PlayerStatCalculator compares ability ids as StringName, so a plain
+	# String payload would silently fail those comparisons.
+	if typeof(value) != TYPE_STRING_NAME:
 		errors.append(
-			"Skill '%s' effect parameter 'ability_id' must be a StringName or String." % id_text
+			"Skill '%s' effect parameter 'ability_id' must be a StringName." % id_text
 		)
 		return
 	var ability_text: String = str(value)

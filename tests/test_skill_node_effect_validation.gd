@@ -147,7 +147,29 @@ func test_unlock_ability_rejects_bad_ability_ids() -> void:
 	assert_true(_contains_error(not_snake.validate(), "must be a snake_case identifier"))
 	assert_true(_contains_error(
 		wrong_type.validate(),
-		"'ability_id' must be a StringName or String",
+		"'ability_id' must be a StringName",
+	))
+
+
+func test_ability_modifier_rejects_plain_string_ability_id() -> void:
+	var skill: SkillNode = _make_skill(&"string_ability_modifier")
+	skill.effect_type = SkillNode.EffectType.ABILITY_MODIFIER
+	skill.effect_parameters = {&"ability_id": "dash", &"damage_multiplier": 1.15}
+
+	assert_true(_contains_error(
+		skill.validate(),
+		"'ability_id' must be a StringName",
+	))
+
+
+func test_unlock_ability_rejects_plain_string_ability_id() -> void:
+	var skill: SkillNode = _make_skill(&"string_unlock")
+	skill.effect_type = SkillNode.EffectType.UNLOCK_ABILITY
+	skill.effect_parameters = {&"ability_id": "dash_lunge"}
+
+	assert_true(_contains_error(
+		skill.validate(),
+		"'ability_id' must be a StringName",
 	))
 
 
