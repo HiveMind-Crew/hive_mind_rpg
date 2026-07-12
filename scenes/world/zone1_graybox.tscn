@@ -1,0 +1,114 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/zone1_graybox.gd" id="1_zone"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2_player"]
+[ext_resource type="PackedScene" path="res://scenes/world/checkpoint.tscn" id="3_checkpoint"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/melee_chaser.tscn" id="4_chaser"]
+[ext_resource type="Script" path="res://scripts/world/respawn_controller.gd" id="5_respawn"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_boss_door"]
+size = Vector2(16, 80)
+
+[node name="Zone1Graybox" type="Node2D"]
+script = ExtResource("1_zone")
+
+[node name="FloorWalls" type="TileMapLayer" parent="."]
+unique_name_in_owner = true
+texture_filter = 1
+
+[node name="PlayerSpawn" type="Marker2D" parent="."]
+unique_name_in_owner = true
+position = Vector2(88, 248)
+
+[node name="ZoneEntrance" type="Marker2D" parent="."]
+unique_name_in_owner = true
+position = Vector2(40, 248)
+
+[node name="BossArenaAnchor" type="Marker2D" parent="."]
+unique_name_in_owner = true
+position = Vector2(1528, 248)
+
+[node name="EncounterRooms" type="Node2D" parent="."]
+
+[node name="EncounterRoomA" type="Marker2D" parent="EncounterRooms" groups=["encounter_rooms"]]
+position = Vector2(408, 248)
+
+[node name="EncounterRoomB" type="Marker2D" parent="EncounterRooms" groups=["encounter_rooms"]]
+position = Vector2(760, 248)
+
+[node name="EncounterRoomC" type="Marker2D" parent="EncounterRooms" groups=["encounter_rooms"]]
+position = Vector2(1128, 248)
+
+[node name="SecretMarkers" type="Node2D" parent="."]
+
+[node name="SecretAlcoveA" type="Marker2D" parent="SecretMarkers" groups=["secret_markers"]]
+position = Vector2(392, 392)
+
+[node name="SecretAlcoveC" type="Marker2D" parent="SecretMarkers" groups=["secret_markers"]]
+position = Vector2(1128, 56)
+
+[node name="Player" parent="." groups=["player"] instance=ExtResource("2_player")]
+unique_name_in_owner = true
+position = Vector2(88, 248)
+
+[node name="Checkpoints" type="Node2D" parent="."]
+
+[node name="CheckpointEntrance" parent="Checkpoints" instance=ExtResource("3_checkpoint")]
+position = Vector2(136, 200)
+
+[node name="CheckpointRoomC" parent="Checkpoints" instance=ExtResource("3_checkpoint")]
+position = Vector2(1048, 184)
+
+[node name="Enemies" type="Node2D" parent="."]
+unique_name_in_owner = true
+
+[node name="ChaserRoomA" parent="Enemies" groups=["resettable"] instance=ExtResource("4_chaser")]
+position = Vector2(408, 232)
+
+[node name="ChaserRoomB1" parent="Enemies" groups=["resettable"] instance=ExtResource("4_chaser")]
+position = Vector2(712, 168)
+
+[node name="ChaserRoomB2" parent="Enemies" groups=["resettable"] instance=ExtResource("4_chaser")]
+position = Vector2(808, 328)
+
+[node name="ChaserRoomC" parent="Enemies" groups=["resettable"] instance=ExtResource("4_chaser")]
+position = Vector2(1128, 280)
+
+[node name="BossDoor" type="StaticBody2D" parent="."]
+unique_name_in_owner = true
+position = Vector2(1320, 248)
+
+[node name="DoorVisual" type="Polygon2D" parent="BossDoor"]
+polygon = PackedVector2Array(-8, -40, 8, -40, 8, 40, -8, 40)
+color = Color(0.62, 0.16, 0.4, 1)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BossDoor"]
+shape = SubResource("RectangleShape2D_boss_door")
+
+[node name="FadeLayer" type="CanvasLayer" parent="."]
+
+[node name="FadeRect" type="ColorRect" parent="FadeLayer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0)
+
+[node name="RespawnController" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("5_respawn")
+player_path = NodePath("../Player")
+health_component_path = NodePath("../Player/HealthComponent")
+fade_rect_path = NodePath("../FadeLayer/FadeRect")
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="InstructionsLabel" type="Label" parent="UI"]
+offset_left = 8.0
+offset_top = 344.0
+offset_right = 632.0
+offset_bottom = 358.0
+theme_override_font_sizes/font_size = 8
+text = "Zone 1: reach the shrines · clear the rooms to unseal the boss door · secrets hide off the path"
