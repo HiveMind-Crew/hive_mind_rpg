@@ -12,12 +12,18 @@ A top-down real-time action RPG built with Godot 4.x and GDScript.
 ## Running tests
 
 The test suite uses [GUT 9.7.1](https://github.com/bitwes/Gut/releases/tag/v9.7.1),
-which is vendored under `addons/gut/` with its MIT license.
+which is vendored under `addons/gut/` with its MIT license plus two small
+Godot 4.6 compatibility patches (issue #40, marked `PATCHED` in
+`addons/gut/godot_singletons.gd` and `addons/gut/stub_params.gd`). Supported
+pairing: Godot 4.6.x with the patched GUT 9.7.1. When upgrading the vendored
+GUT, re-check whether the upstream release still needs those patches.
 
 From the repository root, run all tests with a Godot 4.x executable available
-as `godot`:
+as `godot`. On a fresh clone (or whenever assets changed), import resources
+once first, then run the suite:
 
 ```sh
+godot --headless --path "$PWD" --import
 godot --headless -d -s --path "$PWD" addons/gut/gut_cmdln.gd
 ```
 

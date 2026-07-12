@@ -10,7 +10,11 @@ var logger = _lgr :
 	set(val): _lgr = val
 
 
-var return_val = GutConstants.NOT_SET :
+# PATCHED for hive_mind_rpg issue #40: GutConstants.NOT_SET is an inferred
+# StringName, so Godot 4.6.x types this property StringName from its
+# initializer and then rejects the getter's `return null`. Declaring the
+# property Variant keeps the sentinel + null contract legal on 4.6.x.
+var return_val: Variant = GutConstants.NOT_SET :
 	get():
 		if(GutConstants.is_not_set(return_val)):
 			return null
