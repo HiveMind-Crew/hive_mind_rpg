@@ -1,4 +1,10 @@
-[gd_scene format=3]
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/testing/pixel_scale_test.svg" id="1_pixel_test"]
 
 [node name="Main" type="Node2D"]
 
+[node name="PixelScaleTest" type="Sprite2D" parent="."]
+texture_filter = 1
+position = Vector2(320, 180)
+texture = ExtResource("1_pixel_test")
