@@ -111,6 +111,33 @@ func test_unknown_skill_ids_in_save_are_dropped_on_load() -> void:
 	assert_false(GameState.is_skill_unlocked(&"hacked_super_skill"))
 
 
+func test_record_secret_collected_persists_across_load() -> void:
+	assert_true(SaveManager.record_secret_collected(&"grove_cache"))
+
+	_forget_run_state()
+
+	assert_true(SaveManager.load_game())
+	assert_true(SaveManager.is_secret_collected(&"grove_cache"))
+
+
+func test_record_secret_collected_rejects_duplicates_and_empty_ids() -> void:
+	assert_true(SaveManager.record_secret_collected(&"grove_cache"))
+
+	assert_false(SaveManager.record_secret_collected(&"grove_cache"))
+	assert_false(SaveManager.record_secret_collected(&""))
+	assert_eq(SaveManager.collected_secret_ids.size(), 1)
+
+
+func test_record_secret_collected_writes_the_save_file() -> void:
+	watch_signals(SaveManager)
+	assert_false(SaveManager.has_save())
+
+	SaveManager.record_secret_collected(&"grove_cache")
+
+	assert_true(SaveManager.has_save())
+	assert_signal_emit_count(SaveManager, "game_saved", 1)
+
+
 func test_clear_save_removes_file_and_resets_run_state() -> void:
 	GameState.award_skill_points(2)
 	SaveManager.record_checkpoint("res://somewhere.tscn", Vector2(9, 9))

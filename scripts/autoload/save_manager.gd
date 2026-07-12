@@ -3,8 +3,8 @@ extends Node
 ## user:// via FileAccess (DESIGN.md §9) and restores it on launch.
 ##
 ## Persisted: GameState progression (skill points + unlocked ids), the last
-## checkpoint (scene path + position), and collected secret ids (written for
-## the secrets work in #24; empty until then). Anything invalid — missing
+## checkpoint (scene path + position), and collected secret ids (recorded by
+## SkillPointPickup, issue #24). Anything invalid — missing
 ## file, unparseable JSON, wrong shapes, unknown skill ids — degrades to a
 ## new game with a warning, never a crash.
 
@@ -47,6 +47,20 @@ func record_checkpoint(scene_path: String, position: Vector2) -> void:
 	checkpoint_scene_path = scene_path
 	checkpoint_position = position
 	save_game()
+
+
+func is_secret_collected(secret_id: StringName) -> bool:
+	return collected_secret_ids.has(secret_id)
+
+
+func record_secret_collected(secret_id: StringName) -> bool:
+	# Secrets save immediately (not just on checkpoint/quit) so a collected
+	# pickup can never be re-farmed by force-quitting before the next shrine.
+	if secret_id == StringName() or is_secret_collected(secret_id):
+		return false
+	collected_secret_ids.append(secret_id)
+	save_game()
+	return true
 
 
 func save_game() -> bool:
