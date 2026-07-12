@@ -28,6 +28,14 @@ func _ready() -> void:
 	_invulnerability_timer = Timer.new()
 	_invulnerability_timer.one_shot = true
 	add_child(_invulnerability_timer)
+	# Deferred (issue #35): children _ready before their parents, so an
+	# immediate emission is lost on every consumer that connects in its own
+	# _ready. The broadcast reads live values at fire time, so state changes
+	# in the same frame can't be overwritten by a stale snapshot.
+	_broadcast_initial_health.call_deferred()
+
+
+func _broadcast_initial_health() -> void:
 	health_changed.emit(_current_health, max_health)
 
 

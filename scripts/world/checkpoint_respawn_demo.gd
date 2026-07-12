@@ -19,7 +19,6 @@ func _ready() -> void:
 	_health.health_changed.connect(_on_health_changed)
 	_respawn.respawn_started.connect(_on_respawn_started)
 	_respawn.respawn_finished.connect(_on_respawn_finished)
-	_on_health_changed(_health.current_health, _health.max_health)
 
 
 func _physics_process(_delta: float) -> void:

@@ -17,6 +17,40 @@ func test_starts_at_max_health() -> void:
 	assert_false(_health.is_dead)
 
 
+func test_initial_broadcast_reaches_connections_made_after_its_ready() -> void:
+	# Consumers connect in their own _ready, which runs after this child's;
+	# the deferred initial emission must still reach them (issue #35).
+	var late_health: HealthComponent = HEALTH_COMPONENT_SCENE.instantiate() as HealthComponent
+	late_health.max_health = 7
+	watch_signals(late_health)
+	add_child_autofree(late_health)
+
+	assert_signal_emit_count(
+		late_health, "health_changed", 0,
+		"The initial broadcast must be deferred, not synchronous with _ready."
+	)
+
+	await wait_frames(1)
+
+	assert_signal_emit_count(late_health, "health_changed", 1)
+	assert_signal_emitted_with_parameters(late_health, "health_changed", [7, 7])
+
+
+func test_initial_broadcast_reports_live_values_not_a_ready_snapshot() -> void:
+	# Damage in the same frame as _ready must not be overwritten by a stale
+	# initial broadcast.
+	var late_health: HealthComponent = HEALTH_COMPONENT_SCENE.instantiate() as HealthComponent
+	late_health.max_health = 7
+	late_health.invulnerability_duration = 0.0
+	add_child_autofree(late_health)
+	late_health.take_damage(3)
+	watch_signals(late_health)
+
+	await wait_frames(1)
+
+	assert_signal_emitted_with_parameters(late_health, "health_changed", [4, 7])
+
+
 func test_damage_is_bounded_at_zero_and_emits_death_once() -> void:
 	watch_signals(_health)
 
