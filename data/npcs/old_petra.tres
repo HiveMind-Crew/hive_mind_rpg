@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="NpcBarkSet" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/npc_bark_set.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+npc_name = "Old Petra"
+barks = Array[String](["The woods used to end at the ridge. Now the ridge ends at the woods.", "My grandmother planted that oak. Yesterday it asked about her.", "Sleep facing the wall, child. The lights take eye contact as an invitation."])

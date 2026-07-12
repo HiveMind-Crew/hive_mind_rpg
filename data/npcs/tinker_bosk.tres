@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="NpcBarkSet" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/npc_bark_set.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+npc_name = "Tinker Bosk"
+barks = Array[String](["Relics hum in E-flat when they're content. This one won't stop screaming.", "Found this coil inside a stump. Well — the stump found it first.", "Don't let the sparks touch your teeth. Trust me on that one."])

@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="NpcBarkSet" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/npc_bark_set.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+npc_name = "Warden Maylis"
+barks = Array[String](["The forest path opens when you're ready. It's never ready for you.", "Saw another glow under the roots last night. Third this week.", "Keep your blade close. The trees keep their own counsel now."])
