@@ -34,7 +34,7 @@ position = Vector2(328, 280)
 [node name="Enemies" type="Node2D" parent="."]
 
 [node name="MeleeChaser" parent="Enemies" instance=ExtResource("4_chaser")]
-position = Vector2(520, 328)
+position = Vector2(472, 328)
 
 [node name="UI" type="CanvasLayer" parent="."]
 
