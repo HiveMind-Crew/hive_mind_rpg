@@ -37,6 +37,10 @@ func _ready() -> void:
 	_floor_walls.tile_set = _build_tile_set()
 	_paint_arena()
 	_player.position = _player_spawn.position
+	for node: Node in get_tree().get_nodes_in_group(EnemyBase.ENEMY_GROUP):
+		var enemy: EnemyBase = node as EnemyBase
+		if enemy != null:
+			enemy.set_target(_player)
 
 
 ## True for the outer perimeter and every cell inside an obstacle block.

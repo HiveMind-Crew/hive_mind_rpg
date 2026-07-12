@@ -84,6 +84,18 @@ func test_arena_contains_at_least_three_target_dummies_on_floor() -> void:
 		)
 
 
+func test_arena_contains_targeted_melee_chaser_on_floor() -> void:
+	var arena: ArenaGraybox = _add_arena()
+	var layer: TileMapLayer = arena.get_node("FloorWalls") as TileMapLayer
+	var chaser: EnemyBase = arena.get_node("Enemies/MeleeChaser") as EnemyBase
+	var player: PlayerController = arena.get_node("Player") as PlayerController
+
+	assert_not_null(chaser)
+	assert_eq(chaser.target, player)
+	var cell: Vector2i = layer.local_to_map(layer.to_local(chaser.global_position))
+	assert_false(arena.is_wall_cell(cell))
+
+
 func test_dummy_takes_damage_and_updates_hp_label() -> void:
 	var dummy: TargetDummy = _add_dummy()
 	var hurtbox: Hurtbox = dummy.get_node("Hurtbox") as Hurtbox
