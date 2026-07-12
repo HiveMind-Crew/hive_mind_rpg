@@ -21,6 +21,20 @@ func _physics_process(delta: float) -> void:
 	regenerate(regeneration_per_second * maxf(delta, 0.0))
 
 
+func set_max_energy(new_max_energy: float) -> void:
+	# Runtime max-energy changes (skill unlocks/respec, issue #17). Growth
+	# also grants the new energy immediately; shrinking clamps.
+	new_max_energy = maxf(new_max_energy, 0.01)
+	if is_equal_approx(new_max_energy, max_energy):
+		return
+	var gained_energy: float = new_max_energy - max_energy
+	max_energy = new_max_energy
+	if gained_energy > 0.0:
+		_current_energy += gained_energy
+	_current_energy = clampf(_current_energy, 0.0, max_energy)
+	energy_changed.emit(_current_energy, max_energy)
+
+
 func can_spend(amount: float) -> bool:
 	return amount > 0.0 and _current_energy >= amount
 

@@ -43,3 +43,21 @@ func test_changes_emit_current_and_maximum_energy() -> void:
 	watch_signals(_energy)
 	_energy.spend(25.0)
 	assert_signal_emitted_with_parameters(_energy, "energy_changed", [75.0, 100.0])
+
+
+func test_raising_max_energy_grants_the_new_energy_and_emits() -> void:
+	_energy.spend(30.0)
+	watch_signals(_energy)
+
+	_energy.set_max_energy(115.0)
+
+	assert_eq(_energy.max_energy, 115.0)
+	assert_eq(_energy.current_energy, 85.0)
+	assert_signal_emit_count(_energy, "energy_changed", 1)
+
+
+func test_lowering_max_energy_clamps_current() -> void:
+	_energy.set_max_energy(40.0)
+
+	assert_eq(_energy.max_energy, 40.0)
+	assert_eq(_energy.current_energy, 40.0)
