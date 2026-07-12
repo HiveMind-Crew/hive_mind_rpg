@@ -75,6 +75,28 @@ func respec_skills() -> int:
 	return refunded_points
 
 
+func restore_progress(skill_points: int, unlocked_skill_ids: Array[StringName]) -> bool:
+	# Restores a saved run (issue #19). Ids are validated against the authored
+	# tree and deduped so a hand-edited or corrupt save can never inject
+	# unknown skills; existing unlock/point signals re-fire so live consumers
+	# (player stats, tree UI) refresh through their normal paths.
+	if skill_points < 0:
+		return false
+	var restored_ids: Array[StringName] = []
+	for skill_id: StringName in unlocked_skill_ids:
+		if skill_tree.get_node(skill_id) == null:
+			push_warning("GameState dropped unknown saved skill '%s'." % skill_id)
+			continue
+		if not restored_ids.has(skill_id):
+			restored_ids.append(skill_id)
+	_skill_points = skill_points
+	_unlocked_skill_ids = restored_ids
+	skill_points_changed.emit(_skill_points)
+	for skill_id: StringName in restored_ids:
+		skill_unlocked.emit(skill_id)
+	return true
+
+
 func reset_progress() -> void:
 	var state_changed: bool = _skill_points != 0 or not _unlocked_skill_ids.is_empty()
 	_skill_points = 0

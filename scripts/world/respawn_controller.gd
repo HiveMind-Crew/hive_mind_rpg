@@ -22,6 +22,9 @@ const RESETTABLE_GROUP: StringName = &"resettable"
 ## instantaneous (used by tests and any fade-free context).
 @export var fade_rect_path: NodePath
 @export_range(0.0, 2.0, 0.01) var fade_duration: float = 0.35
+## Persist the run via SaveManager whenever a shrine is reached (issue #19).
+## Tests and throwaway sandboxes opt out.
+@export var save_on_checkpoint: bool = true
 
 var _player: Node2D
 var _health: HealthComponent
@@ -65,6 +68,12 @@ func _on_checkpoint_reached(respawn_position: Vector2) -> void:
 	# Reaching a shrine heals; a dead player is handled by the respawn flow.
 	if not _health.is_dead:
 		_health.restore_full_health()
+	if save_on_checkpoint:
+		var scene_path: String = ""
+		var current_scene: Node = get_tree().current_scene
+		if current_scene != null:
+			scene_path = current_scene.scene_file_path
+		SaveManager.record_checkpoint(scene_path, respawn_position)
 
 
 func _on_player_died() -> void:

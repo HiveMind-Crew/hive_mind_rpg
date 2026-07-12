@@ -23,6 +23,9 @@ var _health: HealthComponent
 func before_each() -> void:
 	GameState.reset_progress()
 	_controller = RespawnController.new()
+	# Persistence has its own coverage in test_save_manager.gd; keep these
+	# tests from writing real save files.
+	_controller.save_on_checkpoint = false
 	_player = Node2D.new()
 	_player.position = START_POSITION
 	_health = HEALTH_SCRIPT.new()

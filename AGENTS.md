@@ -106,6 +106,7 @@ Keep this table current. Agents: do NOT add autoloads without updating this tabl
 |---|---|---|
 | `GameState` | `scripts/autoload/game_state.gd` | Owns skill points, unlocked skills, and respec state. |
 | `TimeScaleManager` | `scripts/autoload/time_scale_manager.gd` | Coordinates base time scale and temporary modifiers so combat hitstop composes with pause, cinematic, and accessibility systems. |
+| `SaveManager` | `scripts/autoload/save_manager.gd` | Persists progression + last checkpoint to JSON in `user://`; loads on launch, saves on checkpoint & quit. |
 
 ## 10. Current Module Owners
 

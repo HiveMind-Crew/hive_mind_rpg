@@ -159,3 +159,32 @@ func test_reset_progress_clears_all_state() -> void:
 
 	assert_eq(GameState.get_skill_points(), 0)
 	assert_true(GameState.get_unlocked_skill_ids().is_empty())
+
+
+func test_restore_progress_sets_points_and_unlocks_and_signals() -> void:
+	watch_signals(GameState)
+
+	var restored: bool = GameState.restore_progress(4, [ROOT_SKILL, CHILD_SKILL])
+
+	assert_true(restored)
+	assert_eq(GameState.get_skill_points(), 4)
+	assert_true(GameState.is_skill_unlocked(ROOT_SKILL))
+	assert_true(GameState.is_skill_unlocked(CHILD_SKILL))
+	assert_signal_emit_count(GameState, "skill_points_changed", 1)
+	assert_signal_emit_count(GameState, "skill_unlocked", 2)
+
+
+func test_restore_progress_drops_unknown_and_duplicate_ids() -> void:
+	var restored: bool = GameState.restore_progress(
+		1, [ROOT_SKILL, ROOT_SKILL, &"not_a_skill"]
+	)
+
+	assert_true(restored)
+	assert_eq(GameState.get_unlocked_skill_ids(), [ROOT_SKILL])
+
+
+func test_restore_progress_rejects_negative_points() -> void:
+	GameState.award_skill_points(2)
+
+	assert_false(GameState.restore_progress(-1, []))
+	assert_eq(GameState.get_skill_points(), 2)
