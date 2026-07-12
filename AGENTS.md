@@ -6,7 +6,7 @@ This file is read by AI coding agents (Claude Code, Copilot, Cursor, etc.) at th
 
 ## 1. Project Overview
 
-- **Project:** hive_mind_rpg — a 2D RPG built in **Godot 4.x** with **GDScript**
+- **Project:** hive_mind_rpg — a 2D RPG built in **Godot 4.7 stable** with **GDScript**
 - **Design source of truth:** `DESIGN.md`. If a task conflicts with DESIGN.md, stop and flag it — don't silently improvise design changes.
 - **Repo:** https://github.com/MeanGreen256/hive_mind_rpg
 
@@ -47,7 +47,7 @@ hive_mind_rpg/
 
 ## 4. GDScript Conventions
 
-- **Godot 4.x syntax only** (no Godot 3 patterns — e.g., use `@export`, `@onready`, typed signals).
+- **Godot 4.7 stable syntax only** (no Godot 3 patterns — e.g., use `@export`, `@onready`, typed signals). Godot 4.6 and earlier are unsupported.
 - **Static typing everywhere:** `var health: int = 10`, `func take_damage(amount: int) -> void:`
 - **Naming:**
   - Files/folders: `snake_case` (`player_controller.gd`)

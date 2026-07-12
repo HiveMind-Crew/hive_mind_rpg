@@ -1,6 +1,11 @@
 # hive_mind_rpg
 
-A top-down real-time action RPG built with Godot 4.x and GDScript.
+A top-down real-time action RPG built with Godot 4.7 stable and GDScript.
+
+## Supported engine
+
+The project targets Godot 4.7 stable. Godot 4.6 and earlier are not supported.
+Keep local editor, headless test, and CI versions aligned with 4.7 stable.
 
 ## Controls
 
@@ -12,13 +17,9 @@ A top-down real-time action RPG built with Godot 4.x and GDScript.
 ## Running tests
 
 The test suite uses [GUT 9.7.1](https://github.com/bitwes/Gut/releases/tag/v9.7.1),
-which is vendored under `addons/gut/` with its MIT license plus two small
-Godot 4.6 compatibility patches (issue #40, marked `PATCHED` in
-`addons/gut/godot_singletons.gd` and `addons/gut/stub_params.gd`). Supported
-pairing: Godot 4.6.x with the patched GUT 9.7.1. When upgrading the vendored
-GUT, re-check whether the upstream release still needs those patches.
+which is vendored under `addons/gut/` with its MIT license.
 
-From the repository root, run all tests with a Godot 4.x executable available
+From the repository root, run all tests with the Godot 4.7 stable executable
 as `godot`. On a fresh clone (or whenever assets changed), import resources
 once first, then run the suite:
 
@@ -28,8 +29,9 @@ godot --headless -d -s --path "$PWD" addons/gut/gut_cmdln.gd
 ```
 
 On systems where the executable has another name or location, replace `godot`
-with that path. For example, a standard macOS application install can be run
-with `/Applications/Godot.app/Contents/MacOS/Godot`.
+with that path. The executable must report version 4.7 stable. For example, a
+standard macOS application install can be run with
+`/Applications/Godot.app/Contents/MacOS/Godot`.
 
 GUT reads `.gutconfig.json`, discovers `test_*.gd` scripts under `tests/` and
 its subdirectories, and exits with a non-zero status when a test fails.

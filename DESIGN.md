@@ -1,7 +1,7 @@
 # hive_mind_rpg — Game Design Document
 
 > **Status:** Draft v0.3 — core decisions locked through 2026-07-11.
-> **Engine:** Godot 4.x (2D) · **Language:** GDScript
+> **Engine:** Godot 4.7 stable (2D) · **Language:** GDScript
 > **Repo:** https://github.com/MeanGreen256/hive_mind_rpg
 > Note: "hive_mind" is the **team/repo name**, not a game mechanic. Working title for the game itself: `[TBD]`.
 
@@ -136,7 +136,7 @@ Unlock skill tree branches → develop a distinct build → clear zone boss → 
 
 | Decision | Choice | Rationale |
 |---|---|---|
-| Engine | Godot 4.x | Free, open-source, strong 2D tooling, AI-friendly GDScript |
+| Engine | Godot 4.7 stable | Free, open-source, strong 2D tooling, AI-friendly GDScript; the supported project version |
 | Language | GDScript, statically typed | Fast iteration; conventions in AGENTS.md |
 | Base resolution | 640×360, integer-scaled | Crisp 16-bit pixel art, scales to 720p/1080p/4K |
 | Pixel snapping | Enabled (2D pixel snap) | Avoid pixel shimmer |
