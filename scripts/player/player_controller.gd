@@ -41,6 +41,7 @@ const MAX_ENERGY_STAT: StringName = &"max_energy"
 @onready var energy: EnergyComponent = %EnergyComponent
 @onready var health: HealthComponent = %HealthComponent
 @onready var _hud: PlayerHud = %PlayerHud
+@onready var _body_visual: PlayerVisual = %Body
 
 var movement_state: PlayerMovementStateMachine.State:
 	get:
@@ -99,6 +100,11 @@ func _physics_process(delta: float) -> void:
 	velocity = _movement.velocity
 	move_and_slide()
 	_movement.finish_frame(input_direction)
+	_body_visual.set_facing_direction(_movement.last_move_direction)
+	if _movement.state == PlayerMovementStateMachine.State.IDLE:
+		_body_visual.play_idle()
+	elif _movement.state == PlayerMovementStateMachine.State.MOVE:
+		_body_visual.play_move()
 	if Input.is_action_just_pressed(&"attack_melee"):
 		try_melee_attack()
 	if Input.is_action_just_pressed(&"ability_relic"):
@@ -130,6 +136,7 @@ func try_relic_ability() -> bool:
 	projectile_parent.add_child(bolt)
 	bolt.global_position = global_position + aim_direction * energy_bolt_spawn_offset
 	AudioManager.play_sfx(&"relic_cast")
+	_body_visual.play_relic(aim_direction)
 	relic_ability_fired.emit(aim_direction)
 	return true
 
@@ -196,6 +203,7 @@ func _on_movement_state_changed(
 
 func _on_dash_started() -> void:
 	_hurtbox.set_enabled(false)
+	_body_visual.play_dash(_movement.last_move_direction)
 	AudioManager.play_sfx(&"dash")
 	dash_started.emit()
 
@@ -208,6 +216,7 @@ func _on_dash_ended() -> void:
 
 func _on_melee_swing_started(direction: Vector2) -> void:
 	_melee_hitbox.position = direction * melee_hitbox_offset
+	_body_visual.play_melee(direction)
 	# Deferred: physics properties cannot safely change while an overlap query is flushing.
 	_melee_hitbox.set_deferred("monitoring", true)
 	AudioManager.play_sfx(&"melee_swing")
@@ -217,6 +226,7 @@ func _on_melee_swing_started(direction: Vector2) -> void:
 func _on_melee_swing_ended() -> void:
 	if is_instance_valid(_melee_hitbox):
 		_melee_hitbox.set_deferred("monitoring", false)
+	_body_visual.play_idle()
 	melee_swing_ended.emit()
 
 

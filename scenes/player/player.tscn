@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=36 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/combat/hurtbox.tscn" id="2_hurtbox"]
@@ -8,6 +8,32 @@
 [ext_resource type="PackedScene" path="res://scenes/combat/health_component.tscn" id="6_health"]
 [ext_resource type="PackedScene" path="res://scenes/ui/player_hud.tscn" id="7_hud"]
 [ext_resource type="PackedScene" path="res://scenes/combat/combat_feedback.tscn" id="8_feedback"]
+[ext_resource type="Texture2D" path="res://assets/sprites/player/wanderer_front_idle.png" id="9_front_idle"]
+[ext_resource type="Texture2D" path="res://assets/sprites/player/wanderer_front_move.png" id="10_front_move"]
+[ext_resource type="Texture2D" path="res://assets/sprites/player/wanderer_front_attack.png" id="11_front_attack"]
+[ext_resource type="Texture2D" path="res://assets/sprites/player/wanderer_back_idle.png" id="12_back_idle"]
+[ext_resource type="Texture2D" path="res://assets/sprites/player/wanderer_back_move.png" id="13_back_move"]
+[ext_resource type="Texture2D" path="res://assets/sprites/player/wanderer_back_attack.png" id="14_back_attack"]
+[ext_resource type="Texture2D" path="res://assets/sprites/player/wanderer_side_idle.png" id="15_side_idle"]
+[ext_resource type="Texture2D" path="res://assets/sprites/player/wanderer_side_move.png" id="16_side_move"]
+[ext_resource type="Texture2D" path="res://assets/sprites/player/wanderer_side_attack.png" id="17_side_attack"]
+[ext_resource type="Script" path="res://scripts/player/player_visual.gd" id="18_visual"]
+[ext_resource type="Texture2D" path="res://assets/sprites/player/wanderer_walk_south_0.png" id="19_walk_south_0"]
+[ext_resource type="Texture2D" path="res://assets/sprites/player/wanderer_walk_south_1.png" id="20_walk_south_1"]
+[ext_resource type="Texture2D" path="res://assets/sprites/player/wanderer_walk_south_2.png" id="21_walk_south_2"]
+[ext_resource type="Texture2D" path="res://assets/sprites/player/wanderer_walk_south_3.png" id="22_walk_south_3"]
+[ext_resource type="Texture2D" path="res://assets/sprites/player/wanderer_walk_north_0.png" id="23_walk_north_0"]
+[ext_resource type="Texture2D" path="res://assets/sprites/player/wanderer_walk_north_1.png" id="24_walk_north_1"]
+[ext_resource type="Texture2D" path="res://assets/sprites/player/wanderer_walk_north_2.png" id="25_walk_north_2"]
+[ext_resource type="Texture2D" path="res://assets/sprites/player/wanderer_walk_north_3.png" id="26_walk_north_3"]
+[ext_resource type="Texture2D" path="res://assets/sprites/player/wanderer_walk_east_0.png" id="27_walk_east_0"]
+[ext_resource type="Texture2D" path="res://assets/sprites/player/wanderer_walk_east_1.png" id="28_walk_east_1"]
+[ext_resource type="Texture2D" path="res://assets/sprites/player/wanderer_walk_east_2.png" id="29_walk_east_2"]
+[ext_resource type="Texture2D" path="res://assets/sprites/player/wanderer_walk_east_3.png" id="30_walk_east_3"]
+[ext_resource type="Texture2D" path="res://assets/sprites/player/wanderer_walk_west_0.png" id="31_walk_west_0"]
+[ext_resource type="Texture2D" path="res://assets/sprites/player/wanderer_walk_west_1.png" id="32_walk_west_1"]
+[ext_resource type="Texture2D" path="res://assets/sprites/player/wanderer_walk_west_2.png" id="33_walk_west_2"]
+[ext_resource type="Texture2D" path="res://assets/sprites/player/wanderer_walk_west_3.png" id="34_walk_west_3"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_player"]
 radius = 7.0
@@ -46,15 +72,38 @@ visual_path = NodePath("../Body")
 [node name="PlayerHud" parent="." instance=ExtResource("7_hud")]
 unique_name_in_owner = true
 
-[node name="Body" type="Polygon2D" parent="."]
+[node name="Body" type="Sprite2D" parent="."]
 unique_name_in_owner = true
-polygon = PackedVector2Array(-7, -8, 7, -8, 9, 6, 0, 11, -9, 6)
-color = Color(0.12, 0.82, 0.76, 1)
-
-[node name="FacingMarker" type="Polygon2D" parent="."]
-position = Vector2(0, 4)
-polygon = PackedVector2Array(-3, 0, 3, 0, 0, 6)
-color = Color(0.95, 0.35, 0.72, 1)
+position = Vector2(0, -4)
+texture = ExtResource("9_front_idle")
+scale = Vector2(0.09, 0.09)
+script = ExtResource("18_visual")
+texture_filter = 1
+front_idle = ExtResource("9_front_idle")
+front_move = ExtResource("10_front_move")
+front_attack = ExtResource("11_front_attack")
+back_idle = ExtResource("12_back_idle")
+back_move = ExtResource("13_back_move")
+back_attack = ExtResource("14_back_attack")
+side_idle = ExtResource("15_side_idle")
+side_move = ExtResource("16_side_move")
+side_attack = ExtResource("17_side_attack")
+walk_south_0 = ExtResource("19_walk_south_0")
+walk_south_1 = ExtResource("20_walk_south_1")
+walk_south_2 = ExtResource("21_walk_south_2")
+walk_south_3 = ExtResource("22_walk_south_3")
+walk_north_0 = ExtResource("23_walk_north_0")
+walk_north_1 = ExtResource("24_walk_north_1")
+walk_north_2 = ExtResource("25_walk_north_2")
+walk_north_3 = ExtResource("26_walk_north_3")
+walk_east_0 = ExtResource("27_walk_east_0")
+walk_east_1 = ExtResource("28_walk_east_1")
+walk_east_2 = ExtResource("29_walk_east_2")
+walk_east_3 = ExtResource("30_walk_east_3")
+walk_west_0 = ExtResource("31_walk_west_0")
+walk_west_1 = ExtResource("32_walk_west_1")
+walk_west_2 = ExtResource("33_walk_west_2")
+walk_west_3 = ExtResource("34_walk_west_3")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position_smoothing_enabled = true
