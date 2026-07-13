@@ -60,6 +60,8 @@ const FLOOR_RECTS: Array[Rect2i] = [
 @onready var _boss_door: StaticBody2D = %BossDoor
 @onready var _enemies_root: Node2D = %Enemies
 @onready var _boss: BossBase = %Boss
+@onready var _camera_limits: CameraLimits = %CameraLimits
+@onready var _respawn_controller: RespawnController = %RespawnController
 
 var _boss_door_open: bool = false
 
@@ -68,12 +70,21 @@ func _ready() -> void:
 	_floor_walls.tile_set = _build_tile_set()
 	_paint_zone()
 	_player.position = _player_spawn.position
+	# Camera limits come from the same authored geometry the tiles are painted
+	# from (issue #65); respawn teleports snap the smoothed camera along.
+	_camera_limits.apply_bounds(get_zone_bounds())
+	_respawn_controller.respawn_finished.connect(_camera_limits.snap_to_target)
 	for enemy: EnemyBase in get_zone_enemies():
 		enemy.set_target(_player)
 		enemy.enemy_died.connect(_on_zone_enemy_died)
 	# The boss lives outside the Enemies root on purpose: the door-unseal
 	# count stays keyed to the encounter chasers, not the fight behind it.
 	_boss.set_target(_player)
+
+
+## The painted tile area in world pixels — the camera never shows past it.
+func get_zone_bounds() -> Rect2:
+	return Rect2(_floor_walls.global_position, Vector2(ZONE_SIZE_TILES * TILE_SIZE))
 
 
 ## True outside the zone bounds and for every cell not inside a floor rect.
