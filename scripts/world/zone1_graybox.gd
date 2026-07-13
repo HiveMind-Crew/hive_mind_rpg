@@ -14,9 +14,10 @@ extends Node2D
 ## - secret_markers group (issue #78): each alcove holds a persistent
 ##   SkillPointPickup under a HiddenRoomReveal cover — collection awards
 ##   points once and survives reloads through SaveManager.
-## - BossDoor + open_boss_door() + BossArenaAnchor: where the #23 boss
-##   framework attaches. Until then the door unseals when the zone's placed
-##   encounters are cleared, so the walkthrough loop is complete.
+## - BossDoor + open_boss_door(): the door unseals when the zone's placed
+##   encounters are cleared, opening the way to the Rootheart Colossus
+##   (issue #23) waiting at the BossArenaAnchor. Defeating it pays the boss
+##   reward and records the persisted zone1_slice_complete milestone.
 
 signal boss_door_opened()
 
@@ -58,6 +59,7 @@ const FLOOR_RECTS: Array[Rect2i] = [
 @onready var _player: PlayerController = %Player
 @onready var _boss_door: StaticBody2D = %BossDoor
 @onready var _enemies_root: Node2D = %Enemies
+@onready var _boss: BossBase = %Boss
 
 var _boss_door_open: bool = false
 
@@ -69,6 +71,9 @@ func _ready() -> void:
 	for enemy: EnemyBase in get_zone_enemies():
 		enemy.set_target(_player)
 		enemy.enemy_died.connect(_on_zone_enemy_died)
+	# The boss lives outside the Enemies root on purpose: the door-unseal
+	# count stays keyed to the encounter chasers, not the fight behind it.
+	_boss.set_target(_player)
 
 
 ## True outside the zone bounds and for every cell not inside a floor rect.
@@ -97,6 +102,10 @@ func get_secret_pickups() -> Array[SkillPointPickup]:
 		if pickup != null and is_ancestor_of(pickup):
 			pickups.append(pickup)
 	return pickups
+
+
+func get_boss() -> BossBase:
+	return _boss
 
 
 func is_boss_door_open() -> bool:

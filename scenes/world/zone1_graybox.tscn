@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/zone1_graybox.gd" id="1_zone"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2_player"]
@@ -7,6 +7,7 @@
 [ext_resource type="Script" path="res://scripts/world/respawn_controller.gd" id="5_respawn"]
 [ext_resource type="PackedScene" path="res://scenes/world/skill_point_pickup.tscn" id="6_pickup"]
 [ext_resource type="Script" path="res://scripts/world/hidden_room_reveal.gd" id="7_reveal"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/rootheart_colossus.tscn" id="8_boss"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_boss_door"]
 size = Vector2(16, 80)
@@ -108,6 +109,14 @@ position = Vector2(808, 328)
 
 [node name="ChaserRoomC" parent="Enemies" groups=["resettable"] instance=ExtResource("4_chaser")]
 position = Vector2(1128, 280)
+
+[node name="BossArena" type="Node2D" parent="."]
+
+[node name="Boss" parent="BossArena" groups=["resettable"] instance=ExtResource("8_boss")]
+unique_name_in_owner = true
+position = Vector2(1528, 248)
+reward_skill_points = 5
+defeat_milestone_id = &"zone1_slice_complete"
 
 [node name="BossDoor" type="StaticBody2D" parent="."]
 unique_name_in_owner = true

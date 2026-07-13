@@ -30,6 +30,7 @@ func _forget_run_state() -> void:
 	SaveManager.checkpoint_scene_path = ""
 	SaveManager.checkpoint_position = Vector2.ZERO
 	SaveManager.collected_secret_ids.clear()
+	SaveManager.completed_milestone_ids.clear()
 
 
 func _write_raw_save(raw_text: String) -> void:
@@ -175,6 +176,38 @@ func test_record_secret_collected_writes_the_save_file() -> void:
 
 	assert_true(SaveManager.has_save())
 	assert_signal_emit_count(SaveManager, "game_saved", 1)
+
+
+func test_record_milestone_completed_persists_across_load() -> void:
+	assert_true(SaveManager.record_milestone_completed(&"zone1_slice_complete"))
+
+	_forget_run_state()
+
+	assert_true(SaveManager.load_game())
+	assert_true(SaveManager.is_milestone_completed(&"zone1_slice_complete"))
+
+
+func test_record_milestone_completed_rejects_duplicates_and_empty_ids() -> void:
+	assert_true(SaveManager.record_milestone_completed(&"zone1_slice_complete"))
+
+	assert_false(SaveManager.record_milestone_completed(&"zone1_slice_complete"))
+	assert_false(SaveManager.record_milestone_completed(&""))
+	assert_eq(SaveManager.completed_milestone_ids.size(), 1)
+
+
+func test_save_without_milestone_key_still_loads_as_valid() -> void:
+	# Saves written before the #23 milestone field must keep loading.
+	_write_raw_save(JSON.stringify({
+		"version": 1,
+		"skill_points": 2,
+		"unlocked_skill_ids": [],
+		"checkpoint": {"scene_path": "", "x": 0, "y": 0},
+		"collected_secret_ids": [],
+	}))
+
+	assert_true(SaveManager.load_game())
+	assert_eq(GameState.get_skill_points(), 2)
+	assert_true(SaveManager.completed_milestone_ids.is_empty())
 
 
 func test_clear_save_removes_file_and_resets_run_state() -> void:

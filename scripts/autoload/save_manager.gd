@@ -3,8 +3,10 @@ extends Node
 ## user:// via FileAccess (DESIGN.md §9) and restores it on launch.
 ##
 ## Persisted: GameState progression (skill points + unlocked ids), the last
-## checkpoint (scene path + position), and collected secret ids (recorded by
-## SkillPointPickup, issue #24). A missing file, unparseable JSON, or wrong
+## checkpoint (scene path + position), collected secret ids (recorded by
+## SkillPointPickup, issue #24), and completed milestone ids (boss kills and
+## other one-shot rewards, issue #23; the key is optional so older saves
+## still load). A missing file, unparseable JSON, or wrong
 ## shape degrades to a new game with a warning, never a crash. Skill ids that
 ## are unknown or lack their prerequisite closure (issue #76) are pruned
 ## individually by GameState.restore_progress() while the rest of the save
@@ -22,6 +24,7 @@ var save_path: String = DEFAULT_SAVE_PATH
 var checkpoint_scene_path: String = ""
 var checkpoint_position: Vector2 = Vector2.ZERO
 var collected_secret_ids: Array[StringName] = []
+var completed_milestone_ids: Array[StringName] = []
 
 
 func _ready() -> void:
@@ -65,6 +68,20 @@ func record_secret_collected(secret_id: StringName) -> bool:
 	return true
 
 
+func is_milestone_completed(milestone_id: StringName) -> bool:
+	return completed_milestone_ids.has(milestone_id)
+
+
+func record_milestone_completed(milestone_id: StringName) -> bool:
+	# Milestones (boss kills, one-shot encounter rewards) save immediately for
+	# the same reason secrets do: a paid reward must never be re-farmable.
+	if milestone_id == StringName() or is_milestone_completed(milestone_id):
+		return false
+	completed_milestone_ids.append(milestone_id)
+	save_game()
+	return true
+
+
 func save_game() -> bool:
 	var unlocked_ids: Array[String] = []
 	for skill_id: StringName in GameState.get_unlocked_skill_ids():
@@ -72,6 +89,9 @@ func save_game() -> bool:
 	var secret_ids: Array[String] = []
 	for secret_id: StringName in collected_secret_ids:
 		secret_ids.append(str(secret_id))
+	var milestone_ids: Array[String] = []
+	for milestone_id: StringName in completed_milestone_ids:
+		milestone_ids.append(str(milestone_id))
 	var save_data: Dictionary[String, Variant] = {
 		"version": SAVE_VERSION,
 		"skill_points": GameState.get_skill_points(),
@@ -82,6 +102,7 @@ func save_game() -> bool:
 			"y": checkpoint_position.y,
 		},
 		"collected_secret_ids": secret_ids,
+		"completed_milestone_ids": milestone_ids,
 	}
 
 	var file: FileAccess = FileAccess.open(save_path, FileAccess.WRITE)
@@ -134,6 +155,9 @@ func load_game() -> bool:
 	collected_secret_ids.clear()
 	for raw_id: Variant in (save_data["collected_secret_ids"] as Array):
 		collected_secret_ids.append(StringName(raw_id))
+	completed_milestone_ids.clear()
+	for raw_id: Variant in (save_data.get("completed_milestone_ids", []) as Array):
+		completed_milestone_ids.append(StringName(raw_id))
 	game_loaded.emit()
 	return true
 
@@ -145,6 +169,7 @@ func clear_save() -> void:
 	checkpoint_scene_path = ""
 	checkpoint_position = Vector2.ZERO
 	collected_secret_ids.clear()
+	completed_milestone_ids.clear()
 	GameState.reset_progress()
 
 
@@ -175,4 +200,11 @@ func _is_valid_save_data(parsed: Variant) -> bool:
 	for raw_id: Variant in (save_data["collected_secret_ids"] as Array):
 		if not raw_id is String:
 			return false
+	# Optional (added with the #23 boss milestones); pre-existing saves omit it.
+	if save_data.has("completed_milestone_ids"):
+		if not save_data["completed_milestone_ids"] is Array:
+			return false
+		for raw_id: Variant in (save_data["completed_milestone_ids"] as Array):
+			if not raw_id is String:
+				return false
 	return true

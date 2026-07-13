@@ -36,6 +36,7 @@ func _forget_run_state() -> void:
 	SaveManager.checkpoint_scene_path = ""
 	SaveManager.checkpoint_position = Vector2.ZERO
 	SaveManager.collected_secret_ids.clear()
+	SaveManager.completed_milestone_ids.clear()
 
 
 func _add_zone() -> Zone1Graybox:
@@ -208,6 +209,39 @@ func test_clearing_every_encounter_unseals_the_boss_door() -> void:
 
 	assert_true(zone.is_boss_door_open())
 	assert_signal_emit_count(zone, "boss_door_opened", 1)
+
+
+func test_boss_waits_in_the_arena_and_pays_the_slice_milestone() -> void:
+	var zone: Zone1Graybox = _add_zone()
+	var player: PlayerController = zone.get_node("Player") as PlayerController
+	var boss: BossBase = zone.get_boss()
+
+	assert_not_null(boss)
+	assert_eq(boss.target, player, "The boss hunts the player like every enemy.")
+	assert_false(zone.is_wall_cell(_cell_of(zone, boss.global_position)))
+	assert_eq(boss.defeat_milestone_id, &"zone1_slice_complete")
+	assert_gt(boss.reward_skill_points, 0, "The boss kill pays a large reward.")
+	assert_eq(boss.get_phase_count(), 2, "The slice boss is a two-phase fight.")
+
+	var points_before: int = GameState.get_skill_points()
+	boss.health.take_damage(99999)
+
+	assert_eq(GameState.get_skill_points(), points_before + boss.reward_skill_points)
+	assert_true(
+		SaveManager.is_milestone_completed(&"zone1_slice_complete"),
+		"Killing the boss flags the vertical slice complete."
+	)
+
+
+func test_boss_death_does_not_count_toward_the_door_unseal() -> void:
+	var zone: Zone1Graybox = _add_zone()
+
+	zone.get_boss().health.take_damage(99999)
+
+	assert_false(
+		zone.is_boss_door_open(),
+		"The door is keyed to the encounter chasers, not the fight behind it."
+	)
 
 
 func test_secret_alcoves_hold_reachable_pickups_with_unique_ids() -> void:
