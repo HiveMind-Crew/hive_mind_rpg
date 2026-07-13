@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/encounter_room_demo.gd" id="1_demo"]
 [ext_resource type="PackedScene" path="res://scenes/world/encounter_room.tscn" id="2_room"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://scenes/combat/hurtbox.tscn" id="4_hurtbox"]
 [ext_resource type="PackedScene" path="res://scenes/combat/health_component.tscn" id="5_health"]
 [ext_resource type="Script" path="res://scripts/world/respawn_controller.gd" id="6_respawn"]
+[ext_resource type="Resource" path="res://data/encounters/demo_encounter_reward.tres" id="7_reward"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_actor"]
 radius = 8.0
@@ -124,6 +125,7 @@ unique_name_in_owner = true
 position = Vector2(320, 180)
 enemies_root_path = NodePath("../EnemyContainer")
 exit_paths = Array[NodePath]([NodePath("../DoorWest"), NodePath("../DoorEast")])
+reward_data = ExtResource("7_reward")
 
 [node name="Actor" type="CharacterBody2D" parent="." groups=["player"]]
 unique_name_in_owner = true

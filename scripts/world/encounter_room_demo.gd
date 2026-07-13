@@ -24,6 +24,7 @@ func _ready() -> void:
 	_actor_health.health_changed.connect(_on_health_changed)
 	_room.encounter_started.connect(_on_encounter_started)
 	_room.encounter_completed.connect(_on_encounter_completed)
+	_room.encounter_reward_awarded.connect(_on_encounter_reward_awarded)
 	_respawn.respawn_finished.connect(_on_respawn_finished)
 
 
@@ -68,6 +69,14 @@ func _on_encounter_started() -> void:
 
 func _on_encounter_completed() -> void:
 	_status_label.text = "Encounter complete — the doors are open."
+
+
+func _on_encounter_reward_awarded(_reward_id: StringName, skill_points: int) -> void:
+	_status_label.text = "Encounter complete — +%d skill point%s (%d total)." % [
+		skill_points,
+		"" if skill_points == 1 else "s",
+		GameState.get_skill_points(),
+	]
 
 
 func _on_respawn_finished() -> void:

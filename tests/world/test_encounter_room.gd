@@ -6,6 +6,7 @@ extends GutTest
 
 const ROOM_SCENE: PackedScene = preload("res://scenes/world/encounter_room.tscn")
 const CHASER_SCENE: PackedScene = preload("res://scenes/enemies/melee_chaser.tscn")
+const TEST_SAVE_PATH: String = "user://test_encounter_reward_save.json"
 
 
 class StubEnemy:
@@ -50,9 +51,22 @@ var _stub_door: StubDoor
 
 
 func before_each() -> void:
+	GameState.reset_progress()
+	SaveManager.save_path = TEST_SAVE_PATH
+	SaveManager.completed_encounter_ids.clear()
+	if FileAccess.file_exists(TEST_SAVE_PATH):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(TEST_SAVE_PATH))
 	_player = Node2D.new()
 	_player.add_to_group(&"player")
 	add_child_autofree(_player)
+
+
+func after_each() -> void:
+	if FileAccess.file_exists(TEST_SAVE_PATH):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(TEST_SAVE_PATH))
+	SaveManager.completed_encounter_ids.clear()
+	SaveManager.save_path = SaveManager.DEFAULT_SAVE_PATH
+	GameState.reset_progress()
 
 
 func _build_room(enemy_count: int = 2) -> void:
@@ -220,6 +234,38 @@ func test_reset_room_can_be_fought_and_completed_again() -> void:
 	# attempt after the reset, not a repeat of the first emission.
 	assert_signal_emit_count(_room, "encounter_completed", 2)
 	assert_signal_emit_count(_room, "encounter_started", 2)
+
+
+func test_authored_reward_awards_once_across_reset_and_persists() -> void:
+	_build_room(1)
+	var reward: EncounterRewardData = EncounterRewardData.new()
+	reward.reward_id = &"forest_room_a"
+	reward.skill_points = 2
+	_room.reward_data = reward
+
+	_room.activate(_player)
+	_stub_enemies()[0].die()
+
+	assert_eq(GameState.get_skill_points(), 2)
+	assert_true(SaveManager.is_encounter_completed(reward.reward_id))
+	assert_signal_emitted_with_parameters(
+		_room, "encounter_reward_awarded", [reward.reward_id, reward.skill_points]
+	)
+	assert_true(FileAccess.file_exists(TEST_SAVE_PATH))
+
+	_room.reset_to_spawn()
+	await wait_physics_frames(1)
+	_room.activate(_player)
+	_stub_enemies()[0].die()
+
+	assert_eq(GameState.get_skill_points(), 2, "A reset encounter cannot duplicate its payout.")
+	assert_signal_emit_count(_room, "encounter_reward_awarded", 1)
+
+	GameState.reset_progress()
+	SaveManager.completed_encounter_ids.clear()
+	assert_true(SaveManager.load_game())
+	assert_eq(GameState.get_skill_points(), 2)
+	assert_true(SaveManager.is_encounter_completed(reward.reward_id))
 
 
 func test_player_body_physically_entering_activates_real_enemies() -> void:

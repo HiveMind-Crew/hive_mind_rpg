@@ -25,6 +25,7 @@ extends Area2D
 
 signal encounter_started()
 signal encounter_completed()
+signal encounter_reward_awarded(reward_id: StringName, skill_points: int)
 
 enum State {
 	DORMANT,
@@ -40,6 +41,9 @@ const ENCOUNTER_ROOM_GROUP: StringName = &"encounter_rooms"
 @export var enemies_root_path: NodePath = ^"Enemies"
 ## Barriers sealed while the encounter is active (see exit interface above).
 @export var exit_paths: Array[NodePath] = []
+## Optional authored payout. A null reward keeps the room reusable for fights
+## that should not advance progression.
+@export var reward_data: EncounterRewardData
 
 var state: State = State.DORMANT
 
@@ -173,6 +177,23 @@ func _complete() -> void:
 	state = State.COMPLETED
 	_set_exits_sealed(false)
 	encounter_completed.emit()
+	_award_completion_reward()
+
+
+func _award_completion_reward() -> void:
+	if reward_data == null:
+		return
+	if not reward_data.is_valid():
+		push_warning("EncounterRoom '%s' has invalid reward data." % name)
+		return
+	if SaveManager.is_encounter_completed(reward_data.reward_id):
+		return
+	if not GameState.award_skill_points(reward_data.skill_points):
+		return
+	# Record after awarding so the immediate save contains both the completion
+	# id and the updated point total.
+	SaveManager.record_encounter_completed(reward_data.reward_id)
+	encounter_reward_awarded.emit(reward_data.reward_id, reward_data.skill_points)
 
 
 func _set_exits_sealed(sealed: bool) -> void:

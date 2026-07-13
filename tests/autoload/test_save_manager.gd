@@ -30,6 +30,7 @@ func _forget_run_state() -> void:
 	SaveManager.checkpoint_scene_path = ""
 	SaveManager.checkpoint_position = Vector2.ZERO
 	SaveManager.collected_secret_ids.clear()
+	SaveManager.completed_encounter_ids.clear()
 
 
 func _write_raw_save(raw_text: String) -> void:
@@ -175,6 +176,18 @@ func test_record_secret_collected_writes_the_save_file() -> void:
 
 	assert_true(SaveManager.has_save())
 	assert_signal_emit_count(SaveManager, "game_saved", 1)
+
+
+func test_record_encounter_completed_persists_and_rejects_duplicates() -> void:
+	assert_true(SaveManager.record_encounter_completed(&"forest_room_a"))
+	assert_false(SaveManager.record_encounter_completed(&"forest_room_a"))
+	assert_false(SaveManager.record_encounter_completed(&""))
+
+	_forget_run_state()
+
+	assert_true(SaveManager.load_game())
+	assert_true(SaveManager.is_encounter_completed(&"forest_room_a"))
+	assert_eq(SaveManager.completed_encounter_ids.size(), 1)
 
 
 func test_clear_save_removes_file_and_resets_run_state() -> void:
