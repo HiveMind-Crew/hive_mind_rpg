@@ -1,9 +1,12 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/arena_graybox.gd" id="1_arena"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2_player"]
 [ext_resource type="PackedScene" path="res://scenes/world/target_dummy.tscn" id="3_dummy"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/melee_chaser.tscn" id="4_chaser"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/ranged_harasser.tscn" id="5_harasser"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/shielded_brute.tscn" id="6_brute"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/fast_flanker.tscn" id="7_flanker"]
 
 [node name="ArenaGraybox" type="Node2D"]
 script = ExtResource("1_arena")
@@ -35,6 +38,15 @@ position = Vector2(328, 280)
 
 [node name="MeleeChaser" parent="Enemies" instance=ExtResource("4_chaser")]
 position = Vector2(472, 328)
+
+[node name="RangedHarasser" parent="Enemies" instance=ExtResource("5_harasser")]
+position = Vector2(600, 120)
+
+[node name="ShieldedBrute" parent="Enemies" instance=ExtResource("6_brute")]
+position = Vector2(280, 380)
+
+[node name="FastFlanker" parent="Enemies" instance=ExtResource("7_flanker")]
+position = Vector2(680, 200)
 
 [node name="UI" type="CanvasLayer" parent="."]
 

@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/enemy_bolt.gd" id="1_bolt"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_bolt"]
+radius = 4.0
+
+[node name="EnemyBolt" type="Area2D"]
+collision_layer = 2
+collision_mask = 5
+monitoring = true
+monitorable = false
+script = ExtResource("1_bolt")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_bolt")
+
+[node name="Visual" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-4, 0, 0, -4, 4, 0, 0, 4)
+color = Color(0.55, 0.85, 0.3, 1)

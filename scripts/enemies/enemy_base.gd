@@ -34,10 +34,12 @@ var target: Node2D
 var _state_time_remaining: float = 0.0
 var _attack_direction: Vector2 = Vector2.DOWN
 var _attack_target_ids: Dictionary[int, bool] = {}
+var _spawn_position: Vector2 = Vector2.ZERO
 
 
 func _ready() -> void:
 	add_to_group(ENEMY_GROUP)
+	_spawn_position = global_position
 	if stats == null:
 		push_error("EnemyBase requires an EnemyStats resource.")
 		set_physics_process(false)
@@ -69,6 +71,24 @@ func set_target(new_target: Node2D) -> void:
 	target = new_target
 	if state == State.IDLE and is_instance_valid(target):
 		_transition_to(State.CHASE)
+
+
+func reset_to_spawn() -> void:
+	# RespawnController's "resettable" group hook: enemies in the area reset
+	# when the player dies (DESIGN.md §5). Revives and rearms a dead enemy,
+	# so the state is restored directly — _transition_to treats DEAD as
+	# terminal on purpose.
+	global_position = _spawn_position
+	velocity = Vector2.ZERO
+	health.restore_full_health()
+	hurtbox.set_enabled(true)
+	attack_hitbox.set_deferred("monitoring", false)
+	var previous_state: State = state
+	state = State.IDLE
+	_state_time_remaining = 0.0
+	_apply_state_visuals()
+	if previous_state != State.IDLE:
+		state_changed.emit(previous_state, state)
 
 
 func _update_idle() -> void:

@@ -90,6 +90,21 @@ func test_authored_enemy_attack_has_readable_impact_metadata() -> void:
 	assert_gt(_enemy.attack_hitbox.knockback_strength, 0.0)
 
 
+func test_reset_to_spawn_revives_and_rearms_at_the_spawn_point() -> void:
+	var spawn_position: Vector2 = _enemy.global_position
+	_enemy.health.invulnerability_duration = 0.0
+	_enemy.global_position += Vector2(40.0, 0.0)
+	_enemy._on_hit_received(99999, Vector2.ZERO)
+	assert_eq(_enemy.state, EnemyBase.State.DEAD)
+
+	_enemy.reset_to_spawn()
+
+	assert_eq(_enemy.global_position, spawn_position)
+	assert_eq(_enemy.state, EnemyBase.State.IDLE)
+	assert_eq(_enemy.health.current_health, _enemy.health.max_health)
+	assert_true(_enemy.hurtbox.enabled, "A reset enemy takes hits again.")
+
+
 func _make_target(offset: Vector2, with_health: bool = false) -> Node2D:
 	var target := Node2D.new()
 	var hurtbox: Hurtbox = HURTBOX_SCENE.instantiate() as Hurtbox

@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="EnemyStats" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/resources/enemy_stats.gd" id="1_stats"]
+
+[resource]
+script = ExtResource("1_stats")
+max_health = 10
+move_speed = 40.0
+attack_damage = 2
+aggro_range = 240.0
+attack_range = 34.0
+attack_offset = 22.0
+wind_up_duration = 0.7
+attack_duration = 0.12
+recovery_duration = 0.9
+stagger_duration = 0.25
