@@ -7,17 +7,20 @@ const HARASSER_SCENE: PackedScene = preload("res://scenes/enemies/ranged_harasse
 const BOLT_SCENE: PackedScene = preload("res://scenes/enemies/enemy_bolt.tscn")
 const HURTBOX_SCENE: PackedScene = preload("res://scenes/combat/hurtbox.tscn")
 
+var _arena: Node2D
 var _harasser: RangedHarasser
 
 
 func before_each() -> void:
+	# The arena stands in for the level scene that owns the shooter. Spawners
+	# parent bolts to the shooter's parent, so every bolt lands under the
+	# arena and is hard-freed with it between tests — a queue_free sweep in
+	# after_each never flushes inside GUT's single-frame test run, so bolts
+	# would otherwise leak into the next test's group counts.
+	_arena = Node2D.new()
+	add_child_autofree(_arena)
 	_harasser = HARASSER_SCENE.instantiate() as RangedHarasser
-	add_child_autofree(_harasser)
-
-
-func after_each() -> void:
-	for node: Node in get_tree().get_nodes_in_group(EnemyBolt.PROJECTILE_GROUP):
-		node.queue_free()
+	_arena.add_child(_harasser)
 
 
 func _make_target(offset: Vector2) -> Node2D:
@@ -65,6 +68,36 @@ func test_holds_fire_while_the_cooldown_runs() -> void:
 
 	assert_eq(_harasser.state, EnemyBase.State.CHASE, "No re-fire until the cooldown ends.")
 	assert_eq(get_tree().get_nodes_in_group(EnemyBolt.PROJECTILE_GROUP).size(), 1)
+
+
+func test_fires_again_after_the_cooldown_elapses() -> void:
+	_harasser.set_target(_make_target(Vector2(100.0, 0.0)))
+	_run_full_attack_cycle()
+
+	_harasser._physics_process(_harasser.fire_cooldown)
+	assert_eq(_harasser.state, EnemyBase.State.WIND_UP, "An elapsed cooldown re-arms the lob.")
+	_harasser._physics_process(_harasser.stats.wind_up_duration)
+
+	assert_eq(
+		get_tree().get_nodes_in_group(EnemyBolt.PROJECTILE_GROUP).size(),
+		2,
+		"The second attack cycle fires exactly one more bolt."
+	)
+
+
+func test_freeing_the_owning_scene_frees_in_flight_bolts() -> void:
+	_harasser.set_target(_make_target(Vector2(100.0, 0.0)))
+	_harasser._physics_process(0.0)
+	_harasser._physics_process(_harasser.stats.wind_up_duration)
+	assert_eq(get_tree().get_nodes_in_group(EnemyBolt.PROJECTILE_GROUP).size(), 1)
+
+	_arena.free()
+
+	assert_eq(
+		get_tree().get_nodes_in_group(EnemyBolt.PROJECTILE_GROUP).size(),
+		0,
+		"Bolts belong to the shooter's scene and free with it — none survive teardown."
+	)
 
 
 func test_backs_away_from_a_player_inside_its_preferred_range() -> void:

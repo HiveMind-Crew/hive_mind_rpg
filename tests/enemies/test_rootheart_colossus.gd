@@ -6,19 +6,24 @@ extends GutTest
 const BOSS_SCENE: PackedScene = preload("res://scenes/enemies/rootheart_colossus.tscn")
 const HURTBOX_SCENE: PackedScene = preload("res://scenes/combat/hurtbox.tscn")
 
+var _arena: Node2D
 var _colossus: RootheartColossus
 
 
 func before_each() -> void:
 	GameState.reset_progress()
+	# The arena stands in for the level scene that owns the boss. Burst bolts
+	# are parented to the boss's parent, so they land under the arena and are
+	# hard-freed with it between tests instead of leaking into later group
+	# counts (a queue_free sweep never flushes inside GUT's single-frame run).
+	_arena = Node2D.new()
+	add_child_autofree(_arena)
 	_colossus = BOSS_SCENE.instantiate() as RootheartColossus
-	add_child_autofree(_colossus)
+	_arena.add_child(_colossus)
 	_colossus.health.invulnerability_duration = 0.0
 
 
 func after_each() -> void:
-	for node: Node in get_tree().get_nodes_in_group(EnemyBolt.PROJECTILE_GROUP):
-		node.queue_free()
 	GameState.reset_progress()
 
 
@@ -106,3 +111,16 @@ func test_phase_one_slam_recovery_stays_quiet() -> void:
 
 	assert_eq(_colossus.state, EnemyBase.State.RECOVERY)
 	assert_eq(_live_bolt_count(), 0, "Phase 1 recoveries fire nothing.")
+
+
+func test_freeing_the_owning_scene_frees_in_flight_burst_bolts() -> void:
+	_colossus.health.take_damage(15)
+	assert_eq(_live_bolt_count(), _colossus.burst_bolt_count)
+
+	_arena.free()
+
+	assert_eq(
+		_live_bolt_count(),
+		0,
+		"Burst bolts belong to the boss's scene and free with it — none survive teardown."
+	)

@@ -9,6 +9,7 @@ const HURTBOX_SCENE: PackedScene = preload("res://scenes/combat/hurtbox.tscn")
 const TEST_SAVE_PATH: String = "user://test_boss_savegame.json"
 const MILESTONE_ID: StringName = &"test_boss_milestone"
 
+var _arena: Node2D
 var _boss: BossBase
 
 
@@ -17,12 +18,15 @@ func before_each() -> void:
 	SaveManager.save_path = TEST_SAVE_PATH
 	_forget_run_state()
 	_delete_test_save()
+	# The arena stands in for the level scene that owns the boss, so phase
+	# bursts (parented to the boss's parent) are hard-freed with it between
+	# tests instead of leaking into other suites' projectile group counts.
+	_arena = Node2D.new()
+	add_child_autofree(_arena)
 	_boss = _spawn_boss(MILESTONE_ID)
 
 
 func after_each() -> void:
-	for node: Node in get_tree().get_nodes_in_group(EnemyBolt.PROJECTILE_GROUP):
-		node.queue_free()
 	_delete_test_save()
 	_forget_run_state()
 	SaveManager.save_path = SaveManager.DEFAULT_SAVE_PATH
@@ -44,7 +48,7 @@ func _forget_run_state() -> void:
 func _spawn_boss(milestone_id: StringName) -> BossBase:
 	var boss: BossBase = BOSS_SCENE.instantiate() as BossBase
 	boss.defeat_milestone_id = milestone_id
-	add_child_autofree(boss)
+	_arena.add_child(boss)
 	boss.health.invulnerability_duration = 0.0
 	return boss
 
