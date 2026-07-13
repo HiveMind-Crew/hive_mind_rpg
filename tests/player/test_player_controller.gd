@@ -12,7 +12,7 @@ var _input_sender: GutInputSender
 var _energy: EnergyComponent
 var _health: HealthComponent
 var _feedback: CombatFeedback
-var _body_visual: Polygon2D
+var _body_visual: Sprite2D
 
 
 func before_each() -> void:
@@ -26,7 +26,7 @@ func before_each() -> void:
 	_energy = _player.get_node("EnergyComponent") as EnergyComponent
 	_health = _player.get_node("HealthComponent") as HealthComponent
 	_feedback = _player.get_node("CombatFeedback") as CombatFeedback
-	_body_visual = _player.get_node("Body") as Polygon2D
+	_body_visual = _player.get_node("Body") as Sprite2D
 	_input_sender = GutInputSender.new(Input)
 
 
