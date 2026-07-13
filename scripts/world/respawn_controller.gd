@@ -80,12 +80,23 @@ func _on_player_died() -> void:
 	if _is_respawning:
 		return
 	_is_respawning = true
+	# Lock the player out for the whole transition (issue #79): a dead player
+	# must not move, dash, attack, or fire the relic behind the fade.
+	_set_player_control_enabled(false)
 	player_died.emit()
 	respawn_started.emit()
 	await _fade_to(1.0)
 	respawn()
 	await _fade_to(0.0)
 	_is_respawning = false
+	_set_player_control_enabled(true)
+
+
+func _set_player_control_enabled(enabled: bool) -> void:
+	# Duck-typed: tests and lightweight demos drive plain Node2D stand-ins
+	# that have no control gate.
+	if _player != null and _player.has_method(&"set_control_enabled"):
+		_player.call(&"set_control_enabled", enabled)
 
 
 func _reset_resettables() -> void:
