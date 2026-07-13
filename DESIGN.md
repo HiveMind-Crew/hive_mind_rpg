@@ -153,7 +153,7 @@ Unlock skill tree branches → develop a distinct build → clear zone boss → 
 
 ## 10. Art & Audio Direction
 
-- **Art:** 16-bit pixel art. Medieval palette corrupted by tech: cold neon accents (cyan/magenta) against earthy tones; glitch/dither effects near relic tech. `[Reference sheet TBD — collect in assets/reference/]`
+- **Art:** 16-bit pixel art. Medieval palette corrupted by tech: cold neon accents (cyan/magenta) against earthy tones; glitch/dither effects near relic tech. Canonical direction: `docs/visual_bible.md` + `docs/asset_manifest_v1.md`; in-engine palette proof: `scenes/reference/visual_reference_sheet.tscn`; reference imagery collects in `assets/reference/`.
 - **Pipeline:** Start with free/CC0 asset packs for graybox + placeholder (e.g., Kenney), replace with custom sprites as style locks. Every asset's source/license logged per AGENTS.md §11.
 - **Audio:** Ambient drones + medieval instrumentation with synthetic artifacts; combat SFX punchy and readable. Placeholder-first.
 
@@ -176,3 +176,4 @@ Unlock skill tree branches → develop a distinct build → clear zone boss → 
 | 2026-07-10 | 0.2 | Filled from design interview: pillars, loops, combat, tree, world, v1 slice, tech decisions | Claude + MeanGreen256 |
 | 2026-07-11 | 0.3 | Locked passive Energy regeneration and fixed 8-direction relic aiming | Codex + MeanGreen256 |
 | 2026-07-11 | 0.4 | Locked Zone 1 theme as a corrupted forest | Codex + MeanGreen256 |
+| 2026-07-13 | 0.5 | Linked canonical v1 visual bible, asset manifest, and reference sheet (issue #82) | Claude + pj200105 |
