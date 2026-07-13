@@ -45,7 +45,7 @@ func test_blocks_hits_arriving_inside_the_frontal_arc() -> void:
 	watch_signals(_brute)
 
 	# The attacker stands to the right (in front), so knockback pushes LEFT.
-	_brute._on_hit_received(1, Vector2.LEFT * 10.0)
+	_brute._on_hit_received(1, Vector2.LEFT * 10.0, Hitbox.ImpactType.GENERIC)
 
 	assert_signal_emit_count(_brute, "hit_blocked", 1)
 	assert_eq(_brute.health.current_health, _brute.health.max_health)
@@ -57,7 +57,7 @@ func test_hits_from_behind_land_and_stagger() -> void:
 	watch_signals(_brute)
 
 	# The attacker stands to the left (behind), so knockback pushes RIGHT.
-	_brute._on_hit_received(1, Vector2.RIGHT * 10.0)
+	_brute._on_hit_received(1, Vector2.RIGHT * 10.0, Hitbox.ImpactType.GENERIC)
 
 	assert_signal_emit_count(_brute, "hit_blocked", 0)
 	assert_eq(_brute.health.current_health, _brute.health.max_health - 1)
@@ -70,12 +70,12 @@ func test_zero_knockback_hits_fall_back_to_target_position() -> void:
 	watch_signals(_brute)
 
 	# Target in front + zero-knockback melee → blocked.
-	_brute._on_hit_received(1, Vector2.ZERO)
+	_brute._on_hit_received(1, Vector2.ZERO, Hitbox.ImpactType.GENERIC)
 	assert_signal_emit_count(_brute, "hit_blocked", 1)
 
 	# Teleport the target behind before the shield can turn → the hit lands.
 	target.global_position = _brute.global_position + Vector2(-200.0, 0.0)
-	_brute._on_hit_received(1, Vector2.ZERO)
+	_brute._on_hit_received(1, Vector2.ZERO, Hitbox.ImpactType.GENERIC)
 	assert_eq(_brute.health.current_health, _brute.health.max_health - 1)
 	assert_eq(_brute.state, EnemyBase.State.STAGGER)
 
@@ -101,6 +101,6 @@ func test_dead_brute_blocks_nothing() -> void:
 	assert_eq(_brute.state, EnemyBase.State.DEAD)
 	watch_signals(_brute)
 
-	_brute._on_hit_received(1, Vector2.LEFT * 10.0)
+	_brute._on_hit_received(1, Vector2.LEFT * 10.0, Hitbox.ImpactType.GENERIC)
 
 	assert_signal_emit_count(_brute, "hit_blocked", 0)

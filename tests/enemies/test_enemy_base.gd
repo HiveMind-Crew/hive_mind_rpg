@@ -94,7 +94,7 @@ func test_reset_to_spawn_revives_and_rearms_at_the_spawn_point() -> void:
 	var spawn_position: Vector2 = _enemy.global_position
 	_enemy.health.invulnerability_duration = 0.0
 	_enemy.global_position += Vector2(40.0, 0.0)
-	_enemy._on_hit_received(99999, Vector2.ZERO)
+	_enemy._on_hit_received(99999, Vector2.ZERO, Hitbox.ImpactType.GENERIC)
 	assert_eq(_enemy.state, EnemyBase.State.DEAD)
 
 	_enemy.reset_to_spawn()

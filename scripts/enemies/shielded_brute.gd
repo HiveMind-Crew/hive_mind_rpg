@@ -44,11 +44,11 @@ func _turn_toward_target(delta: float) -> void:
 	_facing = _facing.rotated(turn).normalized()
 
 
-func _on_hit_received(damage: int, knockback: Vector2) -> void:
+func _on_hit_received(damage: int, knockback: Vector2, impact_type: int) -> void:
 	if _is_hit_blocked(knockback):
 		hit_blocked.emit()
 		return
-	super(damage, knockback)
+	super(damage, knockback, impact_type)
 
 
 func _is_hit_blocked(knockback: Vector2) -> bool:

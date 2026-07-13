@@ -74,7 +74,7 @@ func test_stagger_flips_the_orbit_direction() -> void:
 	_flanker._physics_process(0.016)
 	var orbit_y_before: float = _flanker.velocity.y
 
-	_flanker._on_hit_received(1, Vector2.ZERO)
+	_flanker._on_hit_received(1, Vector2.ZERO, Hitbox.ImpactType.GENERIC)
 	assert_eq(_flanker.state, EnemyBase.State.STAGGER)
 	_flanker._physics_process(_flanker.stats.stagger_duration)
 	assert_eq(_flanker.state, EnemyBase.State.CHASE)
@@ -89,10 +89,10 @@ func test_stagger_flips_the_orbit_direction() -> void:
 
 
 func test_paper_thin_health_dies_in_two_hits() -> void:
-	_flanker._on_hit_received(1, Vector2.ZERO)
+	_flanker._on_hit_received(1, Vector2.ZERO, Hitbox.ImpactType.GENERIC)
 	assert_eq(_flanker.state, EnemyBase.State.STAGGER)
 
-	_flanker._on_hit_received(1, Vector2.ZERO)
+	_flanker._on_hit_received(1, Vector2.ZERO, Hitbox.ImpactType.GENERIC)
 
 	assert_eq(_flanker.state, EnemyBase.State.DEAD)
 	assert_true(_flanker.health.is_dead)
