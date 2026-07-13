@@ -12,6 +12,7 @@ signal melee_swing_ended()
 signal relic_ability_fired(direction: Vector2)
 signal relic_ability_blocked()
 signal skill_effects_refreshed()
+signal control_enabled_changed(enabled: bool)
 
 ## Ability id the starter bolt's ABILITY_MODIFIER skill nodes target.
 const RELIC_BOLT_ABILITY_ID: StringName = &"starter_relic_bolt"
@@ -49,6 +50,10 @@ var movement_state: PlayerMovementStateMachine.State:
 
 var _movement: PlayerMovementStateMachine
 var _melee: PlayerMeleeAttack
+# Gates every input path (movement, dash, melee, relic). Systems that take
+# control away from the player (e.g. respawn transitions, issue #79) toggle
+# this instead of reaching into the state machines.
+var _control_enabled: bool = true
 # Pre-skill baselines captured in _ready; skill effects derive from these so
 # unlock → respec always round-trips back to the authored values (issue #17).
 var _base_max_health: int = 0
@@ -90,13 +95,17 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	var input_direction: Vector2 = Input.get_vector(
-		&"move_left",
-		&"move_right",
-		&"move_up",
-		&"move_down"
-	)
-	_movement.update(input_direction, Input.is_action_just_pressed(&"dash"), delta)
+	var input_direction: Vector2 = Vector2.ZERO
+	var dash_requested: bool = false
+	if _control_enabled:
+		input_direction = Input.get_vector(
+			&"move_left",
+			&"move_right",
+			&"move_up",
+			&"move_down"
+		)
+		dash_requested = Input.is_action_just_pressed(&"dash")
+	_movement.update(input_direction, dash_requested, delta)
 	velocity = _movement.velocity
 	move_and_slide()
 	_movement.finish_frame(input_direction)
@@ -105,9 +114,9 @@ func _physics_process(delta: float) -> void:
 		_body_visual.play_idle()
 	elif _movement.state == PlayerMovementStateMachine.State.MOVE:
 		_body_visual.play_move()
-	if Input.is_action_just_pressed(&"attack_melee"):
+	if _control_enabled and Input.is_action_just_pressed(&"attack_melee"):
 		try_melee_attack()
-	if Input.is_action_just_pressed(&"ability_relic"):
+	if _control_enabled and Input.is_action_just_pressed(&"ability_relic"):
 		try_relic_ability()
 	_melee.update(delta)
 
@@ -116,11 +125,35 @@ func cancel_dash() -> void:
 	_movement.cancel_dash()
 
 
+func is_control_enabled() -> bool:
+	return _control_enabled
+
+
+## Turns player input on/off. Disabling stops movement immediately and cancels
+## any in-flight dash or melee swing (closing its hitbox), so no gameplay
+## action can leak out while an external system (respawn, cutscene) owns the
+## player. Idempotent; emits control_enabled_changed only on real changes.
+func set_control_enabled(enabled: bool) -> void:
+	if _control_enabled == enabled:
+		return
+	_control_enabled = enabled
+	if not enabled:
+		_movement.cancel_dash()
+		_melee.cancel_swing()
+		_movement.velocity = Vector2.ZERO
+		velocity = Vector2.ZERO
+	control_enabled_changed.emit(enabled)
+
+
 func try_melee_attack() -> bool:
+	if not _control_enabled:
+		return false
 	return _melee.try_start_swing(_movement.last_move_direction)
 
 
 func try_relic_ability() -> bool:
+	if not _control_enabled:
+		return false
 	if energy_bolt_scene == null or not energy.spend(energy_bolt_cost):
 		relic_ability_blocked.emit()
 		return false
