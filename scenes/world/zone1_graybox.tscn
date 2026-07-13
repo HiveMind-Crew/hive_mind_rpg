@@ -1,13 +1,21 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/zone1_graybox.gd" id="1_zone"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2_player"]
 [ext_resource type="PackedScene" path="res://scenes/world/checkpoint.tscn" id="3_checkpoint"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/melee_chaser.tscn" id="4_chaser"]
 [ext_resource type="Script" path="res://scripts/world/respawn_controller.gd" id="5_respawn"]
+[ext_resource type="PackedScene" path="res://scenes/world/skill_point_pickup.tscn" id="6_pickup"]
+[ext_resource type="Script" path="res://scripts/world/hidden_room_reveal.gd" id="7_reveal"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_boss_door"]
 size = Vector2(16, 80)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_alcove_south"]
+size = Vector2(80, 80)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_alcove_north"]
+size = Vector2(96, 96)
 
 [node name="Zone1Graybox" type="Node2D"]
 script = ExtResource("1_zone")
@@ -39,13 +47,40 @@ position = Vector2(760, 248)
 [node name="EncounterRoomC" type="Marker2D" parent="EncounterRooms" groups=["encounter_rooms"]]
 position = Vector2(1128, 248)
 
-[node name="SecretMarkers" type="Node2D" parent="."]
+[node name="Secrets" type="Node2D" parent="."]
 
-[node name="SecretAlcoveA" type="Marker2D" parent="SecretMarkers" groups=["secret_markers"]]
-position = Vector2(392, 392)
+[node name="AlcoveSouthPickup" parent="Secrets" groups=["secret_markers"] instance=ExtResource("6_pickup")]
+position = Vector2(392, 400)
+secret_id = &"zone1_alcove_south"
 
-[node name="SecretAlcoveC" type="Marker2D" parent="SecretMarkers" groups=["secret_markers"]]
-position = Vector2(1128, 56)
+[node name="AlcoveNorthPickup" parent="Secrets" groups=["secret_markers"] instance=ExtResource("6_pickup")]
+position = Vector2(1136, 64)
+secret_id = &"zone1_alcove_north"
+points = 2
+
+[node name="AlcoveSouthReveal" type="Area2D" parent="Secrets"]
+position = Vector2(392, 400)
+script = ExtResource("7_reveal")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Secrets/AlcoveSouthReveal"]
+position = Vector2(0, -8)
+shape = SubResource("RectangleShape2D_alcove_south")
+
+[node name="Cover" type="Polygon2D" parent="Secrets/AlcoveSouthReveal"]
+polygon = PackedVector2Array(-40, -32, -8, -32, -8, -48, 8, -48, 8, -32, 40, -32, 40, 32, -40, 32)
+color = Color(0.2, 0.22, 0.27, 1)
+
+[node name="AlcoveNorthReveal" type="Area2D" parent="Secrets"]
+position = Vector2(1136, 64)
+script = ExtResource("7_reveal")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Secrets/AlcoveNorthReveal"]
+position = Vector2(0, 16)
+shape = SubResource("RectangleShape2D_alcove_north")
+
+[node name="Cover" type="Polygon2D" parent="Secrets/AlcoveNorthReveal"]
+polygon = PackedVector2Array(-48, -32, 48, -32, 48, 32, 0, 32, 0, 64, -16, 64, -16, 32, -48, 32)
+color = Color(0.2, 0.22, 0.27, 1)
 
 [node name="Player" parent="." groups=["player"] instance=ExtResource("2_player")]
 unique_name_in_owner = true

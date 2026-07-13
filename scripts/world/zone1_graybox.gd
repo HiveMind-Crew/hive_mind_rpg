@@ -11,7 +11,9 @@ extends Node2D
 ##
 ## Integration points:
 ## - ZoneEntrance marker: where the hub's zone gate (#20) drops the player.
-## - secret_markers group: where the #24 pickups/hidden-room covers go.
+## - secret_markers group (issue #78): each alcove holds a persistent
+##   SkillPointPickup under a HiddenRoomReveal cover — collection awards
+##   points once and survives reloads through SaveManager.
 ## - BossDoor + open_boss_door() + BossArenaAnchor: where the #23 boss
 ##   framework attaches. Until then the door unseals when the zone's placed
 ##   encounters are cleared, so the walkthrough loop is complete.
@@ -84,6 +86,17 @@ func get_zone_enemies() -> Array[EnemyBase]:
 		if enemy != null:
 			zone_enemies.append(enemy)
 	return zone_enemies
+
+
+## The zone's still-uncollected secret pickups (already-collected ones free
+## themselves on spawn, so this is also the "what's left to find" list).
+func get_secret_pickups() -> Array[SkillPointPickup]:
+	var pickups: Array[SkillPointPickup] = []
+	for node: Node in get_tree().get_nodes_in_group(SkillPointPickup.PICKUP_GROUP):
+		var pickup: SkillPointPickup = node as SkillPointPickup
+		if pickup != null and is_ancestor_of(pickup):
+			pickups.append(pickup)
+	return pickups
 
 
 func is_boss_door_open() -> bool:

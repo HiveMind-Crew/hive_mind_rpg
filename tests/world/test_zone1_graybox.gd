@@ -1,19 +1,56 @@
 extends GutTest
 ## Coverage for the Zone 1 graybox (issue #21): painted layout, room/checkpoint/
 ## secret/boss-door structure, and a BFS walkability proof that the entrance
-## reaches every point of interest (the "no softlocks" criterion).
+## reaches every point of interest (the "no softlocks" criterion). The secret
+## alcoves hold real persistent pickups (issue #78), so the suite redirects
+## SaveManager at a scratch file and resets progression around every test.
 
 const ZONE_SCENE: PackedScene = preload("res://scenes/world/zone1_graybox.tscn")
+const TEST_SAVE_PATH: String = "user://test_zone1_savegame.json"
 
 const CARDINAL_OFFSETS: Array[Vector2i] = [
 	Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN,
 ]
 
 
+func before_each() -> void:
+	GameState.reset_progress()
+	SaveManager.save_path = TEST_SAVE_PATH
+	_forget_run_state()
+	_delete_test_save()
+
+
+func after_each() -> void:
+	_delete_test_save()
+	_forget_run_state()
+	SaveManager.save_path = SaveManager.DEFAULT_SAVE_PATH
+	GameState.reset_progress()
+
+
+func _delete_test_save() -> void:
+	if FileAccess.file_exists(TEST_SAVE_PATH):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(TEST_SAVE_PATH))
+
+
+func _forget_run_state() -> void:
+	SaveManager.checkpoint_scene_path = ""
+	SaveManager.checkpoint_position = Vector2.ZERO
+	SaveManager.collected_secret_ids.clear()
+
+
 func _add_zone() -> Zone1Graybox:
 	var zone: Zone1Graybox = ZONE_SCENE.instantiate() as Zone1Graybox
 	add_child_autofree(zone)
 	return zone
+
+
+func _zone_reveals(zone: Zone1Graybox) -> Array[HiddenRoomReveal]:
+	var reveals: Array[HiddenRoomReveal] = []
+	for child: Node in zone.get_node("Secrets").get_children():
+		var reveal: HiddenRoomReveal = child as HiddenRoomReveal
+		if reveal != null:
+			reveals.append(reveal)
+	return reveals
 
 
 func _cell_of(zone: Zone1Graybox, world_position: Vector2) -> Vector2i:
@@ -171,3 +208,65 @@ func test_clearing_every_encounter_unseals_the_boss_door() -> void:
 
 	assert_true(zone.is_boss_door_open())
 	assert_signal_emit_count(zone, "boss_door_opened", 1)
+
+
+func test_secret_alcoves_hold_reachable_pickups_with_unique_ids() -> void:
+	var zone: Zone1Graybox = _add_zone()
+	var spawn: Marker2D = zone.get_node("PlayerSpawn") as Marker2D
+	var reachable: Dictionary[Vector2i, bool] = _reachable_from(
+		zone, _cell_of(zone, spawn.global_position)
+	)
+	var pickups: Array[SkillPointPickup] = zone.get_secret_pickups()
+
+	assert_eq(pickups.size(), 2, "Both authored alcoves hold a real pickup.")
+	var seen_ids: Array[StringName] = []
+	for pickup: SkillPointPickup in pickups:
+		assert_ne(
+			pickup.secret_id, StringName(),
+			"%s needs a nonempty id to persist." % pickup.name
+		)
+		assert_false(seen_ids.has(pickup.secret_id), "%s reuses a secret id." % pickup.name)
+		seen_ids.append(pickup.secret_id)
+		assert_true(
+			reachable.has(_cell_of(zone, pickup.global_position)),
+			"%s must be walkable from the entrance." % pickup.name
+		)
+
+
+func test_secret_covers_hide_the_alcoves_until_the_player_enters() -> void:
+	var zone: Zone1Graybox = _add_zone()
+	var player: PlayerController = zone.get_node("Player") as PlayerController
+	var reveals: Array[HiddenRoomReveal] = _zone_reveals(zone)
+
+	assert_eq(reveals.size(), 2, "Each alcove sits behind a hidden-room cover.")
+	for reveal: HiddenRoomReveal in reveals:
+		var cover: CanvasItem = reveal.get_node("Cover") as CanvasItem
+		assert_true(cover.visible, "%s starts covered." % reveal.name)
+
+		reveal.body_entered.emit(player)
+
+		assert_true(reveal.is_revealed())
+		assert_false(cover.visible, "%s uncovers for the player." % reveal.name)
+
+
+func test_collected_secrets_award_points_and_stay_gone_after_reload() -> void:
+	var zone: Zone1Graybox = _add_zone()
+	var player: PlayerController = zone.get_node("Player") as PlayerController
+	assert_eq(GameState.get_skill_points(), 0)
+
+	for pickup: SkillPointPickup in zone.get_secret_pickups():
+		pickup.body_entered.emit(player)
+
+	assert_eq(GameState.get_skill_points(), 3, "South pays 1, north pays 2.")
+	assert_true(SaveManager.is_secret_collected(&"zone1_alcove_south"))
+	assert_true(SaveManager.is_secret_collected(&"zone1_alcove_north"))
+	assert_true(SaveManager.has_save(), "Collection writes the save immediately.")
+
+	zone.free()
+	var reloaded_zone: Zone1Graybox = _add_zone()
+	await wait_physics_frames(1)
+
+	assert_eq(
+		reloaded_zone.get_secret_pickups().size(), 0,
+		"Collected secrets never respawn on reload."
+	)
