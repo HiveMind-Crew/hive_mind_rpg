@@ -1,0 +1,180 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/encounter_room_demo.gd" id="1_demo"]
+[ext_resource type="PackedScene" path="res://scenes/world/encounter_room.tscn" id="2_room"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/melee_chaser.tscn" id="3_chaser"]
+[ext_resource type="PackedScene" path="res://scenes/combat/hurtbox.tscn" id="4_hurtbox"]
+[ext_resource type="PackedScene" path="res://scenes/combat/health_component.tscn" id="5_health"]
+[ext_resource type="Script" path="res://scripts/world/respawn_controller.gd" id="6_respawn"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_actor"]
+radius = 8.0
+height = 20.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wall_h"]
+size = Vector2(208, 8)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wall_v"]
+size = Vector2(8, 40)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_door"]
+size = Vector2(8, 48)
+
+[node name="EncounterRoomDemo" type="Node2D"]
+script = ExtResource("1_demo")
+
+[node name="Background" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(0, 0, 640, 0, 640, 360, 0, 360)
+color = Color(0.1, 0.11, 0.14, 1)
+
+[node name="RoomFloor" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(224, 116, 416, 116, 416, 244, 224, 244)
+color = Color(0.16, 0.17, 0.21, 1)
+
+[node name="WallNorth" type="StaticBody2D" parent="."]
+position = Vector2(320, 116)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallNorth"]
+shape = SubResource("RectangleShape2D_wall_h")
+
+[node name="Visual" type="Polygon2D" parent="WallNorth"]
+polygon = PackedVector2Array(-104, -4, 104, -4, 104, 4, -104, 4)
+color = Color(0.33, 0.35, 0.42, 1)
+
+[node name="WallSouth" type="StaticBody2D" parent="."]
+position = Vector2(320, 244)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallSouth"]
+shape = SubResource("RectangleShape2D_wall_h")
+
+[node name="Visual" type="Polygon2D" parent="WallSouth"]
+polygon = PackedVector2Array(-104, -4, 104, -4, 104, 4, -104, 4)
+color = Color(0.33, 0.35, 0.42, 1)
+
+[node name="WallWestTop" type="StaticBody2D" parent="."]
+position = Vector2(224, 136)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallWestTop"]
+shape = SubResource("RectangleShape2D_wall_v")
+
+[node name="Visual" type="Polygon2D" parent="WallWestTop"]
+polygon = PackedVector2Array(-4, -20, 4, -20, 4, 20, -4, 20)
+color = Color(0.33, 0.35, 0.42, 1)
+
+[node name="WallWestBottom" type="StaticBody2D" parent="."]
+position = Vector2(224, 224)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallWestBottom"]
+shape = SubResource("RectangleShape2D_wall_v")
+
+[node name="Visual" type="Polygon2D" parent="WallWestBottom"]
+polygon = PackedVector2Array(-4, -20, 4, -20, 4, 20, -4, 20)
+color = Color(0.33, 0.35, 0.42, 1)
+
+[node name="WallEastTop" type="StaticBody2D" parent="."]
+position = Vector2(416, 136)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallEastTop"]
+shape = SubResource("RectangleShape2D_wall_v")
+
+[node name="Visual" type="Polygon2D" parent="WallEastTop"]
+polygon = PackedVector2Array(-4, -20, 4, -20, 4, 20, -4, 20)
+color = Color(0.33, 0.35, 0.42, 1)
+
+[node name="WallEastBottom" type="StaticBody2D" parent="."]
+position = Vector2(416, 224)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WallEastBottom"]
+shape = SubResource("RectangleShape2D_wall_v")
+
+[node name="Visual" type="Polygon2D" parent="WallEastBottom"]
+polygon = PackedVector2Array(-4, -20, 4, -20, 4, 20, -4, 20)
+color = Color(0.33, 0.35, 0.42, 1)
+
+[node name="DoorWest" type="StaticBody2D" parent="."]
+position = Vector2(224, 180)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorWest"]
+shape = SubResource("RectangleShape2D_door")
+
+[node name="Visual" type="Polygon2D" parent="DoorWest"]
+polygon = PackedVector2Array(-4, -24, 4, -24, 4, 24, -4, 24)
+color = Color(0.78, 0.3, 0.32, 1)
+
+[node name="DoorEast" type="StaticBody2D" parent="."]
+position = Vector2(416, 180)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DoorEast"]
+shape = SubResource("RectangleShape2D_door")
+
+[node name="Visual" type="Polygon2D" parent="DoorEast"]
+polygon = PackedVector2Array(-4, -24, 4, -24, 4, 24, -4, 24)
+color = Color(0.78, 0.3, 0.32, 1)
+
+[node name="EnemyContainer" type="Node2D" parent="."]
+
+[node name="ChaserA" parent="EnemyContainer" instance=ExtResource("3_chaser")]
+position = Vector2(280, 148)
+
+[node name="ChaserB" parent="EnemyContainer" instance=ExtResource("3_chaser")]
+position = Vector2(360, 214)
+
+[node name="EncounterRoom" parent="." instance=ExtResource("2_room")]
+unique_name_in_owner = true
+position = Vector2(320, 180)
+enemies_root_path = NodePath("../EnemyContainer")
+exit_paths = Array[NodePath]([NodePath("../DoorWest"), NodePath("../DoorEast")])
+
+[node name="Actor" type="CharacterBody2D" parent="." groups=["player"]]
+unique_name_in_owner = true
+position = Vector2(120, 180)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Actor"]
+shape = SubResource("CapsuleShape2D_actor")
+
+[node name="BodyVisual" type="Polygon2D" parent="Actor"]
+polygon = PackedVector2Array(-8, -10, 8, -10, 8, 10, -8, 10)
+color = Color(0.12, 0.82, 0.76, 1)
+
+[node name="ActorHurtbox" parent="Actor" instance=ExtResource("4_hurtbox")]
+unique_name_in_owner = true
+
+[node name="ActorHealth" parent="Actor" instance=ExtResource("5_health")]
+unique_name_in_owner = true
+max_health = 5
+
+[node name="HpLabel" type="Label" parent="Actor"]
+unique_name_in_owner = true
+offset_left = -20.0
+offset_top = -30.0
+offset_right = 20.0
+offset_bottom = -16.0
+theme_override_font_sizes/font_size = 8
+horizontal_alignment = 1
+text = "HP 5/5"
+
+[node name="RespawnController" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("6_respawn")
+player_path = NodePath("../Actor")
+health_component_path = NodePath("../Actor/ActorHealth")
+save_on_checkpoint = false
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="InfoLabel" type="Label" parent="UI"]
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 560.0
+offset_bottom = 24.0
+theme_override_font_sizes/font_size = 8
+text = "WASD move · E strike a nearby chaser · walk through the west doorway to start the fight"
+
+[node name="StatusLabel" type="Label" parent="UI"]
+unique_name_in_owner = true
+offset_left = 8.0
+offset_top = 26.0
+offset_right = 560.0
+offset_bottom = 42.0
+theme_override_font_sizes/font_size = 8
+text = "The room ahead is dormant — its chasers ignore you until you step inside."

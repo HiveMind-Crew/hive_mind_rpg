@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/encounter_room.gd" id="1_encounter"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_room"]
+size = Vector2(192, 128)
+
+[node name="EncounterRoom" type="Area2D"]
+monitorable = false
+script = ExtResource("1_encounter")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_room")
+
+[node name="Enemies" type="Node2D" parent="."]
