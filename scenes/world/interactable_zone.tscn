@@ -1,0 +1,24 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/interactable_zone.gd" id="1_zone"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_zone"]
+size = Vector2(36, 36)
+
+[node name="InteractableZone" type="Area2D"]
+monitorable = false
+script = ExtResource("1_zone")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_zone")
+
+[node name="PromptLabel" type="Label" parent="."]
+unique_name_in_owner = true
+visible = false
+offset_left = -60.0
+offset_top = -42.0
+offset_right = 60.0
+offset_bottom = -29.0
+theme_override_font_sizes/font_size = 8
+horizontal_alignment = 1
+text = "[E] Interact"
