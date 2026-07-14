@@ -128,6 +128,7 @@ A task is done when:
 - [ ] New logic-heavy code has GUT tests in `tests/` (pure logic: required; node-heavy code: best effort)
 - [ ] Static typing passes (no untyped new code)
 - [ ] DESIGN.md / AGENTS.md updated if behavior or conventions changed
+- [ ] New `.gd` scripts and imported assets are committed with their `.uid` / `.import` sidecars (section 12)
 
 ## 9. Autoload Registry
 
@@ -160,3 +161,22 @@ Update as people/agents claim domains. "Owner" = first reviewer for that area, n
 - Commit binary asset changes without noting the source/license in the PR
 - Introduce paid plugins or assets without team sign-off
 - Change engine version without a dedicated Issue + team agreement
+
+## 12. Godot Metadata Policy (`.uid` / `.import`)
+
+All Godot-generated per-file metadata is versioned; only the editor cache is ignored (issue #81):
+
+- **Track** every `*.uid` sidecar (e.g. `player_controller.gd.uid`). Stable UIDs keep scene/resource references working across clones and renames.
+- **Track** every `*.import` file next to imported assets (PNG, SVG, TTF, WAV, …). They pin import settings so all contributors get identical resources.
+- **Ignore** only editor/user caches — `.godot/` (already in `.gitignore`). Never commit anything from `.godot/`.
+
+When you add a `.gd` script or an importable asset, let Godot generate its sidecar and commit both files in the same PR. When you delete or rename a file, move/delete its sidecar with it.
+
+**Verification** (also the acceptance check for metadata PRs) — run a headless import with the supported Godot 4.7 binary and confirm the worktree stays clean:
+
+```sh
+godot --headless --path . --import
+git status --porcelain   # must print nothing
+```
+
+`tests/test_godot_metadata_policy.gd` enforces the static half of this policy (missing `.gd.uid` sidecars, missing `.import` files, orphaned sidecars, duplicate UIDs) as part of the normal GUT suite.
