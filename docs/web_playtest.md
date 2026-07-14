@@ -97,10 +97,12 @@ python3 tools/serve_web_auth.py --host 127.0.0.1 --port 9125
 ```
 
 Put this server behind a dedicated **named** Cloudflare Tunnel hostname. Do not
-use a public quick tunnel. The password must be at least 20 characters, must
-not be committed or logged, and must be rotated or the server stopped when the
-round ends. This is appropriate only for a small, trusted group; use
-Cloudflare Access for recurring or wider testing.
+use a public quick tunnel. The default requires a password of at least 20
+characters. A password between 8 and 19 characters is only accepted with the
+explicit runtime opt-in `WEB_PLAYTEST_ALLOW_WEAK_PASSWORD=yes`; use that only
+for a short, trusted-group test and rotate or stop the server when the round
+ends. No password belongs in source control. Use Cloudflare Access for
+recurring or broader testing.
 
 - **Launch**: build, then run `tools/deploy_web.sh`. It fails closed unless
   you set `WEB_PLAYTEST_DEPLOY_CMD` (the upload command for your gated

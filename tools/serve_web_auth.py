@@ -25,6 +25,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 BUNDLE_DIR = REPO_ROOT / ".playtest-build" / "web"
 PASSWORD_FILE_ENV = "WEB_PLAYTEST_PASSWORD_FILE"
 USERNAME_ENV = "WEB_PLAYTEST_USERNAME"
+ALLOW_WEAK_PASSWORD_ENV = "WEB_PLAYTEST_ALLOW_WEAK_PASSWORD"
 
 
 def _load_credentials() -> tuple[str, str]:
@@ -45,8 +46,13 @@ def _load_credentials() -> tuple[str, str]:
         raise ValueError(f"password file must be owner-only (0600): {password_file}")
 
     password = password_file.read_text(encoding="utf-8").strip()
-    if len(password) < 20:
-        raise ValueError("password must contain at least 20 characters")
+    if len(password) < 8:
+        raise ValueError("password must contain at least 8 characters")
+    if len(password) < 20 and os.environ.get(ALLOW_WEAK_PASSWORD_ENV) != "yes":
+        raise ValueError(
+            "passwords shorter than 20 characters require "
+            "WEB_PLAYTEST_ALLOW_WEAK_PASSWORD=yes"
+        )
     return username, password
 
 
