@@ -43,6 +43,24 @@ func _press_pause() -> void:
 	await wait_process_frames(2)
 
 
+## Physical controller path (issue #80): a real Start-button event, not a
+## synthetic "pause" action, must reach the menu through the input map.
+func _press_joypad_start() -> void:
+	_input_sender.send_event(_joypad_start_event(true))
+	Input.flush_buffered_events()
+	await wait_process_frames(2)
+	_input_sender.send_event(_joypad_start_event(false))
+	Input.flush_buffered_events()
+	await wait_process_frames(2)
+
+
+func _joypad_start_event(pressed: bool) -> InputEventJoypadButton:
+	var event: InputEventJoypadButton = InputEventJoypadButton.new()
+	event.button_index = JOY_BUTTON_START
+	event.pressed = pressed
+	return event
+
+
 func test_starts_hidden_without_touching_time_scale() -> void:
 	assert_false(_menu.visible)
 	assert_false(_menu.is_open())
@@ -61,6 +79,20 @@ func test_pause_action_opens_the_menu_and_stops_time() -> void:
 	assert_eq(Engine.time_scale, 0.0)
 	assert_eq(TimeScaleManager.get_modifier_count(), 1)
 	assert_signal_emitted(_menu, "menu_opened")
+
+
+func test_physical_start_button_toggles_the_menu() -> void:
+	await _press_joypad_start()
+
+	assert_true(_menu.is_open())
+	assert_true(get_tree().paused)
+	assert_eq(Engine.time_scale, 0.0)
+
+	await _press_joypad_start()
+
+	assert_false(_menu.is_open())
+	assert_false(get_tree().paused)
+	assert_eq(Engine.time_scale, 1.0)
 
 
 func test_pause_action_toggles_closed_and_restores_time() -> void:
