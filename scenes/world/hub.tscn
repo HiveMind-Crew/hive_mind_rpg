@@ -1,0 +1,72 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/hub.gd" id="1_hub"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2_player"]
+[ext_resource type="PackedScene" path="res://scenes/world/checkpoint.tscn" id="3_checkpoint"]
+[ext_resource type="PackedScene" path="res://scenes/world/interactable_zone.tscn" id="4_zone"]
+[ext_resource type="Script" path="res://scripts/world/respawn_controller.gd" id="5_respawn"]
+[ext_resource type="Script" path="res://scripts/world/camera_limits.gd" id="6_camera_limits"]
+
+[node name="Hub" type="Node2D"]
+script = ExtResource("1_hub")
+
+[node name="FloorWalls" type="TileMapLayer" parent="."]
+unique_name_in_owner = true
+texture_filter = 1
+
+[node name="PlayerSpawn" type="Marker2D" parent="."]
+unique_name_in_owner = true
+position = Vector2(320, 272)
+
+[node name="StationVisual" type="Polygon2D" parent="."]
+position = Vector2(128, 176)
+polygon = PackedVector2Array(-14, -18, 14, -18, 14, 14, -14, 14)
+color = Color(0.36, 0.6, 0.44, 1)
+
+[node name="StationZone" parent="." instance=ExtResource("4_zone")]
+unique_name_in_owner = true
+position = Vector2(128, 176)
+prompt_text = "[E] Skill Tree"
+
+[node name="GateVisual" type="Polygon2D" parent="."]
+position = Vector2(612, 176)
+polygon = PackedVector2Array(-8, -36, 8, -36, 8, 36, -8, 36)
+color = Color(0.55, 0.45, 0.65, 1)
+
+[node name="GateZone" parent="." instance=ExtResource("4_zone")]
+unique_name_in_owner = true
+position = Vector2(592, 176)
+prompt_text = "[E] Enter Zone 1"
+
+[node name="Checkpoint" parent="." instance=ExtResource("3_checkpoint")]
+unique_name_in_owner = true
+position = Vector2(320, 112)
+
+[node name="Player" parent="." groups=["player"] instance=ExtResource("2_player")]
+unique_name_in_owner = true
+position = Vector2(320, 272)
+
+[node name="RespawnController" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("5_respawn")
+player_path = NodePath("../Player")
+health_component_path = NodePath("../Player/HealthComponent")
+
+[node name="CameraLimits" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("6_camera_limits")
+camera_path = NodePath("../Player/Camera2D")
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="InstructionsLabel" type="Label" parent="UI"]
+offset_left = 8.0
+offset_top = 344.0
+offset_right = 632.0
+offset_bottom = 358.0
+theme_override_font_sizes/font_size = 8
+text = "Move: WASD · Interact: E — shrine saves the run, station opens the skill tree, gate enters Zone 1"
+
+[node name="ScreenLayer" type="CanvasLayer" parent="."]
+unique_name_in_owner = true
+layer = 2
