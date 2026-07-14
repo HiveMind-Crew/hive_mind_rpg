@@ -4,8 +4,16 @@
 # Godot C# generated files (kept ignored if C# is introduced later)
 .mono/
 
+# Local browser-playtest export output. Keep it hidden so the Godot metadata
+# policy's res:// scan does not mistake generated web icons for source assets.
+.playtest-build/
+
 # Local export credentials
 export_credentials.cfg
+
+# Export build output (regenerate with tools/build_web.sh)
+build/
+dist/
 
 # macOS metadata
 .DS_Store

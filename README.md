@@ -14,6 +14,12 @@ Keep local editor, headless test, and CI versions aligned with 4.7 stable.
 - Melee attack: J or gamepad west button
 - Relic energy bolt: K or gamepad north button
 
+## Web playtest builds
+
+`tools/build_web.sh` produces a private browser playtest build from the
+committed Web export preset; see [docs/web_playtest.md](docs/web_playtest.md)
+for the build, smoke-check, and private deploy/launch/revoke procedure.
+
 ## Running tests
 
 The test suite uses [GUT 9.7.1](https://github.com/bitwes/Gut/releases/tag/v9.7.1),
