@@ -101,6 +101,30 @@ func test_bark_hides_after_its_duration_and_prompt_returns() -> void:
 	)
 
 
+func test_physical_joypad_east_button_interacts() -> void:
+	# Physical controller path (issue #80): a real B-button event, not a
+	# synthetic "interact" action, must reach the NPC through the input map.
+	var npc: FlavorNpc = _spawn_npc(_make_bark_set())
+	npc.body_entered.emit(_player_body())
+	var input_sender: GutInputSender = GutInputSender.new(Input)
+	var press: InputEventJoypadButton = InputEventJoypadButton.new()
+	press.button_index = JOY_BUTTON_B
+	press.pressed = true
+	input_sender.send_event(press)
+	Input.flush_buffered_events()
+
+	await wait_process_frames(2)
+
+	assert_true(npc.is_barking())
+	assert_eq(npc.get_current_bark(), "First line.")
+
+	var release: InputEventJoypadButton = press.duplicate() as InputEventJoypadButton
+	release.pressed = false
+	input_sender.send_event(release)
+	Input.flush_buffered_events()
+	input_sender.clear()
+
+
 func test_npc_without_a_bark_set_warns_and_stays_silent() -> void:
 	var npc: FlavorNpc = _spawn_npc(null)
 	watch_signals(npc)
