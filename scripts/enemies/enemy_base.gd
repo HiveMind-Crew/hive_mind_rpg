@@ -26,8 +26,8 @@ const DEAD_COLOR: Color = Color(0.22, 0.22, 0.26, 1.0)
 @onready var health: HealthComponent = %HealthComponent
 @onready var hurtbox: Hurtbox = %Hurtbox
 @onready var attack_hitbox: Hitbox = %AttackHitbox
-@onready var _body_visual: Polygon2D = %BodyVisual
-@onready var _tell_visual: Polygon2D = %TellVisual
+@onready var _body_visual: CanvasItem = %BodyVisual
+@onready var _tell_visual: CanvasItem = get_node_or_null("%TellVisual") as CanvasItem
 
 var state: State = State.IDLE
 var target: Node2D
@@ -181,15 +181,54 @@ func _on_died() -> void:
 
 
 func _apply_state_visuals() -> void:
-	_tell_visual.visible = state == State.WIND_UP
+	if _tell_visual != null:
+		_tell_visual.visible = state == State.WIND_UP
 	match state:
 		State.WIND_UP:
-			_body_visual.color = WIND_UP_COLOR
+			_set_body_visual(WIND_UP_COLOR, &"windup")
 		State.ATTACK:
-			_body_visual.color = ATTACK_COLOR
+			_set_body_visual(ATTACK_COLOR, &"attack_melee")
 		State.STAGGER:
-			_body_visual.color = STAGGER_COLOR
+			_set_body_visual(STAGGER_COLOR, &"hurt")
 		State.DEAD:
-			_body_visual.color = DEAD_COLOR
+			_set_body_visual(DEAD_COLOR, &"death")
+		State.CHASE:
+			_set_body_visual(IDLE_COLOR, _get_directional_animation(&"walk"))
 		_:
-			_body_visual.color = IDLE_COLOR
+			_set_body_visual(IDLE_COLOR, _get_directional_animation(&"idle"))
+
+
+func _get_directional_animation(prefix: StringName) -> StringName:
+	var direction: Vector2 = _get_visual_facing_direction()
+	if absf(direction.x) > absf(direction.y):
+		return StringName("%s_side" % prefix)
+	if direction.y < 0.0:
+		return StringName("%s_up" % prefix)
+	return StringName("%s_down" % prefix)
+
+
+func _get_visual_facing_direction() -> Vector2:
+	if target == null:
+		return Vector2.DOWN
+	var direction: Vector2 = target.global_position - global_position
+	if direction.is_zero_approx():
+		return Vector2.DOWN
+	return direction.normalized()
+
+
+## Polygon graybox enemies retain their authored `color`; animated production
+## visuals use `modulate` and select their matching authored state clip.
+func _set_body_visual(tint: Color, animation_name: StringName) -> void:
+	var polygon_visual: Polygon2D = _body_visual as Polygon2D
+	if polygon_visual != null:
+		polygon_visual.color = tint
+		return
+	var animated_visual: AnimatedSprite2D = _body_visual as AnimatedSprite2D
+	if animated_visual != null:
+		# Animated production frames carry their own state colors; tinting them
+		# again would muddy the canonical violet, yellow, and attack-red ramps.
+		animated_visual.modulate = Color.WHITE
+		if animation_name.ends_with("_side"):
+			animated_visual.flip_h = _get_visual_facing_direction().x < 0.0
+		if animated_visual.sprite_frames.has_animation(animation_name):
+			animated_visual.play(animation_name)

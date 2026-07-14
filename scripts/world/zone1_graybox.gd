@@ -21,12 +21,14 @@ extends Node2D
 
 signal boss_door_opened()
 
-# Self-made 2-tile placeholder atlas (CC0) — see assets/sprites/testing/README.md.
-const TILES_TEXTURE: Texture2D = preload("res://assets/sprites/testing/graybox_tiles.png")
+# Hand-authored corrupted-forest production atlas — provenance in
+# assets/sprites/LICENSES.md. The test-only graybox atlas remains isolated
+# under assets/sprites/testing/.
+const TILES_TEXTURE: Texture2D = preload("res://assets/sprites/world/zone1_forest_tiles.png")
 const TILE_SOURCE_ID: int = 0
 const TILE_SIZE: Vector2i = Vector2i(16, 16)
 const FLOOR_TILE_ATLAS_COORDS: Vector2i = Vector2i(0, 0)
-const WALL_TILE_ATLAS_COORDS: Vector2i = Vector2i(1, 0)
+const WALL_TILE_ATLAS_COORDS: Vector2i = Vector2i(0, 1)
 
 # 108 x 30 tiles = 1728 x 480 px; the camera follows the player through it.
 const ZONE_SIZE_TILES: Vector2i = Vector2i(108, 30)

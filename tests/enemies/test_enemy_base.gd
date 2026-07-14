@@ -36,7 +36,8 @@ func test_close_target_triggers_readable_wind_up_before_attack() -> void:
 	_enemy._physics_process(0.0)
 
 	assert_eq(_enemy.state, EnemyBase.State.WIND_UP)
-	assert_true(_enemy._tell_visual.visible)
+	var visual: AnimatedSprite2D = _enemy.get_node("BodyVisual") as AnimatedSprite2D
+	assert_eq(visual.animation, &"windup", "The authored windup frame is the tell.")
 	assert_false(_enemy.attack_hitbox.monitoring)
 
 	_enemy._physics_process(_enemy.stats.wind_up_duration)
