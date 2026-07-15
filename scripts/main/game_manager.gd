@@ -25,7 +25,36 @@ var _is_transitioning: bool = false
 
 func _ready() -> void:
 	_pause_menu.return_to_hub_requested.connect(_on_return_to_hub_requested)
+	# SaveManager (an autoload) has already loaded any prior run by the time the
+	# first scene readies, so a recorded checkpoint means Continue and its
+	# absence means a fresh boot into the hub (issue #63). Skill points, unlocks,
+	# and collected secrets were restored during that load and are consumed by
+	# each world's own _ready — the manager only chooses which world opens.
+	if SaveManager.has_checkpoint():
+		continue_game()
+	else:
+		_enter_world(HUB_SCENE)
+
+
+## New Game: wipes the prior run — progression, checkpoint, collected secrets,
+## and milestone rewards — then opens the hub at its authored spawn. A title
+## menu (future) calls this; a no-save boot skips it and simply opens the hub.
+func start_new_game() -> void:
+	SaveManager.clear_save()
 	_enter_world(HUB_SCENE)
+
+
+## Continue: reopens the saved world at the saved checkpoint. An empty, missing,
+## or non-world saved path falls back to the hub so a corrupt or stale save can
+## never strand startup (issue #63). Progression was already restored by the
+## SaveManager load that ran before startup.
+func continue_game() -> void:
+	var world_scene: PackedScene = _saved_world_scene()
+	if world_scene == null:
+		_enter_world(HUB_SCENE)
+		return
+	_enter_world(world_scene)
+	_place_player_at_checkpoint()
 
 
 func get_current_world() -> Node2D:
@@ -70,7 +99,19 @@ func _enter_world(world_scene: PackedScene) -> void:
 		# never see the outgoing world's nodes.
 		_current_world.free()
 		_current_world = null
-	var world: Node2D = world_scene.instantiate() as Node2D
+	var instance: Node = world_scene.instantiate()
+	var world: Node2D = instance as Node2D
+	if world == null:
+		# A stale save that points at a non-world scene (e.g. Main itself) would
+		# otherwise recurse or crash; drop it and open the hub instead.
+		push_warning(
+			"GameManager ignored non-world scene '%s'; opening the hub."
+			% world_scene.resource_path
+		)
+		instance.free()
+		if world_scene != HUB_SCENE:
+			_enter_world(HUB_SCENE)
+		return
 	_world_root.add_child(world)
 	_current_world = world
 	var hub: Hub = world as Hub
@@ -83,6 +124,36 @@ func _enter_world(world_scene: PackedScene) -> void:
 		if world.has_signal(&"hub_return_requested"):
 			world.connect(&"hub_return_requested", _on_return_to_hub_requested)
 	_is_transitioning = false
+
+
+func _saved_world_scene() -> PackedScene:
+	var scene_path: String = SaveManager.checkpoint_scene_path
+	if scene_path.is_empty():
+		return null
+	if not ResourceLoader.exists(scene_path, "PackedScene"):
+		push_warning(
+			"GameManager could not find saved scene '%s'; opening the hub." % scene_path
+		)
+		return null
+	var world_scene: PackedScene = load(scene_path) as PackedScene
+	if world_scene == null:
+		push_warning(
+			"GameManager could not load saved scene '%s'; opening the hub." % scene_path
+		)
+	return world_scene
+
+
+func _place_player_at_checkpoint() -> void:
+	# Continue drops the player on the saved checkpoint, not the world's default
+	# spawn/entrance that _enter_world just used.
+	var player: PlayerController = get_player()
+	if player == null:
+		return
+	player.global_position = SaveManager.checkpoint_position
+	var camera_limits: CameraLimits = _current_world.get_node_or_null("%CameraLimits") as CameraLimits
+	if camera_limits != null:
+		# The teleport must not smooth-pan the camera across the whole world.
+		camera_limits.snap_to_target()
 
 
 func _move_player_to_zone_entrance(world: Node2D) -> void:

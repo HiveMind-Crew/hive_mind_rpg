@@ -69,11 +69,21 @@ func _on_checkpoint_reached(respawn_position: Vector2) -> void:
 	if not _health.is_dead:
 		_health.restore_full_health()
 	if save_on_checkpoint:
-		var scene_path: String = ""
-		var current_scene: Node = get_tree().current_scene
-		if current_scene != null:
-			scene_path = current_scene.scene_file_path
-		SaveManager.record_checkpoint(scene_path, respawn_position)
+		SaveManager.record_checkpoint(_world_scene_path(), respawn_position)
+
+
+func _world_scene_path() -> String:
+	# The scene to reload for this checkpoint is the world this controller lives
+	# in — its own scene root — not get_tree().current_scene, which becomes the
+	# composition root (Main) once GameManager hosts the world (issue #63).
+	# owner is that world root in both standalone F6 runs and the composed tree.
+	var scene_root: Node = owner if owner != null else self
+	if not scene_root.scene_file_path.is_empty():
+		return scene_root.scene_file_path
+	# Hand-built trees (tests) have no packed scene root; fall back to the
+	# active scene so the recorded path stays a best effort rather than empty.
+	var current_scene: Node = get_tree().current_scene
+	return current_scene.scene_file_path if current_scene != null else ""
 
 
 func _on_player_died() -> void:
