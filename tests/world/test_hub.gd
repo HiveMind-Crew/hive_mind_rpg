@@ -83,7 +83,7 @@ func test_hub_props_sit_on_floor_inside_the_single_screen() -> void:
 
 	var props: Array[Node2D] = [
 		hub.get_node("Checkpoint") as Node2D,
-		hub.get_node("StationZone") as Node2D,
+		hub.get_node("SkillTreeStation") as Node2D,
 		hub.get_node("GateZone") as Node2D,
 	]
 	for prop: Node2D in props:
@@ -118,7 +118,7 @@ func test_shrine_setup_lights_heals_and_persists_on_player_touch() -> void:
 func test_station_interact_opens_the_skill_tree_and_locks_player_input() -> void:
 	var hub: Hub = _add_hub()
 	var player: PlayerController = hub.get_node("Player") as PlayerController
-	var station: InteractableZone = hub.get_node("StationZone") as InteractableZone
+	var station: InteractableZone = hub.get_node("SkillTreeStation/InteractionZone") as InteractableZone
 
 	assert_false(hub.is_skill_tree_open())
 
@@ -134,7 +134,7 @@ func test_station_interact_opens_the_skill_tree_and_locks_player_input() -> void
 func test_station_interact_again_closes_the_screen_and_restores_input() -> void:
 	var hub: Hub = _add_hub()
 	var player: PlayerController = hub.get_node("Player") as PlayerController
-	var station: InteractableZone = hub.get_node("StationZone") as InteractableZone
+	var station: InteractableZone = hub.get_node("SkillTreeStation/InteractionZone") as InteractableZone
 
 	station.interact()
 	station.interact()
@@ -151,7 +151,7 @@ func test_station_interact_again_closes_the_screen_and_restores_input() -> void:
 func test_keyboard_interact_at_the_station_drives_the_full_toggle() -> void:
 	var hub: Hub = _add_hub()
 	var player: PlayerController = hub.get_node("Player") as PlayerController
-	var station: InteractableZone = hub.get_node("StationZone") as InteractableZone
+	var station: InteractableZone = hub.get_node("SkillTreeStation/InteractionZone") as InteractableZone
 	station.body_entered.emit(player)
 	var input_sender: GutInputSender = GutInputSender.new(Input)
 
@@ -186,7 +186,7 @@ func test_gate_interact_emits_a_typed_zone_entry_request() -> void:
 func test_gate_stays_inert_while_the_skill_tree_screen_is_open() -> void:
 	var hub: Hub = _add_hub()
 	watch_signals(hub)
-	var station: InteractableZone = hub.get_node("StationZone") as InteractableZone
+	var station: InteractableZone = hub.get_node("SkillTreeStation/InteractionZone") as InteractableZone
 	var gate: InteractableZone = hub.get_node("GateZone") as InteractableZone
 
 	station.interact()

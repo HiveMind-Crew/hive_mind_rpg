@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/world/skill_tree_station.gd" id="1_station"]
+[ext_resource type="PackedScene" path="res://scenes/world/interactable_zone.tscn" id="2_zone"]
+
+[node name="SkillTreeStation" type="Node2D"]
+script = ExtResource("1_station")
+
+[node name="StationVisual" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-14, -18, 14, -18, 14, 14, -14, 14)
+color = Color(0.36, 0.6, 0.44, 1)
+
+[node name="InteractionZone" parent="." instance=ExtResource("2_zone")]
+unique_name_in_owner = true
+prompt_text = "[E] Skill Tree"

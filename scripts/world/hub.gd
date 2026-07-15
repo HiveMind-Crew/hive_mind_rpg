@@ -6,10 +6,10 @@ extends Node2D
 ## _ready() from the named constants below so the layout stays diffable
 ## instead of living as opaque packed tile data.
 ##
-## The hub owns all interaction wiring: the station and gate are plain
-## InteractableZone instances whose interacted signals route here.
-## - Station: toggles the existing skill-tree screen (#16) and suspends player
-##   gameplay input while it is open. Station-specific presentation is #67.
+## Interaction wiring:
+## - Station: a self-contained SkillTreeStation prop (#67) that owns the
+##   skill-tree screen lifecycle and the player input lock; the hub only asks
+##   it is_screen_open() to keep the gate inert behind the menu.
 ## - Gate: emits zone_entry_requested for the scene owner (#68) to consume.
 ##   The hub itself only changes scene on the debug F6 path, where no owner
 ##   exists to listen.
@@ -18,7 +18,6 @@ extends Node2D
 
 signal zone_entry_requested(zone_scene_path: String)
 
-const SKILL_TREE_SCREEN_SCENE: PackedScene = preload("res://scenes/ui/skill_tree_screen.tscn")
 ## Where the gate leads: Zone 1's graybox (#21) is the slice's only zone; its
 ## ZoneEntrance marker is the documented drop-off for this gate.
 const GATE_TARGET_ZONE_PATH: String = "res://scenes/world/zone1_graybox.tscn"
@@ -36,12 +35,9 @@ const HUB_SIZE_TILES: Vector2i = Vector2i(40, 23)
 @onready var _floor_walls: TileMapLayer = %FloorWalls
 @onready var _player_spawn: Marker2D = %PlayerSpawn
 @onready var _player: PlayerController = %Player
-@onready var _station_zone: InteractableZone = %StationZone
+@onready var _station: SkillTreeStation = %SkillTreeStation
 @onready var _gate_zone: InteractableZone = %GateZone
-@onready var _screen_layer: CanvasLayer = %ScreenLayer
 @onready var _camera_limits: CameraLimits = %CameraLimits
-
-var _skill_tree_screen: SkillTreeScreen
 
 
 func _ready() -> void:
@@ -49,7 +45,6 @@ func _ready() -> void:
 	_paint_hub()
 	_player.position = _player_spawn.position
 	_camera_limits.apply_bounds(get_hub_bounds())
-	_station_zone.interacted.connect(_on_station_zone_interacted)
 	_gate_zone.interacted.connect(_on_gate_zone_interacted)
 
 
@@ -66,32 +61,7 @@ func is_wall_cell(coords: Vector2i) -> bool:
 
 
 func is_skill_tree_open() -> bool:
-	return _skill_tree_screen != null
-
-
-func open_skill_tree_screen() -> void:
-	if is_skill_tree_open():
-		return
-	# Suspend gameplay input first so the opening press can never double as an
-	# attack or dash behind the menu.
-	_player.set_control_enabled(false)
-	_skill_tree_screen = SKILL_TREE_SCREEN_SCENE.instantiate() as SkillTreeScreen
-	_screen_layer.add_child(_skill_tree_screen)
-
-
-func close_skill_tree_screen() -> void:
-	if not is_skill_tree_open():
-		return
-	_skill_tree_screen.queue_free()
-	_skill_tree_screen = null
-	_player.set_control_enabled(true)
-
-
-func _on_station_zone_interacted() -> void:
-	if is_skill_tree_open():
-		close_skill_tree_screen()
-	else:
-		open_skill_tree_screen()
+	return _station.is_screen_open()
 
 
 func _on_gate_zone_interacted() -> void:
