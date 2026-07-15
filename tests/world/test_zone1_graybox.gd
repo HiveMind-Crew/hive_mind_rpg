@@ -189,6 +189,25 @@ func test_zone_enemies_stand_on_floor_and_target_the_player() -> void:
 	assert_true(has_flanker, "Zone 1 includes a fast flanker encounter.")
 
 
+func test_zone_props_are_authored_non_colliding_set_dressing() -> void:
+	var zone: Zone1Graybox = _add_zone()
+	var props: Array[Sprite2D] = zone.get_zone_props()
+	var player: PlayerController = zone.get_node("Player") as PlayerController
+
+	assert_gte(props.size(), 7, "Every encounter room and the boss approach need set dressing.")
+	for prop: Sprite2D in props:
+		assert_eq(prop.texture.resource_path, "res://assets/sprites/world/zone1_props.png")
+		assert_true(prop.region_enabled)
+		assert_eq(prop.texture_filter, CanvasItem.TEXTURE_FILTER_NEAREST)
+		assert_false(zone.is_wall_cell(_cell_of(zone, prop.global_position)))
+		assert_gte(prop.global_position.distance_to(player.global_position), 48.0)
+		for enemy: EnemyBase in zone.get_zone_enemies():
+			assert_gte(
+				prop.global_position.distance_to(enemy.global_position), 48.0,
+				"%s must not obscure an enemy spawn." % prop.name
+			)
+
+
 func test_boss_door_starts_sealed_and_opens_on_request() -> void:
 	var zone: Zone1Graybox = _add_zone()
 	watch_signals(zone)

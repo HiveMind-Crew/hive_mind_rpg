@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3]
+[gd_scene load_steps=18 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/zone1_graybox.gd" id="1_zone"]
 [ext_resource type="PackedScene" path="res://scenes/world/interactable_zone.tscn" id="10_exit_zone"]
@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" path="res://scenes/enemies/ranged_harasser.tscn" id="11_harasser"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/shielded_brute.tscn" id="12_brute"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/fast_flanker.tscn" id="13_flanker"]
+[ext_resource type="Texture2D" path="res://assets/sprites/world/zone1_props.png" id="14_props"]
 [ext_resource type="Script" path="res://scripts/world/respawn_controller.gd" id="5_respawn"]
 [ext_resource type="PackedScene" path="res://scenes/world/skill_point_pickup.tscn" id="6_pickup"]
 [ext_resource type="Script" path="res://scripts/world/hidden_room_reveal.gd" id="7_reveal"]
@@ -29,6 +30,57 @@ script = ExtResource("1_zone")
 [node name="FloorWalls" type="TileMapLayer" parent="."]
 unique_name_in_owner = true
 texture_filter = 1
+
+[node name="Props" type="Node2D" parent="."]
+
+[node name="TreeRoomA" type="Sprite2D" parent="Props" groups=["zone1_props"]]
+position = Vector2(296, 144)
+texture_filter = 1
+texture = ExtResource("14_props")
+region_enabled = true
+region_rect = Rect2(0, 0, 32, 48)
+
+[node name="RootRuinRoomA" type="Sprite2D" parent="Props" groups=["zone1_props"]]
+position = Vector2(496, 320)
+texture_filter = 1
+texture = ExtResource("14_props")
+region_enabled = true
+region_rect = Rect2(64, 0, 32, 32)
+
+[node name="TreeRoomB" type="Sprite2D" parent="Props" groups=["zone1_props"]]
+position = Vector2(640, 336)
+texture_filter = 1
+texture = ExtResource("14_props")
+region_enabled = true
+region_rect = Rect2(32, 0, 32, 48)
+
+[node name="RelicMachineRoomB" type="Sprite2D" parent="Props" groups=["zone1_props"]]
+position = Vector2(880, 112)
+texture_filter = 1
+texture = ExtResource("14_props")
+region_enabled = true
+region_rect = Rect2(96, 0, 32, 32)
+
+[node name="TreeRoomC" type="Sprite2D" parent="Props" groups=["zone1_props"]]
+position = Vector2(1024, 320)
+texture_filter = 1
+texture = ExtResource("14_props")
+region_enabled = true
+region_rect = Rect2(0, 0, 32, 48)
+
+[node name="RelicMachineRoomC" type="Sprite2D" parent="Props" groups=["zone1_props"]]
+position = Vector2(1232, 144)
+texture_filter = 1
+texture = ExtResource("14_props")
+region_enabled = true
+region_rect = Rect2(96, 0, 32, 32)
+
+[node name="RootRuinBossApproach" type="Sprite2D" parent="Props" groups=["zone1_props"]]
+position = Vector2(1280, 248)
+texture_filter = 1
+texture = ExtResource("14_props")
+region_enabled = true
+region_rect = Rect2(64, 0, 32, 32)
 
 [node name="PlayerSpawn" type="Marker2D" parent="."]
 unique_name_in_owner = true

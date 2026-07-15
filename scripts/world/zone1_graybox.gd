@@ -42,6 +42,7 @@ const ZONE_SIZE_TILES: Vector2i = Vector2i(108, 30)
 
 const ENCOUNTER_ROOM_GROUP: StringName = &"encounter_rooms"
 const SECRET_MARKER_GROUP: StringName = &"secret_markers"
+const PROP_GROUP: StringName = &"zone1_props"
 
 ## Walkable space in tile coordinates (Rect2i is end-exclusive). Order tells
 ## the story of the route: entrance, corridor, room A (+ its hidden south
@@ -127,6 +128,15 @@ func get_zone_enemies() -> Array[EnemyBase]:
 		if enemy != null:
 			zone_enemies.append(enemy)
 	return zone_enemies
+
+
+func get_zone_props() -> Array[Sprite2D]:
+	var props: Array[Sprite2D] = []
+	for node: Node in get_tree().get_nodes_in_group(PROP_GROUP):
+		var prop: Sprite2D = node as Sprite2D
+		if prop != null and is_ancestor_of(prop):
+			props.append(prop)
+	return props
 
 
 ## The zone's still-uncollected secret pickups (already-collected ones free
