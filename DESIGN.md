@@ -147,6 +147,7 @@ Unlock skill tree branches → develop a distinct build → clear zone boss → 
 | Energy regeneration | Passive | Keeps relic abilities available without requiring melee attacks to recharge them |
 | Relic aiming | Fixed 8-direction | Predictable aiming that fits the top-down pixel-art combat presentation |
 | Skill tree data | One Resource per node (id, branch, cost, prereqs, effect) | Agents can add nodes without touching UI code |
+| Skill effect availability | A node is purchasable only when its effect has a registered live consumer | Players never spend scarce points on inert effects; future authored nodes remain unavailable until implemented |
 | Save format | JSON via `FileAccess` in `user://` | Simple, debuggable |
 
 ---
@@ -177,3 +178,4 @@ Unlock skill tree branches → develop a distinct build → clear zone boss → 
 | 2026-07-11 | 0.3 | Locked passive Energy regeneration and fixed 8-direction relic aiming | Codex + MeanGreen256 |
 | 2026-07-11 | 0.4 | Locked Zone 1 theme as a corrupted forest | Codex + MeanGreen256 |
 | 2026-07-13 | 0.5 | Linked canonical v1 visual bible, asset manifest, and reference sheet (issue #82) | Claude + pj200105 |
+| 2026-07-13 | 0.6 | Required live runtime consumers for purchasable skill effects (issue #77) | Codex + MeanGreen256 |

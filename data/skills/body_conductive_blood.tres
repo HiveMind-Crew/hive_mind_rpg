@@ -7,6 +7,7 @@ script = ExtResource("1")
 id = &"body_conductive_blood"
 branch = 2
 cost = 2
+available = false
 prerequisite_ids = Array[StringName]([&"body_scar_tissue"])
 effect_type = 0
 effect_parameters = {&"relic_energy_cost_multiplier": 0.9}

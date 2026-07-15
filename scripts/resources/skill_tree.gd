@@ -62,6 +62,8 @@ func get_unlock_errors(
 	if node == null:
 		errors.append("Unknown skill id '%s'." % node_id)
 		return errors
+	if not node.available:
+		errors.append("Skill '%s' is not available in this build." % node_id)
 	if unlocked_ids.has(node_id):
 		errors.append("Skill '%s' is already unlocked." % node_id)
 	if available_points < node.cost:

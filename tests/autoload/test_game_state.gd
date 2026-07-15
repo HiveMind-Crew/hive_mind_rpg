@@ -2,11 +2,10 @@ extends GutTest
 
 
 const GAME_STATE_SCRIPT := preload("res://scripts/autoload/game_state.gd")
-const ROOT_SKILL: StringName = &"steel_tempered_edge"
-const CHILD_SKILL: StringName = &"steel_follow_through"
-const EXPENSIVE_SKILL: StringName = &"steel_guard_breaker"
-const SIBLING_SKILL: StringName = &"steel_reversal"
-const MULTI_PREREQ_SKILL: StringName = &"steel_comet_lunge"
+const ROOT_SKILL: StringName = &"relic_resonant_spark"
+const CHILD_SKILL: StringName = &"relic_fold_step"
+const UNAVAILABLE_SKILL: StringName = &"steel_follow_through"
+const UNAVAILABLE_DEEP_SKILL: StringName = &"steel_comet_lunge"
 
 
 func before_each() -> void:
@@ -126,23 +125,21 @@ func test_unlocked_id_snapshot_cannot_mutate_game_state() -> void:
 
 
 func test_reports_total_points_spent_across_unlocked_skills() -> void:
-	GameState.award_skill_points(6)
+	GameState.award_skill_points(3)
 	GameState.spend_points(ROOT_SKILL)
 	GameState.spend_points(CHILD_SKILL)
-	GameState.spend_points(EXPENSIVE_SKILL)
 
-	assert_eq(GameState.get_spent_skill_points(), 4)
-	assert_eq(GameState.get_skill_points(), 2)
+	assert_eq(GameState.get_spent_skill_points(), 3)
+	assert_eq(GameState.get_skill_points(), 0)
 
 
 func test_respec_refunds_every_spent_point_and_clears_unlocks() -> void:
-	GameState.award_skill_points(6)
+	GameState.award_skill_points(3)
 	GameState.spend_points(ROOT_SKILL)
 	GameState.spend_points(CHILD_SKILL)
-	GameState.spend_points(EXPENSIVE_SKILL)
 
-	assert_eq(GameState.respec_skills(), 4)
-	assert_eq(GameState.get_skill_points(), 6)
+	assert_eq(GameState.respec_skills(), 3)
+	assert_eq(GameState.get_skill_points(), 3)
 	assert_true(GameState.get_unlocked_skill_ids().is_empty())
 	assert_eq(GameState.get_spent_skill_points(), 0)
 
@@ -233,44 +230,39 @@ func test_restore_progress_rejects_negative_points() -> void:
 func test_restore_progress_prunes_child_skill_missing_its_prerequisite() -> void:
 	watch_signals(GameState)
 
-	var restored: bool = GameState.restore_progress(0, [EXPENSIVE_SKILL])
+	var restored: bool = GameState.restore_progress(0, [CHILD_SKILL])
 
 	assert_true(restored)
-	assert_false(GameState.is_skill_unlocked(EXPENSIVE_SKILL))
+	assert_false(GameState.is_skill_unlocked(CHILD_SKILL))
 	assert_true(GameState.get_unlocked_skill_ids().is_empty())
 	assert_signal_emit_count(GameState, "skill_unlocked", 0)
 	assert_push_warning("unmet prerequisites")
 
 
 func test_restore_progress_prunes_chain_above_a_missing_root() -> void:
-	# steel_follow_through requires the absent steel_tempered_edge, so it and
-	# everything built on it must fall together.
-	var restored: bool = GameState.restore_progress(0, [CHILD_SKILL, EXPENSIVE_SKILL])
+	var restored: bool = GameState.restore_progress(0, [CHILD_SKILL])
 
 	assert_true(restored)
 	assert_true(GameState.get_unlocked_skill_ids().is_empty())
 
 
-func test_restore_progress_prunes_partially_satisfied_multi_prerequisite_skill() -> void:
-	# steel_comet_lunge requires steel_guard_breaker AND steel_reversal; only
-	# the reversal side of the closure is present.
-	var restored: bool = GameState.restore_progress(
-		0, [ROOT_SKILL, SIBLING_SKILL, MULTI_PREREQ_SKILL]
-	)
+func test_restore_progress_drops_unavailable_authored_skills() -> void:
+	var restored: bool = GameState.restore_progress(0, [ROOT_SKILL, UNAVAILABLE_SKILL])
 
 	assert_true(restored)
-	assert_eq(GameState.get_unlocked_skill_ids(), [ROOT_SKILL, SIBLING_SKILL])
-	assert_false(GameState.is_skill_unlocked(MULTI_PREREQ_SKILL))
+	assert_eq(GameState.get_unlocked_skill_ids(), [ROOT_SKILL])
+	assert_false(GameState.is_skill_unlocked(UNAVAILABLE_SKILL))
+	assert_push_warning("unavailable saved skill")
 
 
 func test_restore_progress_accepts_valid_ids_serialized_out_of_order() -> void:
 	var restored: bool = GameState.restore_progress(
-		2, [EXPENSIVE_SKILL, CHILD_SKILL, ROOT_SKILL]
+		2, [CHILD_SKILL, ROOT_SKILL]
 	)
 
 	assert_true(restored)
 	assert_eq(
-		GameState.get_unlocked_skill_ids(), [EXPENSIVE_SKILL, CHILD_SKILL, ROOT_SKILL]
+		GameState.get_unlocked_skill_ids(), [CHILD_SKILL, ROOT_SKILL]
 	)
 	assert_eq(GameState.get_skill_points(), 2)
 
@@ -285,14 +277,14 @@ func test_restore_progress_still_drops_unknown_and_duplicate_ids_before_closure(
 
 
 func test_respec_cannot_refund_pruned_restored_skills() -> void:
-	GameState.restore_progress(0, [EXPENSIVE_SKILL])
+	GameState.restore_progress(0, [UNAVAILABLE_SKILL])
 
 	assert_eq(GameState.respec_skills(), 0)
 	assert_eq(GameState.get_skill_points(), 0)
 
 
 func test_respec_refunds_only_the_valid_part_of_a_restored_set() -> void:
-	GameState.restore_progress(0, [ROOT_SKILL, MULTI_PREREQ_SKILL])
+	GameState.restore_progress(0, [ROOT_SKILL, UNAVAILABLE_DEEP_SKILL])
 
 	assert_eq(GameState.respec_skills(), 1)
 	assert_eq(GameState.get_skill_points(), 1)

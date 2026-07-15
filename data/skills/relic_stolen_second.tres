@@ -7,6 +7,7 @@ script = ExtResource("1")
 id = &"relic_stolen_second"
 branch = 1
 cost = 3
+available = false
 prerequisite_ids = Array[StringName]([&"relic_fold_step", &"relic_gravity_fault"])
 effect_type = 2
 effect_parameters = {&"ability_id": &"time_stutter", &"duration_seconds": 1.25, &"energy_cost": 35}

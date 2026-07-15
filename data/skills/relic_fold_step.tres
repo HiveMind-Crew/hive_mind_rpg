@@ -9,6 +9,6 @@ branch = 1
 cost = 2
 prerequisite_ids = Array[StringName]([&"relic_resonant_spark"])
 effect_type = 2
-effect_parameters = {&"ability_id": &"short_teleport", &"energy_cost": 15}
+effect_parameters = {&"ability_id": &"short_teleport", &"distance_bonus": 64, &"energy_cost": 15}
 display_name = "Fold Step"
 description = "Spend energy to briefly fold the path between two nearby points."

@@ -7,6 +7,7 @@ script = ExtResource("1")
 id = &"body_efficient_motion"
 branch = 2
 cost = 2
+available = false
 prerequisite_ids = Array[StringName]([&"body_deep_reserves"])
 effect_type = 1
 effect_parameters = {&"ability_id": &"dash", &"recovery_time_multiplier": 0.8}

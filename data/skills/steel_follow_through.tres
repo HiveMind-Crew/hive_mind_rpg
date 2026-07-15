@@ -7,6 +7,7 @@ script = ExtResource("1")
 id = &"steel_follow_through"
 branch = 0
 cost = 1
+available = false
 prerequisite_ids = Array[StringName]([&"steel_tempered_edge"])
 effect_type = 2
 effect_parameters = {&"ability_id": &"melee_combo_finisher"}

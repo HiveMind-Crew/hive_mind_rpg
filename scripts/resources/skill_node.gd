@@ -27,6 +27,9 @@ const UNLOCK_KEY_SUFFIXES: PackedStringArray = ["_multiplier", "_bonus", "_cost"
 @export var id: StringName
 @export var branch: Branch = Branch.STEEL
 @export_range(0, 99, 1) var cost: int = 0
+## Future authored nodes stay visible in data but cannot be purchased until a
+## runtime consumer exists. This prevents spending points on inert promises.
+@export var available: bool = true
 @export var prerequisite_ids: Array[StringName] = []
 @export var effect_type: EffectType = EffectType.STAT_MODIFIER
 @export var effect_parameters: Dictionary[StringName, Variant] = {}

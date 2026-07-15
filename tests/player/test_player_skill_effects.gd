@@ -8,6 +8,7 @@ const PLAYER_SCENE: PackedScene = preload("res://scenes/player/player.tscn")
 const STEEL_ATTACK: StringName = &"steel_tempered_edge"
 const BODY_HP: StringName = &"body_scar_tissue"
 const RELIC_BOLT: StringName = &"relic_resonant_spark"
+const RELIC_TELEPORT: StringName = &"relic_fold_step"
 
 const BASE_MELEE_DAMAGE: int = 10
 const BASE_BOLT_DAMAGE: int = 20
@@ -30,6 +31,7 @@ func before_each() -> void:
 
 
 func after_each() -> void:
+	Input.action_release(&"ability_utility")
 	GameState.reset_progress()
 	for projectile: Node in get_tree().get_nodes_in_group(EnergyBolt.PROJECTILE_GROUP):
 		projectile.free()
@@ -62,6 +64,52 @@ func test_relic_unlock_raises_spawned_bolt_damage() -> void:
 	var bolts: Array[Node] = get_tree().get_nodes_in_group(EnergyBolt.PROJECTILE_GROUP)
 	assert_eq(bolts.size(), 1)
 	assert_eq((bolts[0] as EnergyBolt).damage, 23)
+
+
+func test_tree_unlocked_short_teleport_dispatches_and_spends_energy() -> void:
+	watch_signals(_player)
+	var start_position: Vector2 = _player.global_position
+	var start_energy: float = _energy.current_energy
+	_player._movement.update(Vector2.RIGHT, false, 0.0)
+	_player._movement.finish_frame(Vector2.RIGHT)
+
+	assert_false(_player.try_use_ability(PlayerController.SHORT_TELEPORT_ABILITY_ID))
+	assert_signal_emit_count(_player, "tree_ability_blocked", 1)
+
+	GameState.award_skill_points(3)
+	assert_true(GameState.spend_points(RELIC_BOLT))
+	assert_true(GameState.spend_points(RELIC_TELEPORT))
+	assert_true(_player.try_use_ability(PlayerController.SHORT_TELEPORT_ABILITY_ID))
+
+	assert_eq(_player.global_position, start_position + Vector2.RIGHT * 64.0)
+	assert_eq(_energy.current_energy, start_energy - 15.0)
+	assert_signal_emitted_with_parameters(
+		_player, "tree_ability_used", [PlayerController.SHORT_TELEPORT_ABILITY_ID]
+	)
+
+
+func test_respec_removes_short_teleport_dispatch() -> void:
+	GameState.award_skill_points(3)
+	GameState.spend_points(RELIC_BOLT)
+	GameState.spend_points(RELIC_TELEPORT)
+	GameState.respec_skills()
+
+	assert_false(_player.try_use_ability(PlayerController.SHORT_TELEPORT_ABILITY_ID))
+
+
+func test_utility_input_dispatches_the_unlocked_short_teleport() -> void:
+	GameState.award_skill_points(3)
+	GameState.spend_points(RELIC_BOLT)
+	GameState.spend_points(RELIC_TELEPORT)
+	_player._movement.update(Vector2.RIGHT, false, 0.0)
+	_player._movement.finish_frame(Vector2.RIGHT)
+	var start_position: Vector2 = _player.global_position
+
+	Input.action_press(&"ability_utility")
+	_player._physics_process(0.0)
+	Input.action_release(&"ability_utility")
+
+	assert_eq(_player.global_position, start_position + Vector2.RIGHT * 64.0)
 
 
 func test_respec_reverts_every_effect() -> void:

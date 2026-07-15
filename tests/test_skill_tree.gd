@@ -70,6 +70,15 @@ func test_unlock_rejects_insufficient_points() -> void:
 	assert_eq(tree.spend_points(&"expensive", [], 2), -1)
 
 
+func test_unlock_rejects_unavailable_authored_skills() -> void:
+	var skill: SkillNode = _make_skill(&"future_skill")
+	skill.available = false
+	var tree: SkillTree = _make_tree([skill])
+
+	assert_false(tree.can_unlock(skill.id, [], 10))
+	assert_true(_contains_error(tree.get_unlock_errors(skill.id, [], 10), "not available"))
+
+
 func test_spending_returns_remaining_points_without_mutating_state() -> void:
 	var skill: SkillNode = _make_skill(&"affordable")
 	skill.cost = 2

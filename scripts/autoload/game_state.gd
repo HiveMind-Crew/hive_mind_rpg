@@ -104,8 +104,12 @@ func restore_progress(skill_points: int, unlocked_skill_ids: Array[StringName]) 
 		return false
 	var known_ids: Array[StringName] = []
 	for skill_id: StringName in unlocked_skill_ids:
-		if skill_tree.get_node(skill_id) == null:
+		var saved_skill: SkillNode = skill_tree.get_node(skill_id)
+		if saved_skill == null:
 			push_warning("GameState dropped unknown saved skill '%s'." % skill_id)
+			continue
+		if not saved_skill.available:
+			push_warning("GameState dropped unavailable saved skill '%s'." % skill_id)
 			continue
 		if not known_ids.has(skill_id):
 			known_ids.append(skill_id)

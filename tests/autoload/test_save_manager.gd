@@ -138,7 +138,7 @@ func test_out_of_order_serialized_unlocks_restore_completely() -> void:
 		"version": 1,
 		"skill_points": 2,
 		"unlocked_skill_ids": [
-			"steel_guard_breaker", "steel_follow_through", "steel_tempered_edge",
+			"relic_fold_step", "relic_resonant_spark",
 		],
 		"checkpoint": {"scene_path": "", "x": 0, "y": 0},
 		"collected_secret_ids": [],
@@ -146,9 +146,8 @@ func test_out_of_order_serialized_unlocks_restore_completely() -> void:
 
 	assert_true(SaveManager.load_game())
 	assert_eq(GameState.get_skill_points(), 2)
-	assert_true(GameState.is_skill_unlocked(&"steel_tempered_edge"))
-	assert_true(GameState.is_skill_unlocked(&"steel_follow_through"))
-	assert_true(GameState.is_skill_unlocked(&"steel_guard_breaker"))
+	assert_true(GameState.is_skill_unlocked(&"relic_resonant_spark"))
+	assert_true(GameState.is_skill_unlocked(&"relic_fold_step"))
 
 
 func test_record_secret_collected_persists_across_load() -> void:

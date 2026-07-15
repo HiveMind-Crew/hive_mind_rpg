@@ -61,6 +61,7 @@ Replace `Preset Name` with the name shown in the Export dialog and choose the pl
 - Dash: Space or gamepad south button
 - Melee attack: J or gamepad west button
 - Relic energy bolt: K or gamepad north button
+- Fold Step: Q or gamepad left shoulder (after unlocking it)
 
 ## Web playtest builds
 
