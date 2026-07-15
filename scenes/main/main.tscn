@@ -1,10 +1,13 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
-[ext_resource type="Texture2D" path="res://assets/sprites/testing/pixel_scale_test.svg" id="1_pixel_test"]
+[ext_resource type="Script" path="res://scripts/main/game_manager.gd" id="1_manager"]
+[ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="2_pause"]
 
-[node name="Main" type="Node2D"]
+[node name="Main" type="Node"]
+script = ExtResource("1_manager")
 
-[node name="PixelScaleTest" type="Sprite2D" parent="."]
-texture_filter = 1
-position = Vector2(320, 180)
-texture = ExtResource("1_pixel_test")
+[node name="WorldRoot" type="Node" parent="."]
+unique_name_in_owner = true
+
+[node name="PauseMenu" parent="." instance=ExtResource("2_pause")]
+unique_name_in_owner = true
