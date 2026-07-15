@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Check out pull request
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
 
       - name: Install Godot 4.7 stable
         shell: bash
@@ -22,9 +22,11 @@ jobs:
           set -euo pipefail
           GODOT_VERSION="4.7-stable"
           GODOT_ARCHIVE="Godot_v4.7-stable_linux.x86_64.zip"
+          GODOT_SHA256="0b1a6c54c2c619c12e169fe9241edda4b81080b519451cec2984bf0d2c6cb73c"
           curl --fail --location --retry 3 \
             "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/${GODOT_ARCHIVE}" \
             --output /tmp/godot.zip
+          echo "${GODOT_SHA256}  /tmp/godot.zip" | sha256sum --check --status
           unzip -q /tmp/godot.zip -d /tmp/godot
           chmod +x "/tmp/godot/Godot_v4.7-stable_linux.x86_64"
           "/tmp/godot/Godot_v4.7-stable_linux.x86_64" --version
