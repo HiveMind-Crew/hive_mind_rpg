@@ -21,6 +21,7 @@ const FLANKER_SCENE: PackedScene = preload("res://scenes/enemies/fast_flanker.ts
 const FOREST_TEXTURE: Texture2D = preload("res://assets/sprites/world/zone1_forest_tiles.png")
 const PROPS_ATLAS_PATH: String = "res://assets/sprites/world/zone1_props.png"
 const PROPS_TEXTURE: Texture2D = preload("res://assets/sprites/world/zone1_props.png")
+const PROP_FRAMES: SpriteFrames = preload("res://assets/sprites/world/zone1_props_frames.tres")
 var _png_signature: PackedByteArray = PackedByteArray([137, 80, 78, 71, 13, 10, 26, 10])
 const CHASER_FRAME_SIZE: Vector2i = Vector2i(24, 24)
 const TILE_SIZE: Vector2i = Vector2i(16, 16)
@@ -30,6 +31,18 @@ func test_production_pngs_have_valid_signatures_and_manifest_dimensions() -> voi
 	_assert_png_dimensions(CHASER_SHEET_PATH, CHASER_TEXTURE, Vector2i(192, 320))
 	_assert_png_dimensions(FOREST_ATLAS_PATH, FOREST_TEXTURE, Vector2i(128, 80))
 	_assert_png_dimensions(PROPS_ATLAS_PATH, PROPS_TEXTURE, Vector2i(128, 96))
+
+
+func test_zone_prop_atlas_has_a_complete_four_frame_machine_glow_loop() -> void:
+	assert_true(PROP_FRAMES.has_animation(&"glow"))
+	assert_eq(PROP_FRAMES.get_frame_count(&"glow"), 4)
+	for frame_index: int in 4:
+		var frame_texture: AtlasTexture = PROP_FRAMES.get_frame_texture(&"glow", frame_index) as AtlasTexture
+		assert_not_null(frame_texture)
+		if frame_texture != null:
+			assert_eq(frame_texture.atlas, PROPS_TEXTURE)
+			assert_eq(frame_texture.region.size, Vector2(32.0, 32.0))
+			assert_eq(frame_texture.region.position, Vector2(float(frame_index * 32), 48.0))
 
 
 func test_chaser_sprite_frames_match_manifest_animation_contract() -> void:

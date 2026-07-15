@@ -130,10 +130,10 @@ func get_zone_enemies() -> Array[EnemyBase]:
 	return zone_enemies
 
 
-func get_zone_props() -> Array[Sprite2D]:
-	var props: Array[Sprite2D] = []
+func get_zone_props() -> Array[CanvasItem]:
+	var props: Array[CanvasItem] = []
 	for node: Node in get_tree().get_nodes_in_group(PROP_GROUP):
-		var prop: Sprite2D = node as Sprite2D
+		var prop: CanvasItem = node as CanvasItem
 		if prop != null and is_ancestor_of(prop):
 			props.append(prop)
 	return props

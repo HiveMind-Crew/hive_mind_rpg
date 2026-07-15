@@ -43,14 +43,16 @@ def tree(draw: ImageDraw.ImageDraw, offset: tuple[int, int], mirror: bool) -> No
     rect(draw, (20, 44, 28, 47), MOSS_DARK, offset)
 
 
-def relic_machine(draw: ImageDraw.ImageDraw, offset: tuple[int, int]) -> None:
-    rect(draw, (3, 7, 28, 30), STONE_DARK, offset)
-    rect(draw, (6, 9, 25, 28), STONE_MID, offset)
-    rect(draw, (9, 11, 22, 25), CANOPY, offset)
-    rect(draw, (14, 5, 18, 29), MAGENTA, offset)
-    rect(draw, (15, 7, 17, 27), CYAN, offset)
-    rect(draw, (1, 28, 30, 31), STONE_DARK, offset)
-    rect(draw, (6, 31, 25, 33), MOSS_DARK, offset)
+def relic_machine(draw: ImageDraw.ImageDraw, offset: tuple[int, int], phase: int) -> None:
+    glow_colours = [MAGENTA, (0xDB, 0x4C, 0xC7, 255), CYAN, (0x8A, 0xC3, 0xFF, 255)]
+    glow = glow_colours[phase]
+    rect(draw, (3, 7, 28, 29), STONE_DARK, offset)
+    rect(draw, (6, 9, 25, 27), STONE_MID, offset)
+    rect(draw, (9, 11, 22, 24), CANOPY, offset)
+    rect(draw, (14, 5, 18, 28), glow, offset)
+    rect(draw, (15, 7, 17, 26), CYAN, offset)
+    rect(draw, (1, 28, 30, 30), STONE_DARK, offset)
+    rect(draw, (6, 30, 25, 31), MOSS_DARK, offset)
 
 
 def root_ruin(draw: ImageDraw.ImageDraw, offset: tuple[int, int]) -> None:
@@ -83,11 +85,12 @@ def main() -> None:
     tree(draw, (0, 0), False)
     tree(draw, (32, 0), True)
     root_ruin(draw, (64, 0))
-    relic_machine(draw, (96, 0))
-    stump(draw, (0, 48))
-    stone(draw, (16, 48))
-    stump(draw, (32, 48))
-    stone(draw, (48, 48))
+    for phase in range(4):
+        relic_machine(draw, (phase * 32, 48), phase)
+    stump(draw, (0, 80))
+    stone(draw, (16, 80))
+    stump(draw, (32, 80))
+    stone(draw, (48, 80))
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     image.save(OUT_PATH)
     print(f"wrote {OUT_PATH.relative_to(Path.cwd())} {image.size}")

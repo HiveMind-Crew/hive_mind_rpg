@@ -1,0 +1,39 @@
+[gd_resource type="SpriteFrames" load_steps=5 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/world/zone1_props.png" id="1_props"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_glow_0"]
+atlas = ExtResource("1_props")
+region = Rect2(0, 48, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_glow_1"]
+atlas = ExtResource("1_props")
+region = Rect2(32, 48, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_glow_2"]
+atlas = ExtResource("1_props")
+region = Rect2(64, 48, 32, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_glow_3"]
+atlas = ExtResource("1_props")
+region = Rect2(96, 48, 32, 32)
+
+[resource]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_glow_0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_glow_1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_glow_2")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_glow_3")
+}],
+"loop": true,
+"name": &"glow",
+"speed": 5.0
+}]
