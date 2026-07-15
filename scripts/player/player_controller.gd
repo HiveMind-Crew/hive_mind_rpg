@@ -69,6 +69,8 @@ var _hitstop_generation: int = 0
 
 
 func _ready() -> void:
+	collision_layer = CollisionLayers.PLAYER_BODY
+	collision_mask = CollisionLayers.WORLD
 	_movement = PlayerMovementStateMachine.new(
 		move_speed,
 		acceleration,

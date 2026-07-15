@@ -38,6 +38,8 @@ var _spawn_position: Vector2 = Vector2.ZERO
 
 
 func _ready() -> void:
+	collision_layer = CollisionLayers.ENEMY_BODY
+	collision_mask = CollisionLayers.WORLD
 	add_to_group(ENEMY_GROUP)
 	_spawn_position = global_position
 	if stats == null:
