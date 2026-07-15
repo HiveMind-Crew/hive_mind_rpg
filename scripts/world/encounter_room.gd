@@ -25,6 +25,11 @@ extends Area2D
 
 signal encounter_started()
 signal encounter_completed()
+## Fires once, right after encounter_completed, when a valid reward is paid out
+## for the first clear (issue #60). Skipped on repeat clears and rooms with no
+## reward_data. HUD/feedback listens here; the point total itself arrives
+## through GameState.skill_points_changed.
+signal encounter_reward_awarded(reward_id: StringName, skill_points: int)
 
 enum State {
 	DORMANT,
@@ -40,6 +45,9 @@ const ENCOUNTER_ROOM_GROUP: StringName = &"encounter_rooms"
 @export var enemies_root_path: NodePath = ^"Enemies"
 ## Barriers sealed while the encounter is active (see exit interface above).
 @export var exit_paths: Array[NodePath] = []
+## Optional authored payout (issue #60). Null keeps the room a reusable fight
+## that never advances progression; a valid reward pays out once per reward_id.
+@export var reward_data: EncounterRewardData
 
 var state: State = State.DORMANT
 
@@ -173,6 +181,26 @@ func _complete() -> void:
 	state = State.COMPLETED
 	_set_exits_sealed(false)
 	encounter_completed.emit()
+	_award_completion_reward()
+
+
+func _award_completion_reward() -> void:
+	# The reward is one-shot for the run, not per attempt: reset_to_spawn()
+	# re-arms the room after a death (the die-back loop), but the persisted
+	# completion id keeps a second clear from paying again. Recording happens
+	# after the award so the immediate save holds both the completion id and the
+	# new point total.
+	if reward_data == null:
+		return
+	if not reward_data.is_valid():
+		push_warning("EncounterRoom '%s' has invalid reward_data; no points awarded." % name)
+		return
+	if SaveManager.is_milestone_completed(reward_data.reward_id):
+		return
+	if not GameState.award_skill_points(reward_data.skill_points):
+		return
+	SaveManager.record_milestone_completed(reward_data.reward_id)
+	encounter_reward_awarded.emit(reward_data.reward_id, reward_data.skill_points)
 
 
 func _set_exits_sealed(sealed: bool) -> void:
