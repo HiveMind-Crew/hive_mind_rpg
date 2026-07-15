@@ -9,6 +9,9 @@ extends GutTest
 
 const MAIN_SCENE: PackedScene = preload("res://scenes/main/main.tscn")
 const TEST_SAVE_PATH: String = "user://test_game_manager_savegame.json"
+const ZONE1_PATH: String = "res://scenes/world/zone1_graybox.tscn"
+const HUB_PATH: String = "res://scenes/world/hub.tscn"
+const ROOT_SKILL: StringName = &"steel_tempered_edge"
 
 const AUTOLOAD_NAMES: Array[StringName] = [
 	&"GameState", &"TimeScaleManager", &"SaveManager", &"AudioManager",
@@ -222,6 +225,122 @@ func test_repeated_transitions_keep_singletons_and_working_contracts() -> void:
 			_autoload_instance_count(autoload_name), 1,
 			"Transitions never duplicate the %s autoload." % autoload_name
 		)
+
+
+## Simulates a relaunch: the on-disk save is reloaded into memory (what
+## SaveManager._ready does at boot) so a freshly added Main sees a prior run.
+func _reload_saved_run() -> void:
+	GameState.reset_progress()
+	_forget_run_state()
+	assert_true(SaveManager.load_game(), "Precondition: the saved run reloads from disk.")
+
+
+func test_startup_continues_into_the_saved_zone_at_the_checkpoint() -> void:
+	var checkpoint_position: Vector2 = Vector2(321, 654)
+	GameState.award_skill_points(5)
+	GameState.spend_points(ROOT_SKILL)
+	SaveManager.record_checkpoint(ZONE1_PATH, checkpoint_position)
+	_reload_saved_run()
+
+	var main: GameManager = _add_main()
+	await wait_process_frames(2)
+
+	var zone: Zone1Graybox = main.get_current_world() as Zone1Graybox
+	assert_not_null(zone, "A saved checkpoint continues into that world, not the hub.")
+	assert_false(main.is_hub_active())
+	assert_eq(
+		main.get_player().global_position, checkpoint_position,
+		"Continue drops the player on the saved checkpoint, not the zone entrance."
+	)
+	assert_eq(GameState.get_skill_points(), 4, "Continue restores saved skill points.")
+	assert_true(GameState.is_skill_unlocked(ROOT_SKILL), "Continue restores saved unlocks.")
+	_assert_single_player_hud_and_camera("after continue")
+
+
+func test_startup_with_no_save_boots_into_the_hub() -> void:
+	# before_each clears the scratch save, so this is the fresh-boot path.
+	var main: GameManager = _add_main()
+
+	assert_true(main.is_hub_active(), "A run with no checkpoint starts a new game in the hub.")
+	assert_false(SaveManager.has_checkpoint())
+
+
+func test_continue_with_a_missing_saved_scene_falls_back_to_the_hub() -> void:
+	SaveManager.checkpoint_scene_path = "res://scenes/world/does_not_exist.tscn"
+	SaveManager.checkpoint_position = Vector2(10, 20)
+
+	var main: GameManager = _add_main()
+	await wait_process_frames(1)
+
+	assert_true(main.is_hub_active(), "A missing saved scene path falls back to the hub safely.")
+
+
+func test_continue_with_a_non_world_saved_scene_falls_back_to_the_hub() -> void:
+	# A stale save pointing at the composition root must not recurse into another
+	# GameManager; it degrades to the hub.
+	SaveManager.checkpoint_scene_path = "res://scenes/main/main.tscn"
+	SaveManager.checkpoint_position = Vector2.ZERO
+
+	var main: GameManager = _add_main()
+	await wait_process_frames(1)
+
+	assert_true(main.is_hub_active(), "A saved non-world scene falls back to the hub safely.")
+	_assert_single_player_hud_and_camera("after non-world fallback")
+
+
+func test_new_game_wipes_the_prior_run_and_opens_the_hub() -> void:
+	GameState.award_skill_points(3)
+	SaveManager.record_checkpoint(ZONE1_PATH, Vector2(1, 2))
+	_reload_saved_run()
+	var main: GameManager = _add_main()
+	await wait_process_frames(2)
+	assert_false(main.is_hub_active(), "Precondition: the saved run continued into Zone 1.")
+
+	main.start_new_game()
+	await wait_process_frames(2)
+
+	assert_true(main.is_hub_active(), "New Game opens the hub.")
+	assert_eq(GameState.get_skill_points(), 0, "New Game resets progression.")
+	assert_false(SaveManager.has_save(), "New Game clears the save file.")
+	assert_false(SaveManager.has_checkpoint(), "New Game forgets the checkpoint.")
+	_assert_single_player_hud_and_camera("after new game")
+
+
+func test_continue_keeps_collected_secrets_that_new_game_then_clears() -> void:
+	SaveManager.record_secret_collected(&"secret_alpha")
+	SaveManager.record_checkpoint(HUB_PATH, Vector2(5, 5))
+	_reload_saved_run()
+
+	var main: GameManager = _add_main()
+	await wait_process_frames(2)
+	assert_true(
+		SaveManager.is_secret_collected(&"secret_alpha"),
+		"Continue leaves already-collected secrets collected."
+	)
+
+	main.start_new_game()
+	await wait_process_frames(1)
+	assert_false(
+		SaveManager.is_secret_collected(&"secret_alpha"),
+		"New Game forgets collected secrets."
+	)
+
+
+func test_zone_checkpoint_records_the_world_scene_not_the_composition_root() -> void:
+	var main: GameManager = _add_main()
+	var zone: Zone1Graybox = await _enter_zone1(main)
+	var checkpoint: Checkpoint = zone.get_node("Checkpoints/CheckpointEntrance") as Checkpoint
+
+	checkpoint.body_entered.emit(main.get_player())
+
+	assert_eq(
+		SaveManager.checkpoint_scene_path, zone.scene_file_path,
+		"Checkpoints under the manager save the world scene so Continue can reopen it."
+	)
+	assert_ne(
+		SaveManager.checkpoint_scene_path, "res://scenes/main/main.tscn",
+		"The saved scene must be the world, never the composition root."
+	)
 
 
 func test_zone1_exit_gate_returns_to_the_hub() -> void:
