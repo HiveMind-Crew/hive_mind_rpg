@@ -40,6 +40,14 @@ func test_turns_toward_its_target_at_a_limited_rate() -> void:
 	assert_gt(_brute.get_facing().x, 0.99, "Given time, the shield tracks the target.")
 
 
+func test_shield_visual_is_visible_and_tracks_the_blocking_arc() -> void:
+	_face_right()
+	var shield: Polygon2D = _brute.get_node("ShieldVisual") as Polygon2D
+
+	assert_true(shield.visible, "The block direction must remain visible to the player.")
+	assert_almost_eq(shield.rotation, _brute.get_facing().angle(), 0.001)
+
+
 func test_blocks_hits_arriving_inside_the_frontal_arc() -> void:
 	_face_right()
 	watch_signals(_brute)

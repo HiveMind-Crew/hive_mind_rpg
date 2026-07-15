@@ -119,8 +119,7 @@ shadow.
 
 - **Tile grid:** 16×16 px tiles (matches the existing graybox TileSet). Zone
   geometry, doors, and room sizes stay on this grid.
-- **Frame canvases:** per-asset sizes are fixed in the manifest. Canvas
-  dimensions are even numbers so centered sprites land on the pixel grid.
+- **Frame canvases:** regular player and enemy actors use **32×32 px** frames; large elites use 48×48 px and bosses use 64×64 px or larger. This keeps the 16-bit pixel-art language while allowing enough silhouette, gear, and corruption detail for a modern action-RPG presentation. Per-asset sizes are fixed in the manifest. Canvas dimensions are even numbers so centered sprites land on the pixel grid.
 - **Pivot convention:** all `Sprite2D` / `AnimatedSprite2D` use
   `centered = true`, `offset = (0, 0)`, and the **frame center aligns with the
   collision-shape center**. Where a collision shape is locally offset (the

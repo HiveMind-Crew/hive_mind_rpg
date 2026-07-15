@@ -1,6 +1,7 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/shielded_brute.gd" id="1_enemy"]
+[ext_resource type="SpriteFrames" path="res://assets/sprites/enemies/shielded_brute_frames.tres" id="6_frames"]
 [ext_resource type="Resource" path="res://data/enemies/shielded_brute.tres" id="2_stats"]
 [ext_resource type="PackedScene" path="res://scenes/combat/health_component.tscn" id="3_health"]
 [ext_resource type="PackedScene" path="res://scenes/combat/hurtbox.tscn" id="4_hurtbox"]
@@ -18,15 +19,18 @@ stats = ExtResource("2_stats")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_body")
 
-[node name="BodyVisual" type="Polygon2D" parent="."]
+[node name="BodyVisual" type="AnimatedSprite2D" parent="."]
 unique_name_in_owner = true
-polygon = PackedVector2Array(-12, -8, 0, -12, 12, -8, 12, 8, 0, 12, -12, 8)
-color = Color(0.5, 0.36, 0.22, 1)
+texture_filter = 1
+sprite_frames = ExtResource("6_frames")
+animation = &"idle_down"
+autoplay = "idle_down"
+playing = true
 
 [node name="ShieldVisual" type="Polygon2D" parent="."]
 unique_name_in_owner = true
 polygon = PackedVector2Array(10, -13, 16, -11, 16, 11, 10, 13)
-color = Color(0.35, 0.3, 0.24, 1)
+color = Color(0.22, 0.08, 0.28, 0.9)
 
 [node name="TellVisual" type="Polygon2D" parent="."]
 unique_name_in_owner = true

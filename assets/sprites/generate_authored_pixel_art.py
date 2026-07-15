@@ -10,7 +10,7 @@ Re-running the script reproduces the committed PNGs byte-for-byte:
   python3 assets/sprites/generate_authored_pixel_art.py
 
 Outputs:
-  assets/sprites/enemies/melee_chaser.png        (144x240 sheet, 43 frames)
+  assets/sprites/enemies/melee_chaser.png        (192x320 sheet, 43 frames)
   assets/sprites/enemies/melee_chaser_frames.tres (SpriteFrames over the sheet)
   assets/sprites/world/zone1_forest_tiles.png    (128x80 atlas of 16x16 tiles)
 """
@@ -831,7 +831,8 @@ def chaser_animations() -> dict[str, dict]:
     }
 
 
-CHASER_FRAME = 24
+CHASER_LOGICAL_FRAME = 24
+CHASER_FRAME = 32
 CHASER_SHEET_COLUMNS = 6
 
 ANIMATION_ROW_ORDER = [
@@ -857,7 +858,14 @@ def build_chaser_sheet() -> tuple[Image.Image, dict[str, dict]]:
     )
     for row, name in enumerate(ANIMATION_ROW_ORDER):
         for column, frame in enumerate(animations[name]["frames"]):
-            blit(sheet, frame, CHASER_PALETTE, column * CHASER_FRAME, row * CHASER_FRAME)
+            logical_frame = Image.new(
+                "RGBA", (CHASER_LOGICAL_FRAME, CHASER_LOGICAL_FRAME), (0, 0, 0, 0)
+            )
+            blit(logical_frame, frame, CHASER_PALETTE, 0, 0)
+            display_frame = logical_frame.resize(
+                (CHASER_FRAME, CHASER_FRAME), Image.Resampling.NEAREST
+            )
+            sheet.alpha_composite(display_frame, (column * CHASER_FRAME, row * CHASER_FRAME))
     return sheet, animations
 
 

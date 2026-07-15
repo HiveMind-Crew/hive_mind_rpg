@@ -1,6 +1,7 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/ranged_harasser.gd" id="1_enemy"]
+[ext_resource type="SpriteFrames" path="res://assets/sprites/enemies/ranged_harasser_frames.tres" id="7_frames"]
 [ext_resource type="Resource" path="res://data/enemies/ranged_harasser.tres" id="2_stats"]
 [ext_resource type="PackedScene" path="res://scenes/combat/health_component.tscn" id="3_health"]
 [ext_resource type="PackedScene" path="res://scenes/combat/hurtbox.tscn" id="4_hurtbox"]
@@ -20,10 +21,13 @@ stats = ExtResource("2_stats")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_body")
 
-[node name="BodyVisual" type="Polygon2D" parent="."]
+[node name="BodyVisual" type="AnimatedSprite2D" parent="."]
 unique_name_in_owner = true
-polygon = PackedVector2Array(0, -12, 8, 2, 10, 10, -10, 10, -8, 2)
-color = Color(0.45, 0.72, 0.3, 1)
+texture_filter = 1
+sprite_frames = ExtResource("7_frames")
+animation = &"idle_down"
+autoplay = "idle_down"
+playing = true
 
 [node name="TellVisual" type="Polygon2D" parent="."]
 unique_name_in_owner = true

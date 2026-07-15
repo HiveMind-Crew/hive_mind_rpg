@@ -230,5 +230,7 @@ func _set_body_visual(tint: Color, animation_name: StringName) -> void:
 		animated_visual.modulate = Color.WHITE
 		if animation_name.ends_with("_side"):
 			animated_visual.flip_h = _get_visual_facing_direction().x < 0.0
+		else:
+			animated_visual.flip_h = false
 		if animated_visual.sprite_frames.has_animation(animation_name):
 			animated_visual.play(animation_name)

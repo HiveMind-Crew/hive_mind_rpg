@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=17 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/zone1_graybox.gd" id="1_zone"]
 [ext_resource type="PackedScene" path="res://scenes/world/interactable_zone.tscn" id="10_exit_zone"]
@@ -6,6 +6,9 @@
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2_player"]
 [ext_resource type="PackedScene" path="res://scenes/world/checkpoint.tscn" id="3_checkpoint"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/melee_chaser.tscn" id="4_chaser"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/ranged_harasser.tscn" id="11_harasser"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/shielded_brute.tscn" id="12_brute"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/fast_flanker.tscn" id="13_flanker"]
 [ext_resource type="Script" path="res://scripts/world/respawn_controller.gd" id="5_respawn"]
 [ext_resource type="PackedScene" path="res://scenes/world/skill_point_pickup.tscn" id="6_pickup"]
 [ext_resource type="Script" path="res://scripts/world/hidden_room_reveal.gd" id="7_reveal"]
@@ -113,14 +116,26 @@ unique_name_in_owner = true
 [node name="ChaserRoomA" parent="Enemies" groups=["resettable"] instance=ExtResource("4_chaser")]
 position = Vector2(408, 232)
 
+[node name="FlankerRoomA" parent="Enemies" groups=["resettable"] instance=ExtResource("13_flanker")]
+position = Vector2(360, 280)
+
 [node name="ChaserRoomB1" parent="Enemies" groups=["resettable"] instance=ExtResource("4_chaser")]
 position = Vector2(712, 168)
+
+[node name="HarasserRoomB" parent="Enemies" groups=["resettable"] instance=ExtResource("11_harasser")]
+position = Vector2(760, 248)
+
+[node name="BruteRoomB" parent="Enemies" groups=["resettable"] instance=ExtResource("12_brute")]
+position = Vector2(840, 248)
 
 [node name="ChaserRoomB2" parent="Enemies" groups=["resettable"] instance=ExtResource("4_chaser")]
 position = Vector2(808, 328)
 
 [node name="ChaserRoomC" parent="Enemies" groups=["resettable"] instance=ExtResource("4_chaser")]
 position = Vector2(1128, 280)
+
+[node name="HarasserRoomC" parent="Enemies" groups=["resettable"] instance=ExtResource("11_harasser")]
+position = Vector2(1184, 200)
 
 [node name="BossArena" type="Node2D" parent="."]
 

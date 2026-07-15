@@ -169,10 +169,24 @@ func test_zone_enemies_stand_on_floor_and_target_the_player() -> void:
 	var player: PlayerController = zone.get_node("Player") as PlayerController
 	var zone_enemies: Array[EnemyBase] = zone.get_zone_enemies()
 
-	assert_gte(zone_enemies.size(), 4, "Each encounter room is populated.")
+	assert_gte(zone_enemies.size(), 7, "The three authored encounter rooms use the full regular roster.")
+	var has_chaser: bool = false
+	var has_harasser: bool = false
+	var has_brute: bool = false
+	var has_flanker: bool = false
 	for enemy: EnemyBase in zone_enemies:
+		has_chaser = has_chaser or not (
+			enemy is RangedHarasser or enemy is ShieldedBrute or enemy is FastFlanker
+		)
+		has_harasser = has_harasser or enemy is RangedHarasser
+		has_brute = has_brute or enemy is ShieldedBrute
+		has_flanker = has_flanker or enemy is FastFlanker
 		assert_eq(enemy.target, player, "%s should hunt the player." % enemy.name)
 		assert_false(zone.is_wall_cell(_cell_of(zone, enemy.global_position)))
+	assert_true(has_chaser, "Zone 1 retains the melee chaser baseline.")
+	assert_true(has_harasser, "Zone 1 includes a ranged harasser encounter.")
+	assert_true(has_brute, "Zone 1 includes a shielded brute encounter.")
+	assert_true(has_flanker, "Zone 1 includes a fast flanker encounter.")
 
 
 func test_boss_door_starts_sealed_and_opens_on_request() -> void:
