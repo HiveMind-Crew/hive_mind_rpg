@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/hub.gd" id="1_hub"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2_player"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://scenes/world/interactable_zone.tscn" id="4_zone"]
 [ext_resource type="Script" path="res://scripts/world/respawn_controller.gd" id="5_respawn"]
 [ext_resource type="Script" path="res://scripts/world/camera_limits.gd" id="6_camera_limits"]
+[ext_resource type="PackedScene" path="res://scenes/world/skill_tree_station.tscn" id="7_station"]
 
 [node name="Hub" type="Node2D"]
 script = ExtResource("1_hub")
@@ -18,15 +19,11 @@ texture_filter = 1
 unique_name_in_owner = true
 position = Vector2(320, 272)
 
-[node name="StationVisual" type="Polygon2D" parent="."]
-position = Vector2(128, 176)
-polygon = PackedVector2Array(-14, -18, 14, -18, 14, 14, -14, 14)
-color = Color(0.36, 0.6, 0.44, 1)
-
-[node name="StationZone" parent="." instance=ExtResource("4_zone")]
+[node name="SkillTreeStation" parent="." instance=ExtResource("7_station")]
 unique_name_in_owner = true
 position = Vector2(128, 176)
-prompt_text = "[E] Skill Tree"
+player_path = NodePath("../Player")
+screen_layer_path = NodePath("../ScreenLayer")
 
 [node name="GateVisual" type="Polygon2D" parent="."]
 position = Vector2(612, 176)
