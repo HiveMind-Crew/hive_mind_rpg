@@ -62,6 +62,30 @@ func _count_node_buttons(root: Node) -> int:
 	return total
 
 
+func test_all_branch_columns_and_detail_fit_within_the_viewport() -> void:
+	# Regression: the three branch columns plus the detail panel must fit inside
+	# the project render width. The detail panel used to balloon to fit long
+	# single-line "Locked: ..." status text, pushing the outer columns off both
+	# edges of the screen (unreadable/unreachable) until its labels were set to
+	# wrap. Show the worst case — a deep locked node whose status names its
+	# missing prerequisites — then assert nothing is clipped.
+	_screen._show_node_details(&"steel_comet_lunge")
+	await wait_physics_frames(2)
+
+	var viewport_width: float = float(
+		ProjectSettings.get_setting("display/window/size/viewport_width")
+	)
+	var columns: Control = _screen.get_node("Margin/Layout/Columns") as Control
+	var left_edge: float = columns.global_position.x
+	var right_edge: float = columns.global_position.x + columns.size.x
+
+	assert_gte(left_edge, -0.5, "The leftmost branch column must not be clipped off-screen.")
+	assert_lte(
+		right_edge, viewport_width + 0.5,
+		"The detail panel must not be clipped off the right edge of the screen."
+	)
+
+
 func _find_button(root: Node, skill_id: StringName) -> SkillNodeButton:
 	if root is SkillNodeButton and (root as SkillNodeButton).skill_id == skill_id:
 		return root

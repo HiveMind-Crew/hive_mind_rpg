@@ -130,15 +130,20 @@ func test_zone_camera_limits_match_the_authored_tile_geometry() -> void:
 
 func test_zone_covers_the_project_viewport_on_both_axes() -> void:
 	var zone: Zone1Graybox = _add_zone()
-	var viewport_size: Vector2 = Vector2(
+	var camera: Camera2D = zone.get_node("Player/Camera2D") as Camera2D
+	# The world camera is zoomed in (crisp full-res UI: the render surface is
+	# larger than the visible world so menus/HUD get native-resolution space).
+	# The zone only has to cover the *visible* world area, not the raw render
+	# resolution, so divide the project viewport by the camera zoom.
+	var visible_size: Vector2 = Vector2(
 		float(ProjectSettings.get_setting("display/window/size/viewport_width")),
 		float(ProjectSettings.get_setting("display/window/size/viewport_height"))
-	)
+	) / camera.zoom
 
 	var zone_bounds: Rect2 = zone.get_zone_bounds()
 
-	assert_gte(zone_bounds.size.x, viewport_size.x, "No horizontal void beside the zone.")
-	assert_gte(zone_bounds.size.y, viewport_size.y, "No vertical void above/below the zone.")
+	assert_gte(zone_bounds.size.x, visible_size.x, "No horizontal void beside the zone.")
+	assert_gte(zone_bounds.size.y, visible_size.y, "No vertical void above/below the zone.")
 
 
 func test_camera_never_frames_outside_the_zone_at_the_spawn_edge() -> void:

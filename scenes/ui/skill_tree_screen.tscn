@@ -128,18 +128,22 @@ theme_override_constants/separation = 6
 unique_name_in_owner = true
 layout_mode = 2
 text = "Select a skill"
+autowrap_mode = 2
 
 [node name="DetailCostLabel" type="Label" parent="Margin/Layout/Columns/DetailPanel/DetailMargin/DetailBox"]
 unique_name_in_owner = true
 layout_mode = 2
+autowrap_mode = 2
 
 [node name="DetailStatusLabel" type="Label" parent="Margin/Layout/Columns/DetailPanel/DetailMargin/DetailBox"]
 unique_name_in_owner = true
 layout_mode = 2
+autowrap_mode = 2
 
 [node name="DetailPrereqLabel" type="Label" parent="Margin/Layout/Columns/DetailPanel/DetailMargin/DetailBox"]
 unique_name_in_owner = true
 layout_mode = 2
+autowrap_mode = 2
 
 [node name="DetailDescriptionLabel" type="Label" parent="Margin/Layout/Columns/DetailPanel/DetailMargin/DetailBox"]
 unique_name_in_owner = true
