@@ -97,10 +97,11 @@ Actions: `up down left right dash melee relic utility interact pause`
   `[E] …` prompt to appear, *then* tap `interact`).
 - **Escape is swallowed by the browser**, so `HM.tap('pause')` usually won't
   open the pause menu in-browser — verify pause via Tier 1 instead.
-- **Canvas can render small / top-left-anchored at larger window sizes** — a
-  Web-shell scaling quirk, tracked in issue #125, *not* a game bug. Smaller
-  browser viewports render larger/more readable; the geometric truth is better
-  confirmed with a Tier-1 probe than by eyeballing a tiny canvas.
+- **The canvas fills or letterbox-centers the window** since issue #125
+  (fractional stretch scaling). If it ever renders small or top-left-anchored
+  in an *automated* browser pane, suspect the pane's window/DPR emulation
+  first — that artifact never reproduced in a real browser tab. Geometric
+  truth is still better confirmed with a Tier-1 probe than by eyeballing.
 - **Reading game state from JS isn't wired up.** Godot doesn't expose node state
   to the page, so you can't query the player's position from the browser. For
   deterministic behavior checks (position, health, state machine), use Tier 1.

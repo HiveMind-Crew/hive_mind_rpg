@@ -29,7 +29,7 @@ size/window_width_override=1280
 size/window_height_override=720
 stretch/mode="canvas_items"
 stretch/aspect="keep"
-stretch/scale_mode="integer"
+stretch/scale_mode="fractional"
 
 [input]
 

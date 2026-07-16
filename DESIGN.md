@@ -139,7 +139,7 @@ Unlock skill tree branches → develop a distinct build → clear zone boss → 
 |---|---|---|
 | Engine | Godot 4.7 stable | Free, open-source, strong 2D tooling, AI-friendly GDScript; the supported project version |
 | Language | GDScript, statically typed | Fast iteration; conventions in AGENTS.md |
-| Base resolution | 1280×720, integer-scaled; world camera zoomed 2× so the visible world is 640×360 | Keeps the crisp 16-bit pixel-art density of a 640×360 view while giving menus/HUD native-resolution space so text UI (e.g. the skill tree) renders crisp and fits; scales to 720p/1080p/4K |
+| Base resolution | 1280×720, fractional-scaled with aspect `keep`; world camera zoomed 2× so the visible world is 640×360 | Keeps the crisp 16-bit pixel-art density of a 640×360 view while giving menus/HUD native-resolution space so text UI (e.g. the skill tree) renders crisp and fits. Fractional scaling fills or letterbox-centers any window (integer scaling rendered 1080p at 1× and cropped sub-720p browser windows, issue #125); world texels stay integer at exact 720p (2×), 1080p (3×), and 4K (6×) |
 | Pixel snapping | Enabled (2D pixel snap) | Avoid pixel shimmer |
 | Tilemaps | Godot TileMapLayer | Native, well-documented |
 | Content data | Custom Resources (`.tres`) | Type-safe in-editor editing for skills/enemies; diffs OK in git |
