@@ -85,6 +85,8 @@ func reset_to_spawn() -> void:
 	health.restore_full_health()
 	hurtbox.set_enabled(true)
 	attack_hitbox.set_deferred("monitoring", false)
+	# Rejoin the body layer left on death, so a revived enemy is solid again.
+	set_deferred("collision_layer", CollisionLayers.ENEMY_BODY)
 	var previous_state: State = state
 	state = State.IDLE
 	_state_time_remaining = 0.0
@@ -155,6 +157,11 @@ func _transition_to(new_state: State) -> void:
 			velocity = Vector2.ZERO
 			attack_hitbox.set_deferred("monitoring", false)
 			hurtbox.set_enabled(false)
+			# Remains must never block a route (issue #130): leaving the body
+			# layer makes the corpse pass-through for everything that masks
+			# ENEMY_BODY while the death visuals stay in place. Deferred:
+			# death flows out of a combat-area overlap flush.
+			set_deferred("collision_layer", 0)
 	_apply_state_visuals()
 	state_changed.emit(previous_state, state)
 
