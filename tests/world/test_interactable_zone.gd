@@ -20,6 +20,17 @@ func _player_body() -> CharacterBody2D:
 	return body
 
 
+func test_zone_scans_the_player_body_layer_only() -> void:
+	var zone: InteractableZone = _spawn_zone()
+
+	assert_eq(
+		zone.collision_mask, CollisionLayers.PLAYER_BODY,
+		"Actor bodies left the default layer (issue #128); the zone must scan "
+		+ "PLAYER_BODY or real overlap never fires (issue #135)."
+	)
+	assert_eq(zone.collision_layer, 0, "A pure sensor occupies no physics layer.")
+
+
 func test_prompt_starts_hidden_with_the_authored_text() -> void:
 	var zone: InteractableZone = _spawn_zone("[E] Skill Tree")
 	var prompt: Label = zone.get_node("%PromptLabel") as Label
