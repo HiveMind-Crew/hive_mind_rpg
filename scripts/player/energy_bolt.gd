@@ -8,6 +8,7 @@ const PROJECTILE_GROUP: StringName = &"player_projectiles"
 
 var direction: Vector2 = Vector2.DOWN
 var _remaining_lifetime: float = 0.0
+var _ended: bool = false
 
 
 func _ready() -> void:
@@ -16,6 +17,16 @@ func _ready() -> void:
 	if direction.is_zero_approx():
 		direction = Vector2.DOWN
 	_remaining_lifetime = lifetime
+	var placeholder: CanvasItem = get_node_or_null("Visual") as CanvasItem
+	if placeholder != null:
+		placeholder.hide()
+	var flight_visual: AnimatedSprite2D = AnimatedSprite2D.new()
+	flight_visual.name = "FlightVisual"
+	flight_visual.sprite_frames = CombatFxSpawner.bolt_flight_frames()
+	flight_visual.animation = CombatFxSpawner.BOLT_FLIGHT
+	flight_visual.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	add_child(flight_visual)
+	flight_visual.play()
 	area_entered.connect(_on_area_entered)
 	body_entered.connect(_on_body_entered)
 
@@ -25,7 +36,7 @@ func _physics_process(delta: float) -> void:
 	position += direction * speed * safe_delta
 	_remaining_lifetime -= safe_delta
 	if _remaining_lifetime <= 0.0:
-		queue_free()
+		_end()
 
 
 func _on_area_entered(area: Area2D) -> void:
@@ -34,8 +45,16 @@ func _on_area_entered(area: Area2D) -> void:
 		return
 	hurtbox.receive_hit(self)
 	# Physics objects cannot safely be removed while overlap callbacks flush.
-	queue_free.call_deferred()
+	_end.call_deferred()
 
 
 func _on_body_entered(_body: Node2D) -> void:
-	queue_free.call_deferred()
+	_end.call_deferred()
+
+
+func _end() -> void:
+	if _ended:
+		return
+	_ended = true
+	CombatFxSpawner.spawn_bolt_impact(get_parent(), global_position)
+	queue_free()

@@ -286,6 +286,7 @@ func _on_movement_state_changed(
 func _on_dash_started() -> void:
 	_hurtbox.set_enabled(false)
 	_body_visual.play_dash(_movement.last_move_direction)
+	CombatFxSpawner.spawn_dash_trail(get_parent(), global_position, _movement.last_move_direction)
 	AudioManager.play_sfx(&"dash")
 	dash_started.emit()
 
@@ -299,6 +300,7 @@ func _on_dash_ended() -> void:
 func _on_melee_swing_started(direction: Vector2) -> void:
 	_melee_hitbox.position = direction * melee_hitbox_offset
 	_body_visual.play_melee(direction)
+	CombatFxSpawner.spawn_slash(get_parent(), global_position + direction * melee_hitbox_offset, direction)
 	# Deferred: physics properties cannot safely change while an overlap query is flushing.
 	_melee_hitbox.set_deferred("monitoring", true)
 	AudioManager.play_sfx(&"melee_swing")
