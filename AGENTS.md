@@ -122,6 +122,8 @@ Use this lifecycle for every upcoming bug fix, feature, or enhancement:
 
 ## 8. Testing & Definition of Done
 
+**How to run, isolate, and playtest:** see [`docs/agent_playtesting.md`](docs/agent_playtesting.md) — the three verification tiers (headless GUT + simulated input, single-scene isolation, and Web-build browser playtest), the headless probe pattern, and the browser input helper (`tools/browser_playtest_helpers.js`). Reach for the browser only when a change needs visual/feel verification the headless suite can't give; prefer GUT for anything deterministic.
+
 A task is done when:
 - [ ] Project opens in Godot with no errors or warnings introduced
 - [ ] The feature works as described in the Issue (include repro steps in PR)
