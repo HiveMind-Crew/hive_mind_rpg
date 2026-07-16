@@ -55,6 +55,7 @@ func _on_damaged(_amount: int, _knockback: Vector2, impact_type: int) -> void:
 	_flash_ends_at_msec = Time.get_ticks_msec() + roundi(flash_duration * 1000.0)
 	set_process(true)
 	_render_feedback(Time.get_ticks_msec())
+	CombatFxSpawner.spawn_spark(get_parent(), _visual.global_position)
 	hit_feedback_started.emit(impact_type)
 
 
@@ -79,6 +80,7 @@ func _on_died() -> void:
 	_invulnerable = false
 	_flash_ends_at_msec = 0
 	_visual.self_modulate = death_tint
+	CombatFxSpawner.spawn_dissolve(get_parent(), _visual.global_position)
 	set_process(false)
 	death_feedback_started.emit()
 
