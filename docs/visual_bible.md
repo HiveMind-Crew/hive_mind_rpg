@@ -1,183 +1,137 @@
-# Visual Bible — v1 Vertical Slice (Corrupted Forest)
+# Visual Bible — v1 Vertical Slice (Stylized HD 2D)
 
-> **Status:** Canonical for the v1 slice (issue #82). Expands DESIGN.md §10.
-> Every sprite/tileset/UI-skin task cites this document plus
-> [`asset_manifest_v1.md`](asset_manifest_v1.md) instead of redefining scale,
-> palette, or import rules.
-> In-engine proof: run `scenes/reference/visual_reference_sheet.tscn` (F6) to
-> see the palette and a native 640×360 readability strip. The scene's swatch
-> constants mirror §2 and must be updated in the same PR as any palette change.
+> **Status:** Canonical for the v1 slice (issue #139). Expands `DESIGN.md` §10.
+> It replaces the former 16-bit pixel-art target. `docs/asset_manifest_v1.md`
+> owns migration groups and production status. Existing pixel assets remain
+> playable legacy content until focused replacement passes land.
 
 ## 1. Direction in one paragraph
 
-16-bit top-down pixel art. Zone 1 is a **corrupted forest**: earthy medieval
-forms — soil, bark, moss, worked stone, parchment — broken by buried relic
-tech that bleeds **cyan and magenta** into the world. The medieval layer is
-low-saturation and hand-worn; the tech layer is high-saturation, emissive, and
-geometric (straight seams, dithered glow, glitch offsets). The two languages
-never blend: corruption reads as an intrusion, not a tint.
+**Stylized HD 2D illustration.** Zone 1 is a corrupted forest of painterly,
+hand-worn medieval materials — soil, bark, moss, worked stone, cloth — ruptured
+by buried relic technology. The medieval language is low-saturation, organic,
+and imperfect. Relic tech is precise, geometric, emissive, and visibly foreign.
+The goal is a premium illustrated action RPG, not 3D realism and not enlarged or
+smoothed pixel art. The top-down camera, 2D gameplay/collision, hand-built
+rooms, and surreal science-fantasy tone remain unchanged.
 
-## 2. Palette
+## 2. Visual languages and palette
 
-All colors are 8-bit hex. Actor/FX anchors are already shipped in gameplay
-scenes and scripts (sources noted); world ramps are new and canonical here.
+### 2.1 Medieval world
 
-### 2.1 World ramps (earthy, low saturation)
+Earth, stone, foliage, and cloth occupy warm/cool muted ranges. Materials should
+show deliberate brush texture, value variation, and age without noisy detail.
+Keep playable floors calmer and lower-contrast than walls, props, and actors.
+The current earth/stone/moss palette families remain useful starting anchors,
+but exact ramps are established by the one-screen HD prototype rather than
+copied mechanically from legacy pixel art.
 
-| Ramp | Values (dark → light) | Use |
-|---|---|---|
-| Canopy / void | `#100D16` `#1C1826` `#2A2438` | Backgrounds, pit/void, deepest shadow. Coolest and darkest values on screen. |
-| Soil / bark | `#2E211B` `#4A3628` `#6B4E33` `#8F6D46` | Ground, roots, trunks, wooden props. |
-| Moss / foliage | `#1E2B1D` `#33472A` `#4F6B38` `#7A934F` | Walkable forest floor, leaves, undergrowth. |
-| Stone | `#2B2B33` `#45454F` `#63636E` | Ruins, shrine masonry, walls. `#666B80` is the checkpoint-dormant anchor (`checkpoint.gd`). |
-| Parchment | `#B8A98C` `#D9CBA8` `#F2E9CE` | Cloth, bone, bright medieval highlights, UI body text. |
+### 2.2 Relic corruption
 
-### 2.2 Corruption accents (relic tech — reserved)
+Relic technology reserves bright **cyan** and **magenta** emissives. Cyan reads
+as power, relic machinery, pickups, and player energy; magenta reads as
+corruption, hostile tech, and threat-side machinery. The colors must appear as
+an intrusion into medieval materials, never as ambient forest decoration. Glow
+is spatially contained: it lights nearby material and supports interaction or
+threat readability rather than washing out the scene.
 
-| Ramp | Values | Use |
-|---|---|---|
-| Relic cyan | `#0F4A52` `#1FA0A8` `#4DE5FF` `#C8F8FF` | Relic machinery glow, energy bolt (`#4DE5FF`, `energy_bolt.tscn`), skill-point pickups, energy UI. |
-| Corruption magenta | `#5C1E52` `#9E2966` `#F259B8` `#FFC8EC` | Corruption veins/growths, boss door (`#9E2966`, `zone1_graybox.tscn`), threat-side tech. |
+### 2.3 Actor and gameplay signals
 
-**Reservation rule:** cyan/magenta at these saturations appear **only** on
-relic tech, corruption, and the interactive/threat elements listed above —
-never in ambient foliage, soil, or stone. The sole actor exception is the
-player's magenta facing marker (`#F259B8`): it communicates facing at a glance
-and never appears as an ambient/world material. This keeps interactables,
-danger, and player orientation readable at a glance.
+- Player: teal-led silhouette with a restrained magenta facing/readability
+  accent.
+- Enemies: violet-led silhouettes, distinct from both player and world.
+- Wind-up/telegraph: warm yellow; damage: red; restoration/checkpoint: green;
+  energy: cyan; defeat: desaturated dark neutral.
+- These semantic colors are gameplay communication and must not be repurposed
+  as ordinary decoration.
 
-### 2.3 Actor identity
+## 3. Value hierarchy and readability
 
-| Group | Values | Anchors |
-|---|---|---|
-| Player (teal) | `#0E5F58` `#1FD1C2` `#A8FFF2`, accent `#F259B8` | Body `#1FD1C2` and facing marker `#F259B8` from `player.tscn`. |
-| Enemies (violet) | `#3A1445` `#9440AD` `#D98FF0` | Idle body `#9440AD` from `enemy_base.gd`. |
+1. Background/void is darkest and quietest.
+2. Walls and major props create readable framing silhouettes.
+3. Walkable floor is mid-value and visually calm.
+4. Actors, interactables, and navigation affordances have the strongest local
+   separation from their immediate floor and wall backgrounds.
+5. Combat telegraphs, relic glow, and short-lived FX are the brightest and most
+   saturated elements.
 
-Player = teal family; enemies = violet family; world = earth ramps. No world
-material may sit in the teal or violet hue bands at actor saturation.
+At actual play size, the player, every enemy archetype, hostile attack,
+checkpoint, pickup, secret cue, and zone gate must be identifiable without
+relying on labels. Environment art may frame routes but may not conceal enemy
+spawns, interact prompts, collision boundaries, or secret entrances.
 
-### 2.4 Signal colors (combat/UI states — semantic, do not repurpose)
+## 4. Material, lighting, and depth
 
-| Meaning | Hex | Anchor |
-|---|---|---|
-| Wind-up / telegraph | `#FFC72E` | `enemy_base.gd` WIND_UP_COLOR |
-| Attack / damage | `#FF3340` | `enemy_base.gd` ATTACK_COLOR |
-| Restore / checkpoint lit | `#80F2B8` | `checkpoint.gd` lit_color |
-| Energy / relic UI | `#8CE5FF` | `player_hud.tscn` energy label |
-| Health UI | `#FFB8B8` | `player_hud.tscn` health label |
-| Death / defeated | `#383842` | `enemy_base.gd` DEAD_COLOR |
-| UI panel base | `#171721` | `skill_tree_screen.tscn` backdrop |
+- **Medieval materials:** irregular hand-painted edges; warm/cool shifts across
+  worn stone, bark, moss, soil, cloth, and metal. Detail follows form and
+  lighting rather than evenly coating every surface.
+- **Relic materials:** clean geometry, repeated manufacture marks, emissive
+  cores, restrained distortion/channel splitting near corruption boundaries.
+- **Lighting:** authored top-down/three-quarter lighting defines form, contact,
+  and navigation. Soft shadows may ground actors and props, but may not hide
+  gameplay space or imply collision where none exists.
+- **Depth:** use overlap, value, ambient occlusion/contact shadow, and
+  disciplined prop placement. Do not use visual depth to change top-down
+  collision, targeting, camera, or movement rules.
 
-## 3. Value hierarchy (dark → light)
+## 5. Animation and combat presentation
 
-1. **Background / void** — darkest, least saturated (canopy ramp).
-2. **Walls & large props** — dark silhouettes with a single light-ramp rim on
-   the top edge; must separate from floor by ≥ 2 value steps.
-3. **Walkable floor** — mid value, lowest local contrast on screen (moss/soil
-   mids); floor detail stays within adjacent ramp steps so actors pop.
-4. **Actors & interactables** — highest local contrast; each actor's mid value
-   must differ from the floor mid by ≥ 3 value steps.
-5. **FX, telegraphs, corruption glow** — brightest and most saturated,
-   short-lived or spatially small.
+Animation should be smooth enough to communicate anticipation, impact,
+recovery, movement direction, and state changes clearly. It may use authored
+frame animation, skeletal/rigged animation, or a validated hybrid; exact method
+is intentionally deferred to the prototype. Attack contact, dash readability,
+relic casting, hit reactions, death states, and enemy telegraphs remain
+presentation-only unless a gameplay issue explicitly changes them.
 
-Light reads as coming from above (top-down): top faces light, south faces
-shadow.
+Live mechanical signals always win over decorative art: facing, active shields,
+wind-ups, hitboxes, invulnerability, and defeated pass-through states need
+clear current-state feedback even if an illustrated body sheet is static.
 
-## 4. Outline, shadow, and material language
+## 6. Geometry, collision, and scene composition
 
-- **Actors and interactables:** 1 px selective outline in the darkest value of
-  the actor's own ramp (never pure black). Outline may drop out on the lit top
-  edge.
-- **World tiles and props:** no outlines; separation comes from value steps
-  and the wall-top rim light.
-- **Contact shadows:** optional 1–2 px tall ellipse under actors at ~40 %
-  opacity of `#100D16`. No long cast shadows in v1.
-- **Medieval materials:** rounded, irregular, hand-worn silhouettes; hue
-  shifts toward warm in light, cool in shadow; dithering allowed only at
-  16-bit-era coarseness (2×1 / 2×2 checker).
-- **Relic-tech materials:** straight edges, exact repeats, emissive cores
-  (lightest ramp value at the center, no outline); glitch treatment = 1–2 px
-  horizontal row offsets and cyan/magenta channel-split ghosting, used
-  sparingly and only near relic tech.
+Gameplay geometry is canonical. Art conforms to existing collision shapes,
+navigation, spawns, interact areas, and encounter layout; an art pass never
+silently changes them. Decorative overhangs must preserve honest ground contact
+and leave actor silhouettes, interactables, and walkable routes readable.
+Visual nodes remain separate from collision components and gameplay signals.
 
-## 5. Native-resolution readability rules (640×360)
+The former 16×16 tile grid and 32×32 actor frame conventions are **legacy
+implementation details**, not art-direction targets. They remain valid for
+current assets only while the migration is underway.
 
-- Base resolution is 640×360, integer-scaled (`project.godot`); **1 texel =
-  1 screen pixel**. Author and judge all art at 640×360, not zoomed.
-- Sprites render at `scale = 1` only. No non-integer scaling, no rotation of
-  pixel sprites (FX nodes may rotate in 90° steps; free rotation is allowed
-  only for untextured/primitive FX).
-- Minimum feature size 2 px; minimum text size = the 8 px UI font already used
-  by the HUD.
-- Every actor must read in **pure silhouette** against both the floor mid
-  value and the wall dark value — verify in the reference sheet's readability
-  strip before merging new actor art.
-- Keep `snap_2d_transforms_to_pixel` / `snap_2d_vertices_to_pixel` on
-  (already set project-wide).
+## 7. Rendering and implementation transition
 
-## 6. Sprite grid, scale, pivots, collision alignment
+The shipped project currently retains pixel snapping, nearest-filtered legacy
+textures, a 2× world camera configuration, and 1280×720 output. These settings
+remain untouched until the one-screen HD prototype proves the replacement.
+That prototype must set and document:
 
-- **Tile grid:** 16×16 px tiles (matches the existing graybox TileSet). Zone
-  geometry, doors, and room sizes stay on this grid.
-- **Frame canvases:** regular player and enemy actors use **32×32 px** frames; large elites use 48×48 px and bosses use 64×64 px or larger. This keeps the 16-bit pixel-art language while allowing enough silhouette, gear, and corruption detail for a modern action-RPG presentation. Per-asset sizes are fixed in the manifest. Canvas dimensions are even numbers so centered sprites land on the pixel grid.
-- **Pivot convention:** all `Sprite2D` / `AnimatedSprite2D` use
-  `centered = true`, `offset = (0, 0)`, and the **frame center aligns with the
-  collision-shape center**. Where a collision shape is locally offset (the
-  player capsule sits at `(0, 2)`), the sprite node takes the same local
-  position. Existing collision shapes are canonical; art conforms to
-  collision, never the reverse.
-- **Overhang:** visuals may exceed their collision shape by ≤ 3 px per side,
-  and by more only **upward** (e.g., checkpoint shrine, boss door arch) so
-  ground contact stays honest.
-- **Facing:** side-facing frames face **right**; left is `flip_h`. Up/down are
-  authored frames.
+- source texture dimensions and atlas/rig approach;
+- texture filtering, mipmap, compression, and alpha settings;
+- camera zoom/presentation and UI/world readability at supported displays;
+- animation workflow and runtime cost;
+- Web export size, load time, and frame-time budget.
 
-## 7. Godot import settings (pixel art)
+Do not introduce fractional visual scaling, smoothing, renderer changes, or
+new asset settings in a conversion pass before that prototype decision lands.
 
-Every production texture uses these import parameters (the graybox atlas
-already demonstrates them — see `graybox_tiles.png.import`):
+## 8. UI and typography
 
-| Parameter | Value |
-|---|---|
-| `compress/mode` | `0` (Lossless) |
-| `mipmaps/generate` | `false` |
-| `process/fix_alpha_border` | `true` |
-| `process/premult_alpha` | `false` |
-| `detect_3d/compress_to` | keep default; never convert |
+UI remains clean, high-contrast, and subordinate to active combat. It should
+share the illustrated material language without becoming ornate or reducing
+scan speed. HP, energy, skill availability, interaction prompts, and controller
+hints must remain legible at 1280×720 output and ordinary browser/window sizes.
+The former pixel font and 8 px minimum are legacy constraints pending the UI
+conversion pass; accessibility and functional layout are not optional.
 
-Texture filtering must be **Nearest**. Until a dedicated ticket flips the
-project default (`rendering/textures/canvas_textures/default_texture_filter`),
-set `texture_filter = 1` (Nearest) on the node that displays the texture, as
-`zone1_graybox.tscn` does for its `TileMapLayer`.
+## 9. Production, provenance, and review
 
-Source files: PNG only for production sprites (SVG remains test-only). No
-paid or unlicensed assets (AGENTS.md §11); provenance rules are in the
-manifest §3.
-
-## 8. Animation naming and loop conventions
-
-`SpriteFrames` animation names are `snake_case`:
-`<action>[_<facing>]` with facings `down`, `up`, `side`.
-
-| Animation | Loop | FPS | Notes |
-|---|---|---|---|
-| `idle_*` | loop | 6 | Subtle 2–4 frame breathing/bob. |
-| `walk_*` | loop | 10 | |
-| `dash_*` | one-shot | 12 | Player only in v1. |
-| `attack_melee_*` | one-shot | 12 | Contact frame flagged in the frame count column of the manifest. |
-| `attack_relic_*` | one-shot | 12 | |
-| `windup` | one-shot | 8 | Enemy telegraph; tinted toward `#FFC72E`. |
-| `hurt` | one-shot | 12 | |
-| `death` | one-shot | 10 | Holds last frame; ends within death tint `#383842`. |
-
-Non-actor loops (checkpoint lit, relic glow, corruption shimmer) are 4-frame
-loops at 6 fps unless the manifest says otherwise. Frame counts per asset are
-fixed in the manifest.
-
-## 9. Production vs graybox
-
-Programmatic placeholder visuals (`Polygon2D` bodies, flat tiles, default
-Control theming) are **graybox** and remain untouched until a focused
-follow-up issue replaces each one citing this bible. The manifest (§4 there)
-lists exactly which assets are production targets and which existing files
-are retained test assets.
+- Every binary asset records source, author/tool, license, and post-processing
+  in `assets/sprites/LICENSES.md` or the applicable license log.
+- Use only properly licensed hand-authored, CC0/compatible third-party, or
+  policy-compliant generated source material. Do not claim provenance that is
+  not documented.
+- Review art at actual gameplay size and in a real combat route, not only a
+  zoomed asset sheet.
+- Each focused conversion pass preserves gameplay and includes structural tests
+  and manual playtest evidence appropriate to its asset group.
