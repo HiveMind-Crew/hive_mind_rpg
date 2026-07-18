@@ -44,7 +44,6 @@ chaser_path = NodePath("../Enemies/ChaserRoomA")
 chaser_visual_path = NodePath("../Enemies/ChaserRoomA/BodyVisual")
 checkpoint_path = NodePath("../Checkpoints/CheckpointEntrance")
 checkpoint_visual_path = NodePath("../Checkpoints/CheckpointEntrance/Visual")
-hud_panel_path = NodePath("../Player/PlayerHud/MarginContainer/PanelContainer")
 
 [node name="Props" type="Node2D" parent="."]
 

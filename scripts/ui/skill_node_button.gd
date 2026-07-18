@@ -4,11 +4,9 @@ extends Button
 ## the screen configures it, restyles it, and listens to its built-in
 ## pressed/focus_entered signals — this button never reaches up the tree.
 
-# Graybox state palette (no art pass yet): tint the whole button so the
-# three states read at a glance even without icons.
-const UNLOCKED_COLOR := Color(0.45, 0.95, 0.55)
-const AVAILABLE_COLOR := Color(0.55, 0.9, 1.0)
-const LOCKED_COLOR := Color(0.45, 0.45, 0.52)
+const UNLOCKED_COLOR := Color(0.47, 0.92, 0.48)
+const AVAILABLE_COLOR := Color(0.31, 0.91, 0.96)
+const LOCKED_COLOR := Color(0.48, 0.49, 0.45)
 
 var skill_id: StringName = &""
 
@@ -28,8 +26,8 @@ func setup(skill: SkillNode) -> void:
 func set_display_state(state: SkillTreeDisplay.State) -> void:
 	match state:
 		SkillTreeDisplay.State.UNLOCKED:
-			modulate = UNLOCKED_COLOR
+			modulate = Color(0.72, 1.0, 0.72, 1.0)
 		SkillTreeDisplay.State.AVAILABLE:
-			modulate = AVAILABLE_COLOR
+			modulate = Color.WHITE
 		SkillTreeDisplay.State.LOCKED:
-			modulate = LOCKED_COLOR
+			modulate = Color(0.52, 0.55, 0.52, 1.0)

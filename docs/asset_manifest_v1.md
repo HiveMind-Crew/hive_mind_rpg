@@ -96,7 +96,7 @@ phone smoke test before merge.
 
 | Group | Scope | Non-goals |
 |---|---|---|
-| UI skin and typography | HUD, skill tree, prompts, panels, icons, and accessibility/readability treatment. | UI layout behavior, skill costs, input flow, pause behavior, or save state. |
+| UI skin and typography | **Production conversion in issue #156:** shared dark iron/stone material theme, semantic HP/energy and skill-state colors, eight illustrated HD emblems, larger typography, focus treatment, and readable desktop/mobile-landscape HUD, prompts, pause, skill tree, and touch controls. | UI layout behavior, skill costs, input flow, pause behavior, mobile input ownership, or save state. |
 | Combat and relic FX | Attacks, impacts, dash/relic feedback, projectiles, enemy telegraphs, and death presentation. | Damage, hitboxes/hurtboxes, hitstop, timing, AI, or time-scale ownership. |
 
 Issue #154 desktop Web evidence used the production `1280×720` canvas and the
@@ -106,6 +106,15 @@ read without changing their collision footprints. The release/no-threads Web
 export kept `index.wasm` at 39,509,339 bytes and produced a 6,712,544-byte PCK,
 a +475,136-byte delta from the issue #149 baseline — below the 2 MiB review
 threshold. Browser console inspection reported no warnings or errors.
+
+Issue #156 browser evidence covered the live HUD and pause overlay at
+`1280×720`, the standalone skill tree at the same canvas, and forced touch
+controls in the production Android-landscape `915×412` viewport. Resource
+labels, focus outlines, semantic colors, and all eight emblems remained within
+their panels and controls; the browser console reported no warnings or errors.
+The release/no-threads export kept `index.wasm` at 39,509,339 bytes and produced
+a 7,028,548-byte PCK, a +316,004-byte delta from issue #154 and below the 2 MiB
+physical-device-review threshold.
 
 ## 4. Legacy inventory
 
