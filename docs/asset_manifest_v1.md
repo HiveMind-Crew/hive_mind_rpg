@@ -76,7 +76,7 @@ phone smoke test before merge.
 
 | Group | Scope | Non-goals |
 |---|---|---|
-| Player HD presentation | Illustrated player body, directional movement/action states, readable facing cue, contact shadow, and presentation integration. | Movement, dash/melee/relic timing, hitboxes/hurtboxes, stats, saves, or player collision. |
+| Player HD presentation | Implemented in issue #150: illustrated player body, directional cyan facing accent (magenta during dash/melee/relic), contact shadow, and state-driven presentation integration. | Movement, dash/melee/relic timing, hitboxes/hurtboxes, stats, saves, or player collision. |
 
 ### 3.2 Enemies and boss
 

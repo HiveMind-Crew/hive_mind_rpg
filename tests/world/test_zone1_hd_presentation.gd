@@ -260,7 +260,11 @@ func test_only_selected_legacy_display_nodes_are_hidden_and_only_visually() -> v
 	assert_true(other_shrine_visual.visible)
 
 	# The HD replacements ride the same actors, so gameplay motion moves them.
-	assert_eq(presentation.get_player_sprite().get_parent(), zone.get_node("Player"))
+	assert_eq(
+		presentation.get_player_sprite().get_parent(),
+		zone.get_node("Player/HdPresentation"),
+		"Zone 1 must reuse the player-wide HD display instead of adding a duplicate body."
+	)
 	assert_eq(
 		presentation.get_chaser_sprite().get_parent().get_parent(),
 		zone.get_node("Enemies/ChaserRoomA")

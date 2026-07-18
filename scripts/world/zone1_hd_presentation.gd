@@ -114,10 +114,18 @@ func _ready() -> void:
 	_background_sprite = _build_background_sprite()
 	add_child(_background_sprite)
 	_hide_covered_legacy_scenery()
-	_player_sprite = _install_actor_sprite(
-		_player, _player_legacy_visual, PLAYER_TEXTURE,
-		PLAYER_VISUAL_HEIGHT_PX, PLAYER_VISUAL_OFFSET
+	var player_hd_presentation: PlayerHdPresentation = (
+		_player.get_node_or_null("HdPresentation") as PlayerHdPresentation
 	)
+	if player_hd_presentation != null:
+		# Issue #150 owns the player-wide display node. Reuse it so Zone 1 does
+		# not add a duplicate HD body over the actor it already renders.
+		_player_sprite = player_hd_presentation.get_display_sprite()
+	else:
+		_player_sprite = _install_actor_sprite(
+			_player, _player_legacy_visual, PLAYER_TEXTURE,
+			PLAYER_VISUAL_HEIGHT_PX, PLAYER_VISUAL_OFFSET
+		)
 	# The production regular-enemy pass owns the roster body. Retain the old
 	# prototype hound only as a compatibility fallback for stripped fixtures.
 	var roster_presentation: EnemyHdPresentation = (
