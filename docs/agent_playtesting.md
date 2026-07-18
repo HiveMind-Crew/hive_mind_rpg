@@ -89,6 +89,24 @@ HM.releaseAll()                // if anything sticks
 Actions: `up down left right dash melee relic utility interact pause`
 (mapped to the `project.godot` `[input]` bindings — keep them in sync).
 
+### Mobile Web controls
+
+Use the authenticated HTTPS playtest endpoint on a phone; plain LAN HTTP is
+not a secure context for Godot Web on Android/iOS. The supported public
+playtest host is `https://hiverpg.coolness.work` and requires its existing
+access prompt.
+
+The current mobile control pass is **landscape-first**:
+
+- Left thumb: virtual stick for movement.
+- Right thumb: `ATK`, `REL`, `DASH`, and `USE` (contextual interact).
+- Portrait intentionally shows a rotate-device message rather than tiny or
+  misleading controls. Rotate to landscape before testing the action loop.
+
+A Bluetooth/USB keyboard remains a valid fallback and uses the ordinary
+desktop bindings. Test touch input with actual fingers on the phone: browser
+automation can validate Web loading but cannot establish real multitouch feel.
+
 ### Gotchas (learned the hard way)
 
 - **The player is fast.** For fine alignment to an interactable, `HM.hold(dir,
