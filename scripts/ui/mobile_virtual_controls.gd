@@ -197,6 +197,9 @@ func _build_visuals() -> void:
 func _make_panel(color: Color, radius: float, label_text: String) -> Panel:
 	var panel: Panel = Panel.new()
 	panel.custom_minimum_size = Vector2(radius * 2.0, radius * 2.0)
+	# This overlay is positioned directly under a plain Control rather than a
+	# Container, so custom_minimum_size alone does not assign its drawn rect.
+	panel.size = panel.custom_minimum_size
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	style.bg_color = color
