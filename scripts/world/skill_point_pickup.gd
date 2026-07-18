@@ -9,6 +9,11 @@ extends Area2D
 signal collected(secret_id: StringName, points: int)
 
 const PICKUP_GROUP: StringName = &"skill_point_pickups"
+const HD_TEXTURE: Texture2D = preload(
+	"res://assets/sprites/world/hd/interactables/skill_point_pickup.png"
+)
+const HD_VISUAL_HEIGHT_PX: float = 24.0
+const HD_TEXTURE_FILTER: CanvasItem.TextureFilter = CanvasItem.TEXTURE_FILTER_LINEAR
 
 ## Unique per placed pickup. An empty id still grants points but cannot be
 ## persisted, so the pickup would respawn on every visit.
@@ -17,6 +22,7 @@ const PICKUP_GROUP: StringName = &"skill_point_pickups"
 @export var player_group: StringName = &"player"
 
 var _collected: bool = false
+var _hd_visual: Sprite2D
 
 
 func _ready() -> void:
@@ -27,6 +33,10 @@ func _ready() -> void:
 	collision_layer = 0
 	collision_mask = CollisionLayers.PLAYER_BODY
 	add_to_group(PICKUP_GROUP)
+	var legacy_visual: Polygon2D = get_node("Visual") as Polygon2D
+	legacy_visual.hide()
+	_hd_visual = _build_hd_visual()
+	add_child(_hd_visual)
 	if secret_id == StringName():
 		push_warning(
 			"SkillPointPickup '%s' has no secret_id; it will respawn on every visit." % name
@@ -41,6 +51,10 @@ func is_collected() -> bool:
 	return _collected
 
 
+func get_hd_visual() -> Sprite2D:
+	return _hd_visual
+
+
 func _on_body_entered(body: Node2D) -> void:
 	# body_entered can re-fire while queue_free is still pending, so the flag
 	# keeps the payout a one-shot.
@@ -52,3 +66,13 @@ func _on_body_entered(body: Node2D) -> void:
 		SaveManager.record_secret_collected(secret_id)
 	collected.emit(secret_id, points)
 	queue_free()
+
+
+func _build_hd_visual() -> Sprite2D:
+	var sprite: Sprite2D = Sprite2D.new()
+	sprite.name = "HdVisual"
+	sprite.texture = HD_TEXTURE
+	sprite.texture_filter = HD_TEXTURE_FILTER
+	var visual_scale: float = HD_VISUAL_HEIGHT_PX / float(HD_TEXTURE.get_height())
+	sprite.scale = Vector2(visual_scale, visual_scale)
+	return sprite

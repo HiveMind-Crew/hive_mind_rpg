@@ -13,3 +13,4 @@ color = Color(0.36, 0.6, 0.44, 1)
 [node name="InteractionZone" parent="." instance=ExtResource("2_zone")]
 unique_name_in_owner = true
 prompt_text = "[E] Skill Tree"
+show_gate_visual = false

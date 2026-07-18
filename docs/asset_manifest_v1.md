@@ -90,7 +90,18 @@ phone smoke test before merge.
 | Group | Scope | Non-goals |
 |---|---|---|
 | Corrupted-forest environment | Floors, walls, foliage, ruins, relic corruption, route framing, and set dressing. | Tile/collision layout, camera bounds, secret route geometry, enemy placement, or room logic. |
-| Interactables | Checkpoints, gates, pickups, boss door, secret reveals, and associated affordance feedback. | Area2D contracts, reward values, save behavior, or transition logic. |
+| Interactables | **Production conversion in issue #153:** six distinct transparent illustrated assets under `assets/sprites/world/hd/interactables/`; each display is parented to its live checkpoint, gate sensor, pickup, station, hidden-room trigger, or boss-door body. Dormant/lit, nearby, collected, screen-open, revealed, and sealed/open presentation follows the existing mechanical signals and state. | Area2D contracts, reward values, save behavior, transition logic, secret geometry, or boss-door collision. |
+
+Issue #153 uses explicit display-height/offset contracts at the shipped 2×
+camera: checkpoint 44 px, travel gate 54 px, pickup 24 px, station 52 px,
+secret-reveal pulse 48 px, and boss door 88 px. The neutral gate and station
+reserve cyan, the checkpoint changes from a dim neutral state to restoration
+green/white, pickups and reveal feedback use cyan, and the sealed boss door
+uses threat-side magenta. Legacy polygons remain hidden in the tree where
+their owning scene previously used them; collision shapes and sensors are
+unchanged. All six PNG imports are lossless, unmipmapped, unpremultiplied-alpha
+textures with alpha-border correction, and every live Sprite2D filters
+linearly per node.
 
 ### 3.4 UI and combat FX
 
@@ -106,6 +117,15 @@ read without changing their collision footprints. The release/no-threads Web
 export kept `index.wasm` at 39,509,339 bytes and produced a 6,712,544-byte PCK,
 a +475,136-byte delta from the issue #149 baseline — below the 2 MiB review
 threshold. Browser console inspection reported no warnings or errors.
+
+Issue #153 browser evidence covered the live Hub and the real Zone 1 scene at
+the production `1280×720` canvas. The checkpoint, travel gate, skill station,
+pickup, and route-facing state cues remained distinct against both the Hub
+graybox and the accepted forest background at the shipped 2× camera; the
+browser console reported no warnings or errors. The release/no-threads export
+kept `index.wasm` at 39,509,339 bytes and produced a 7,392,736-byte PCK, a
++364,188-byte delta from issue #156 and below the 2 MiB physical-device-review
+threshold.
 
 Issue #156 browser evidence covered the live HUD and pause overlay at
 `1280×720`, the standalone skill tree at the same canvas, and forced touch

@@ -128,11 +128,9 @@ func _ready() -> void:
 			_chaser, _chaser_legacy_visual, CHASER_TEXTURE,
 			CHASER_VISUAL_HEIGHT_PX, Vector2.ZERO
 		)
-	_shrine_sprite = _install_actor_sprite(
-		_checkpoint, _checkpoint_legacy_visual, SHRINE_TEXTURE,
-		SHRINE_VISUAL_HEIGHT_PX, SHRINE_VISUAL_OFFSET
-	)
-	_shrine_sprite.modulate = SHRINE_DORMANT_MODULATE
+	# Issue #153 gives every checkpoint its own production HD display. Resolve
+	# it lazily because this helper may become ready before the checkpoint.
+	_shrine_sprite = _checkpoint.get_hd_visual()
 	_checkpoint.checkpoint_reached.connect(_on_checkpoint_reached)
 
 
@@ -187,11 +185,13 @@ func get_chaser_sprite() -> Sprite2D:
 
 
 func get_shrine_sprite() -> Sprite2D:
+	if _shrine_sprite == null and is_instance_valid(_checkpoint):
+		_shrine_sprite = _checkpoint.get_hd_visual()
 	return _shrine_sprite
 
 
 func get_hd_sprites() -> Array[Sprite2D]:
-	return [_background_sprite, _player_sprite, get_chaser_sprite(), _shrine_sprite]
+	return [_background_sprite, _player_sprite, get_chaser_sprite(), get_shrine_sprite()]
 
 
 ## Display-only legacy scenery hidden because it sits under the painted
@@ -267,4 +267,6 @@ func _install_actor_sprite(
 
 
 func _on_checkpoint_reached(_respawn_position: Vector2) -> void:
-	_shrine_sprite.modulate = SHRINE_LIT_MODULATE
+	var shrine_sprite: Sprite2D = get_shrine_sprite()
+	if shrine_sprite != null:
+		shrine_sprite.modulate = SHRINE_LIT_MODULATE

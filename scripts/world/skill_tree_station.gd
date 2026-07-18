@@ -16,6 +16,13 @@ signal screen_opened()
 signal screen_closed()
 
 const SKILL_TREE_SCREEN_SCENE: PackedScene = preload("res://scenes/ui/skill_tree_screen.tscn")
+const HD_TEXTURE: Texture2D = preload(
+	"res://assets/sprites/world/hd/interactables/skill_tree_station.png"
+)
+const HD_VISUAL_HEIGHT_PX: float = 52.0
+const HD_VISUAL_OFFSET: Vector2 = Vector2(0, -8)
+const HD_TEXTURE_FILTER: CanvasItem.TextureFilter = CanvasItem.TEXTURE_FILTER_LINEAR
+const ACTIVE_MODULATE: Color = Color(0.72, 1.0, 1.0, 1.0)
 
 ## Player whose gameplay input suspends while the screen is open.
 @export var player_path: NodePath
@@ -23,6 +30,7 @@ const SKILL_TREE_SCREEN_SCENE: PackedScene = preload("res://scenes/ui/skill_tree
 @export var screen_layer_path: NodePath
 
 var _screen: SkillTreeScreen
+var _hd_visual: Sprite2D
 
 @onready var _player: PlayerController = get_node(player_path) as PlayerController
 @onready var _screen_layer: CanvasLayer = get_node(screen_layer_path) as CanvasLayer
@@ -30,11 +38,21 @@ var _screen: SkillTreeScreen
 
 
 func _ready() -> void:
+	var legacy_visual: Polygon2D = get_node("StationVisual") as Polygon2D
+	legacy_visual.hide()
+	_hd_visual = _build_hd_visual()
+	add_child(_hd_visual)
+	move_child(_hd_visual, 0)
 	_zone.interacted.connect(_on_zone_interacted)
+	_zone.player_nearby_changed.connect(_on_player_nearby_changed)
 
 
 func is_screen_open() -> bool:
 	return _screen != null
+
+
+func get_hd_visual() -> Sprite2D:
+	return _hd_visual
 
 
 func open_screen() -> void:
@@ -45,6 +63,7 @@ func open_screen() -> void:
 	_player.set_control_enabled(false)
 	_screen = SKILL_TREE_SCREEN_SCENE.instantiate() as SkillTreeScreen
 	_screen_layer.add_child(_screen)
+	_hd_visual.modulate = ACTIVE_MODULATE
 	screen_opened.emit()
 
 
@@ -54,6 +73,7 @@ func close_screen() -> void:
 	_screen.queue_free()
 	_screen = null
 	_player.set_control_enabled(true)
+	_hd_visual.modulate = ACTIVE_MODULATE if _zone.is_player_nearby() else Color.WHITE
 	screen_closed.emit()
 
 
@@ -62,3 +82,20 @@ func _on_zone_interacted() -> void:
 		close_screen()
 	else:
 		open_screen()
+
+
+func _on_player_nearby_changed(nearby: bool) -> void:
+	if is_screen_open():
+		return
+	_hd_visual.modulate = ACTIVE_MODULATE if nearby else Color.WHITE
+
+
+func _build_hd_visual() -> Sprite2D:
+	var sprite: Sprite2D = Sprite2D.new()
+	sprite.name = "HdVisual"
+	sprite.texture = HD_TEXTURE
+	sprite.texture_filter = HD_TEXTURE_FILTER
+	sprite.position = HD_VISUAL_OFFSET
+	var visual_scale: float = HD_VISUAL_HEIGHT_PX / float(HD_TEXTURE.get_height())
+	sprite.scale = Vector2(visual_scale, visual_scale)
+	return sprite

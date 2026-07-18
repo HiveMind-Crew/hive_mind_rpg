@@ -257,7 +257,10 @@ func test_only_selected_legacy_display_nodes_are_hidden_and_only_visually() -> v
 	var other_shrine_visual: Polygon2D = (
 		zone.get_node("Checkpoints/CheckpointRoomC/Visual") as Polygon2D
 	)
-	assert_true(other_shrine_visual.visible)
+	assert_false(
+		other_shrine_visual.visible,
+		"Every checkpoint now owns a production HD display (issue #153)."
+	)
 
 	# The HD replacements ride the same actors, so gameplay motion moves them.
 	assert_eq(
