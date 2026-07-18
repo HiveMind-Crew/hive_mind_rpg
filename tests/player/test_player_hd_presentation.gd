@@ -39,6 +39,29 @@ func test_hd_presentation_mirrors_facing_and_move_state() -> void:
 	assert_ne(display.position.y, 2.0, "Move state adds presentation-only bob.")
 
 
+func test_hd_presentation_has_unambiguous_state_driven_four_direction_feedback() -> void:
+	var accent: Polygon2D = _presentation.get_node("FacingAccent") as Polygon2D
+	var direction_expectations: Array[Array] = [
+		[Vector2.UP, 0.0], [Vector2.RIGHT, PI * 0.5],
+		[Vector2.DOWN, PI], [Vector2.LEFT, -PI * 0.5],
+	]
+	for expectation: Array in direction_expectations:
+		_legacy_visual.set_facing_direction(expectation[0] as Vector2)
+		_legacy_visual.play_move()
+		_presentation._process(0.0)
+		assert_almost_eq(accent.rotation, expectation[1] as float, 0.01)
+	_legacy_visual.play_melee(Vector2.UP)
+	_presentation._process(0.0)
+	assert_eq(accent.color, PlayerHdPresentation.ACTION_FACING_ACCENT_COLOR)
+	_legacy_visual._on_clip_finished()
+	_legacy_visual.play_dash(Vector2.DOWN)
+	_presentation._process(0.0)
+	assert_eq(accent.color, PlayerHdPresentation.ACTION_FACING_ACCENT_COLOR)
+	_legacy_visual.play_relic(Vector2.LEFT)
+	_presentation._process(0.0)
+	assert_eq(accent.color, PlayerHdPresentation.ACTION_FACING_ACCENT_COLOR)
+
+
 func test_hd_presentation_changes_pose_without_changing_player_collision() -> void:
 	var display: Sprite2D = _presentation.get_display_sprite()
 	var base_scale: Vector2 = display.scale

@@ -16,12 +16,16 @@ const ACTION_SQUASH: Vector2 = Vector2(1.1, 0.9)
 const DASH_STRETCH: Vector2 = Vector2(0.9, 1.12)
 const HURT_TINT: Color = Color(1.0, 0.72, 0.72, 1.0)
 const DEAD_TINT: Color = Color(0.35, 0.37, 0.4, 1.0)
+const FACING_ACCENT_COLOR: Color = Color(0.28, 0.9, 1.0, 0.9)
+const ACTION_FACING_ACCENT_COLOR: Color = Color(1.0, 0.35, 0.82, 0.96)
+const FACING_ACCENT_POSITION: Vector2 = Vector2(0.0, -11.0)
 
 @export var visual_path: NodePath
 
 var _legacy_visual: PlayerVisual
 var _display_sprite: Sprite2D
 var _contact_shadow: Polygon2D
+var _facing_accent: Polygon2D
 var _animation_state: StringName = PlayerVisual.IDLE_ANIMATION
 var _elapsed: float = 0.0
 
@@ -45,6 +49,7 @@ func _process(delta: float) -> void:
 	_display_sprite.flip_h = _legacy_visual.flip_h
 	_display_sprite.self_modulate = _state_modulate() * _legacy_visual.self_modulate
 	_apply_state_pose()
+	_update_facing_accent()
 
 
 func get_display_sprite() -> Sprite2D:
@@ -57,8 +62,10 @@ func _ensure_display_nodes() -> void:
 		return
 	_display_sprite = _create_display_sprite()
 	_contact_shadow = _create_contact_shadow()
+	_facing_accent = _create_facing_accent()
 	add_child(_contact_shadow)
 	add_child(_display_sprite)
+	add_child(_facing_accent)
 
 
 func _create_display_sprite() -> Sprite2D:
@@ -84,6 +91,17 @@ func _create_contact_shadow() -> Polygon2D:
 	return shadow
 
 
+func _create_facing_accent() -> Polygon2D:
+	var accent: Polygon2D = Polygon2D.new()
+	accent.name = "FacingAccent"
+	accent.polygon = PackedVector2Array([
+		Vector2(-3.0, 3.0), Vector2(0.0, -4.0), Vector2(3.0, 3.0),
+	])
+	accent.position = FACING_ACCENT_POSITION
+	accent.color = FACING_ACCENT_COLOR
+	return accent
+
+
 func _on_animation_state_changed(next_state: StringName) -> void:
 	_animation_state = next_state
 
@@ -105,6 +123,26 @@ func _apply_state_pose() -> void:
 			_display_sprite.rotation = 0.0
 	if _animation_state != PlayerVisual.DEATH_ANIMATION:
 		_display_sprite.rotation = 0.0
+
+
+func _update_facing_accent() -> void:
+	_facing_accent.visible = _animation_state != PlayerVisual.DEATH_ANIMATION
+	if not _facing_accent.visible:
+		return
+	match _legacy_visual.facing_label:
+		&"north":
+			_facing_accent.rotation = 0.0
+		&"east":
+			_facing_accent.rotation = PI * 0.5
+		&"west":
+			_facing_accent.rotation = -PI * 0.5
+		_:
+			_facing_accent.rotation = PI
+	_facing_accent.color = (
+		ACTION_FACING_ACCENT_COLOR
+		if _animation_state in [PlayerVisual.DASH_ANIMATION, PlayerVisual.MELEE_ANIMATION, PlayerVisual.RELIC_ANIMATION]
+		else FACING_ACCENT_COLOR
+	)
 
 
 func _state_modulate() -> Color:
