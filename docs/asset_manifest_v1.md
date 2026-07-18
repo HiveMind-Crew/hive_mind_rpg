@@ -103,6 +103,15 @@ unchanged. All six PNG imports are lossless, unmipmapped, unpremultiplied-alpha
 textures with alpha-border correction, and every live Sprite2D filters
 linearly per node.
 
+Issue #152 has begun the production environment extension with
+`assets/sprites/world/hd/zone1_rooms_b_c.png`, a 1024×576 environment-only
+plate covering the named room-B → room-C route at the contract 5/6 scale. It
+adds no baked actors, interactables, gates, shrines, pickups, or hazards; live
+scene nodes and secret-reveal covers remain above the presentation layer. The
+boss corridor, boss approach, and arena remain on the legacy environment layer
+until the next focused plate lands, so this row does not yet mark the full
+Zone 1 environment group complete.
+
 ### 3.4 UI and combat FX
 
 | Group | Scope | Non-goals |
@@ -123,8 +132,9 @@ the production `1280×720` canvas. The checkpoint, travel gate, skill station,
 pickup, and route-facing state cues remained distinct against both the Hub
 graybox and the accepted forest background at the shipped 2× camera; the
 browser console reported no warnings or errors. The release/no-threads export
-kept `index.wasm` at 39,509,339 bytes and produced a 7,392,736-byte PCK, a
-+364,188-byte delta from issue #156 and below the 2 MiB physical-device-review
+kept `index.wasm` at 39,509,339 bytes and produced an 8,095,056-byte PCK after
+merging the issue #152 environment extension, a +364,220-byte delta from that
+7,730,836-byte `main` baseline and below the 2 MiB physical-device-review
 threshold.
 
 Issue #156 browser evidence covered the live HUD and pause overlay at
