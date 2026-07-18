@@ -361,19 +361,22 @@ func test_entrance_shrine_lights_when_checkpoint_reached() -> void:
 	)
 
 
-func test_hud_treatment_present_without_layout_changes() -> void:
+func test_hud_uses_shared_production_treatment() -> void:
 	var zone: Zone1Graybox = _add_zone()
 
 	var panel: PanelContainer = (
 		zone.get_node("Player/PlayerHud/MarginContainer/PanelContainer") as PanelContainer
 	)
-	assert_true(
-		panel.has_theme_stylebox_override("panel"),
-		"Zone-local HUD treatment must be applied."
-	)
-	# Shared HUD structure and sizing stay intact — treatment is skin-only.
-	var health_bar: ProgressBar = panel.get_node("Bars/HealthBar") as ProgressBar
-	var energy_bar: ProgressBar = panel.get_node("Bars/EnergyBar") as ProgressBar
-	assert_eq(health_bar.custom_minimum_size, Vector2(170, 8))
-	assert_eq(energy_bar.custom_minimum_size, Vector2(170, 8))
+	assert_not_null(panel.get_theme_stylebox("panel"))
+	# Zone 1 consumes the shared production HUD instead of overriding it with
+	# the prototype-local skin from issue #141.
+	assert_false(panel.has_theme_stylebox_override("panel"))
+	var health_bar: ProgressBar = panel.get_node(
+		"PanelMargin/Bars/HealthGroup/HealthBar"
+	) as ProgressBar
+	var energy_bar: ProgressBar = panel.get_node(
+		"PanelMargin/Bars/EnergyGroup/EnergyBar"
+	) as ProgressBar
+	assert_eq(health_bar.custom_minimum_size, Vector2(228, 14))
+	assert_eq(energy_bar.custom_minimum_size, Vector2(228, 14))
 	assert_not_null(zone.get_node("Player/PlayerHud").get_script())

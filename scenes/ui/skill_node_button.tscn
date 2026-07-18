@@ -3,6 +3,6 @@
 [ext_resource type="Script" path="res://scripts/ui/skill_node_button.gd" id="1_button"]
 
 [node name="SkillNodeButton" type="Button"]
-custom_minimum_size = Vector2(150, 30)
+custom_minimum_size = Vector2(150, 42)
 focus_mode = 2
 script = ExtResource("1_button")

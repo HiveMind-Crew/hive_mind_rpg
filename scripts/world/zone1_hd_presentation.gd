@@ -54,13 +54,6 @@ const SHRINE_VISUAL_OFFSET: Vector2 = Vector2(0, -8)
 const SHRINE_DORMANT_MODULATE: Color = Color(0.62, 0.66, 0.68, 1.0)
 const SHRINE_LIT_MODULATE: Color = Color.WHITE
 
-## Zone-local HUD skin: a mossy dark panel with a contained cyan energy
-## accent. Applied as theme overrides only, so shared HUD behavior/layout in
-## player_hud.gd and player_hud.tscn stay intact.
-const HUD_PANEL_BG_COLOR: Color = Color(0.09, 0.11, 0.1, 0.92)
-const HUD_PANEL_BORDER_COLOR: Color = Color(0.3, 0.95, 1.0, 0.55)
-const HUD_PANEL_CONTENT_MARGIN_PX: float = 4.0
-
 @export var props_root_path: NodePath
 @export var exit_gate_visual_path: NodePath
 @export var player_path: NodePath
@@ -69,7 +62,6 @@ const HUD_PANEL_CONTENT_MARGIN_PX: float = 4.0
 @export var chaser_visual_path: NodePath
 @export var checkpoint_path: NodePath
 @export var checkpoint_visual_path: NodePath
-@export var hud_panel_path: NodePath
 
 var _props_root: Node2D
 var _exit_gate_visual: Polygon2D
@@ -79,7 +71,6 @@ var _chaser: EnemyBase
 var _chaser_legacy_visual: AnimatedSprite2D
 var _checkpoint: Checkpoint
 var _checkpoint_legacy_visual: Polygon2D
-var _hud_panel: PanelContainer
 
 var _hidden_legacy_scenery: Array[CanvasItem] = []
 
@@ -99,15 +90,13 @@ func _ready() -> void:
 	_chaser_legacy_visual = get_node_or_null(chaser_visual_path) as AnimatedSprite2D
 	_checkpoint = get_node_or_null(checkpoint_path) as Checkpoint
 	_checkpoint_legacy_visual = get_node_or_null(checkpoint_visual_path) as Polygon2D
-	_hud_panel = get_node_or_null(hud_panel_path) as PanelContainer
 	if (
 		_props_root == null or _exit_gate_visual == null
 		or _player == null or _player_legacy_visual == null
 		or _chaser == null or _chaser_legacy_visual == null
 		or _checkpoint == null or _checkpoint_legacy_visual == null
-		or _hud_panel == null
 	):
-		push_error("Zone1HdPresentation requires valid actor/visual/HUD paths.")
+		push_error("Zone1HdPresentation requires valid actor/visual paths.")
 		set_process(false)
 		return
 
@@ -145,7 +134,6 @@ func _ready() -> void:
 	)
 	_shrine_sprite.modulate = SHRINE_DORMANT_MODULATE
 	_checkpoint.checkpoint_reached.connect(_on_checkpoint_reached)
-	_apply_hud_treatment()
 
 
 func _process(_delta: float) -> void:
@@ -280,13 +268,3 @@ func _install_actor_sprite(
 
 func _on_checkpoint_reached(_respawn_position: Vector2) -> void:
 	_shrine_sprite.modulate = SHRINE_LIT_MODULATE
-
-
-func _apply_hud_treatment() -> void:
-	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = HUD_PANEL_BG_COLOR
-	style.border_color = HUD_PANEL_BORDER_COLOR
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(3)
-	style.set_content_margin_all(HUD_PANEL_CONTENT_MARGIN_PX)
-	_hud_panel.add_theme_stylebox_override("panel", style)

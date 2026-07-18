@@ -1,6 +1,10 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/skill_tree_screen.gd" id="1_screen"]
+[ext_resource type="Theme" path="res://assets/ui/hd/hd_ui_theme.tres" id="2_theme"]
+[ext_resource type="Texture2D" path="res://assets/ui/hd/steel.png" id="3_steel"]
+[ext_resource type="Texture2D" path="res://assets/ui/hd/relic.png" id="4_relic"]
+[ext_resource type="Texture2D" path="res://assets/ui/hd/body.png" id="5_body"]
 
 [node name="SkillTreeScreen" type="Control"]
 layout_mode = 3
@@ -10,6 +14,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_screen")
+theme = ExtResource("2_theme")
 
 [node name="Background" type="ColorRect" parent="."]
 layout_mode = 1
@@ -18,7 +23,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.09, 0.09, 0.13, 1)
+color = Color(0.018, 0.027, 0.029, 1)
 
 [node name="Margin" type="MarginContainer" parent="."]
 layout_mode = 1
@@ -27,10 +32,10 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 8
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 12
 
 [node name="Layout" type="VBoxContainer" parent="Margin"]
 layout_mode = 2
@@ -43,6 +48,8 @@ theme_override_constants/separation = 8
 [node name="TitleLabel" type="Label" parent="Margin/Layout/Header"]
 layout_mode = 2
 text = "Skill Tree"
+theme_override_colors/font_color = Color(0.75, 0.96, 0.93, 1)
+theme_override_font_sizes/font_size = 28
 
 [node name="HeaderSpacer" type="Control" parent="Margin/Layout/Header"]
 layout_mode = 2
@@ -52,6 +59,8 @@ size_flags_horizontal = 3
 unique_name_in_owner = true
 layout_mode = 2
 text = "Points: 0"
+theme_override_colors/font_color = Color(0.96, 0.78, 0.33, 1)
+theme_override_font_sizes/font_size = 20
 
 [node name="RespecButton" type="Button" parent="Margin/Layout/Header"]
 unique_name_in_owner = true
@@ -68,10 +77,19 @@ theme_override_constants/separation = 12
 layout_mode = 2
 size_flags_horizontal = 3
 
+[node name="SteelIcon" type="TextureRect" parent="Margin/Layout/Columns/SteelBranch"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+texture = ExtResource("3_steel")
+expand_mode = 3
+stretch_mode = 5
+
 [node name="SteelTitle" type="Label" parent="Margin/Layout/Columns/SteelBranch"]
 layout_mode = 2
 horizontal_alignment = 1
 text = "Steel"
+theme_override_colors/font_color = Color(0.78, 0.81, 0.76, 1)
+theme_override_font_sizes/font_size = 20
 
 [node name="SteelColumn" type="VBoxContainer" parent="Margin/Layout/Columns/SteelBranch"]
 unique_name_in_owner = true
@@ -83,10 +101,19 @@ theme_override_constants/separation = 4
 layout_mode = 2
 size_flags_horizontal = 3
 
+[node name="RelicIcon" type="TextureRect" parent="Margin/Layout/Columns/RelicBranch"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+texture = ExtResource("4_relic")
+expand_mode = 3
+stretch_mode = 5
+
 [node name="RelicTitle" type="Label" parent="Margin/Layout/Columns/RelicBranch"]
 layout_mode = 2
 horizontal_alignment = 1
 text = "Relic"
+theme_override_colors/font_color = Color(0.34, 0.94, 0.98, 1)
+theme_override_font_sizes/font_size = 20
 
 [node name="RelicColumn" type="VBoxContainer" parent="Margin/Layout/Columns/RelicBranch"]
 unique_name_in_owner = true
@@ -98,10 +125,19 @@ theme_override_constants/separation = 4
 layout_mode = 2
 size_flags_horizontal = 3
 
+[node name="BodyIcon" type="TextureRect" parent="Margin/Layout/Columns/BodyBranch"]
+custom_minimum_size = Vector2(50, 50)
+layout_mode = 2
+texture = ExtResource("5_body")
+expand_mode = 3
+stretch_mode = 5
+
 [node name="BodyTitle" type="Label" parent="Margin/Layout/Columns/BodyBranch"]
 layout_mode = 2
 horizontal_alignment = 1
 text = "Body"
+theme_override_colors/font_color = Color(0.91, 0.69, 0.28, 1)
+theme_override_font_sizes/font_size = 20
 
 [node name="BodyColumn" type="VBoxContainer" parent="Margin/Layout/Columns/BodyBranch"]
 unique_name_in_owner = true
@@ -111,7 +147,7 @@ theme_override_constants/separation = 4
 
 [node name="DetailPanel" type="PanelContainer" parent="Margin/Layout/Columns"]
 layout_mode = 2
-custom_minimum_size = Vector2(190, 0)
+custom_minimum_size = Vector2(230, 0)
 
 [node name="DetailMargin" type="MarginContainer" parent="Margin/Layout/Columns/DetailPanel"]
 layout_mode = 2
@@ -129,6 +165,8 @@ unique_name_in_owner = true
 layout_mode = 2
 text = "Select a skill"
 autowrap_mode = 2
+theme_override_colors/font_color = Color(0.74, 0.96, 0.94, 1)
+theme_override_font_sizes/font_size = 20
 
 [node name="DetailCostLabel" type="Label" parent="Margin/Layout/Columns/DetailPanel/DetailMargin/DetailBox"]
 unique_name_in_owner = true

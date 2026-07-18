@@ -30,6 +30,10 @@ const STICK_RADIUS_PX: float = 84.0
 const STICK_DEADZONE: float = 0.28
 const BUTTON_RADIUS_PX: float = 42.0
 const EDGE_MARGIN_PX: float = 28.0
+const STEEL_ICON: Texture2D = preload("res://assets/ui/hd/steel.png")
+const RELIC_ICON: Texture2D = preload("res://assets/ui/hd/relic.png")
+const DASH_ICON: Texture2D = preload("res://assets/ui/hd/dash.png")
+const INTERACT_ICON: Texture2D = preload("res://assets/ui/hd/interact.png")
 
 @export var force_touch_controls: bool = false
 
@@ -164,19 +168,35 @@ func _build_visuals() -> void:
 	_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_root)
 
-	_stick_base = _make_panel(Color(0.04, 0.08, 0.1, 0.50), STICK_RADIUS_PX, "MOVE")
+	_stick_base = _make_panel(
+		Color(0.025, 0.045, 0.045, 0.68), STICK_RADIUS_PX, "MOVE", null, "MoveStick"
+	)
 	_root.add_child(_stick_base)
-	_stick_knob = _make_panel(Color(0.18, 0.75, 0.82, 0.72), STICK_RADIUS_PX * 0.42, "")
+	_stick_knob = _make_panel(
+		Color(0.12, 0.58, 0.61, 0.86), STICK_RADIUS_PX * 0.42, "", null, "MoveKnob"
+	)
 	_root.add_child(_stick_knob)
 
 	var labels: Dictionary[StringName, String] = {
-		&"attack_melee": "ATK",
-		&"ability_relic": "REL",
-		&"dash": "DASH",
-		&"interact": "USE",
+		&"attack_melee": "Attack",
+		&"ability_relic": "Relic",
+		&"dash": "Dash",
+		&"interact": "Use",
+	}
+	var icons: Dictionary[StringName, Texture2D] = {
+		&"attack_melee": STEEL_ICON,
+		&"ability_relic": RELIC_ICON,
+		&"dash": DASH_ICON,
+		&"interact": INTERACT_ICON,
 	}
 	for action: StringName in BUTTON_ACTIONS:
-		var panel: Panel = _make_panel(Color(0.12, 0.08, 0.18, 0.72), BUTTON_RADIUS_PX, labels[action])
+		var panel: Panel = _make_panel(
+			Color(0.055, 0.065, 0.065, 0.84),
+			BUTTON_RADIUS_PX,
+			labels[action],
+			icons[action],
+			str(action).to_pascal_case() + "Button"
+		)
 		_action_buttons[action] = panel
 		_root.add_child(panel)
 
@@ -194,8 +214,15 @@ func _build_visuals() -> void:
 	_root.add_child(_rotate_label)
 
 
-func _make_panel(color: Color, radius: float, label_text: String) -> Panel:
+func _make_panel(
+	color: Color,
+	radius: float,
+	label_text: String,
+	icon_texture: Texture2D,
+	panel_name: String
+) -> Panel:
 	var panel: Panel = Panel.new()
+	panel.name = panel_name
 	panel.custom_minimum_size = Vector2(radius * 2.0, radius * 2.0)
 	# This overlay is positioned directly under a plain Control rather than a
 	# Container, so custom_minimum_size alone does not assign its drawn rect.
@@ -203,18 +230,33 @@ func _make_panel(color: Color, radius: float, label_text: String) -> Panel:
 	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var style: StyleBoxFlat = StyleBoxFlat.new()
 	style.bg_color = color
-	style.border_color = Color(0.54, 0.94, 1.0, 0.78)
-	style.set_border_width_all(2)
+	style.border_color = Color(0.34, 0.83, 0.82, 0.90)
+	style.set_border_width_all(3)
 	style.set_corner_radius_all(roundi(radius))
 	panel.add_theme_stylebox_override("panel", style)
+	if icon_texture != null:
+		var icon: TextureRect = TextureRect.new()
+		icon.name = "Icon"
+		icon.texture = icon_texture
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		icon.position = Vector2(radius * 0.35, radius * 0.18)
+		icon.size = Vector2(radius * 1.30, radius * 1.30)
+		panel.add_child(icon)
 	if not label_text.is_empty():
 		var label: Label = Label.new()
+		label.name = "Label"
 		label.text = label_text
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		label.add_theme_font_size_override("font_size", 16)
-		label.add_theme_color_override("font_color", Color(0.93, 0.98, 1.0, 1.0))
+		label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+		label.add_theme_font_size_override("font_size", 12 if icon_texture != null else 16)
+		label.add_theme_color_override("font_color", Color(0.91, 0.94, 0.86, 1.0))
+		label.add_theme_color_override("font_outline_color", Color(0.01, 0.015, 0.016, 1.0))
+		label.add_theme_constant_override("outline_size", 3)
+		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		label.offset_bottom = -4.0
 		panel.add_child(label)
 	return panel
 
