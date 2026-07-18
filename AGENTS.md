@@ -8,7 +8,7 @@ This file is read by AI coding agents (Claude Code, Copilot, Cursor, etc.) at th
 
 - **Project:** hive_mind_rpg — a 2D RPG built in **Godot 4.7 stable** with **GDScript**
 - **Design source of truth:** `DESIGN.md`. If a task conflicts with DESIGN.md, stop and flag it — don't silently improvise design changes.
-- **Repo:** https://github.com/MeanGreen256/hive_mind_rpg
+- **Repo:** https://github.com/HiveMind-Crew/hive_mind_rpg
 
 ## 2. Golden Rules for Agents
 

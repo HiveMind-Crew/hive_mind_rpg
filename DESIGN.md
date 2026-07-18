@@ -2,7 +2,7 @@
 
 > **Status:** Draft v0.3 — core decisions locked through 2026-07-11.
 > **Engine:** Godot 4.7 stable (2D) · **Language:** GDScript
-> **Repo:** https://github.com/MeanGreen256/hive_mind_rpg
+> **Repo:** https://github.com/HiveMind-Crew/hive_mind_rpg
 > Note: "hive_mind" is the **team/repo name**, not a game mechanic. Working title for the game itself: `[TBD]`.
 
 ---
