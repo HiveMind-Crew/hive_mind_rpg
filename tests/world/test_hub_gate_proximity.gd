@@ -97,6 +97,29 @@ func test_joypad_east_at_the_real_gate_travels_to_zone1() -> void:
 	_assert_player_arrived_in_zone1()
 
 
+func test_mobile_use_touch_at_the_real_gate_travels_to_zone1() -> void:
+	await _stand_player_on_gate()
+	var controls: MobileVirtualControls = _manager.get_node("MobileVirtualControls") as MobileVirtualControls
+	assert_not_null(controls)
+	if controls == null:
+		return
+	# Headless test environments are not touch displays; explicitly enable the
+	# component's documented test override and use its public touch contract.
+	controls.force_touch_controls = true
+	controls.set_forced_viewport_size(Vector2(1280, 720))
+
+	controls.handle_touch_pressed(7, controls.get_button_center(&"interact"))
+	Input.flush_buffered_events()
+	await _wait_until(
+		func() -> bool: return _manager.get_current_world() is Zone1Graybox,
+		"the mobile USE touch never dispatched an interaction event to the gate"
+	)
+	controls.handle_touch_released(7)
+	Input.flush_buffered_events()
+
+	_assert_player_arrived_in_zone1()
+
+
 func _hub() -> Hub:
 	return _manager.get_current_world() as Hub
 

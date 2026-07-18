@@ -257,15 +257,15 @@ func _place_centered(control: Control, center: Vector2) -> void:
 
 func _update_stick(position: Vector2) -> void:
 	_stick_position = position
-	var offset: Vector2 = (position - _stick_center).limit_length(STICK_RADIUS_PX)
-	_update_stick_visual(offset)
-	_update_movement_actions(offset / STICK_RADIUS_PX)
+	var stick_offset: Vector2 = (position - _stick_center).limit_length(STICK_RADIUS_PX)
+	_update_stick_visual(stick_offset)
+	_update_movement_actions(stick_offset / STICK_RADIUS_PX)
 
 
-func _update_stick_visual(offset: Vector2) -> void:
+func _update_stick_visual(stick_offset: Vector2) -> void:
 	if _stick_knob == null:
 		return
-	_place_centered(_stick_knob, _stick_center + offset)
+	_place_centered(_stick_knob, _stick_center + stick_offset)
 
 
 func _update_movement_actions(direction: Vector2) -> void:
@@ -283,7 +283,7 @@ func _set_movement_action(action: StringName, active: bool) -> void:
 	if active:
 		if get_pressed_action_count(action) == 0:
 			_action_touch_counts[action] = 1
-			Input.action_press(action)
+			_dispatch_action_event(action, true)
 			_synthetic_actions[action] = true
 	else:
 		_release_action_fully(action)
@@ -293,7 +293,7 @@ func _press_action(action: StringName) -> void:
 	var count: int = get_pressed_action_count(action) + 1
 	_action_touch_counts[action] = count
 	if count == 1:
-		Input.action_press(action)
+		_dispatch_action_event(action, true)
 		_synthetic_actions[action] = true
 
 
@@ -308,8 +308,23 @@ func _release_action(action: StringName) -> void:
 func _release_action_fully(action: StringName) -> void:
 	_action_touch_counts.erase(action)
 	if _synthetic_actions.has(action):
-		Input.action_release(action)
+		_dispatch_action_event(action, false)
 		_synthetic_actions.erase(action)
+
+
+func _dispatch_action_event(action: StringName, pressed: bool) -> void:
+	# Keep polled movement/combat controllers in sync with the virtual state.
+	if pressed:
+		Input.action_press(action)
+	else:
+		Input.action_release(action)
+	var event: InputEventAction = InputEventAction.new()
+	event.action = action
+	event.pressed = pressed
+	event.strength = 1.0 if pressed else 0.0
+	# action_press only changes polled state. Parsing the matching event also
+	# reaches contextual _unhandled_input owners such as the Hub gate.
+	Input.parse_input_event(event)
 
 
 func _release_all_actions() -> void:
