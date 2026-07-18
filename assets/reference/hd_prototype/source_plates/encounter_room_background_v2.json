@@ -1,0 +1,13 @@
+{
+  "generator": "LemonadeAI",
+  "model": "Flux-2-Klein-9B-GGUF",
+  "prompt": "orthographic straight-down top-down 2D action RPG environment plate only, 16:9, stylized HD hand-painted corrupted ancient forest first-encounter route, quiet moss-and-soil walkable clearing and corridor through the center, dark hand-worn stone walls, roots, ferns and foliage framing the edges, subtle buried alien machinery texture only at far edges with small contained cyan and magenta emissive seams, premium fantasy game background, absolutely no shrines, no beacons, no altars, no gates, no doors, no pickups, no characters, no creatures, no UI, no text, no logo, no watermark, no pixel art, no isometric, no perspective tilt",
+  "requested_size": "1024x576",
+  "actual_size": [
+    1024,
+    576
+  ],
+  "elapsed_seconds": 34.92,
+  "response_format": "b64_json",
+  "purpose": "Issue #141 recomposed no-affordance HD environment plate, replacing the baked-shrine background after independent review."
+}

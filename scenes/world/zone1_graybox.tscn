@@ -36,6 +36,8 @@ texture_filter = 1
 [node name="HdPresentation" type="Node2D" parent="."]
 unique_name_in_owner = true
 script = ExtResource("16_hd_presentation")
+props_root_path = NodePath("../Props")
+exit_gate_visual_path = NodePath("../ExitGateVisual")
 player_path = NodePath("../Player")
 player_visual_path = NodePath("../Player/Body")
 chaser_path = NodePath("../Enemies/ChaserRoomA")

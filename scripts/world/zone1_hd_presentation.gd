@@ -11,10 +11,19 @@ extends Node2D
 ##
 ## Sits between FloorWalls and Props in the zone tree so the plate draws over
 ## the legacy tiles but under props, actors, and interactables.
+##
+## The plate depicts environment only — no shrine, gate, pickup, character, or
+## other gameplay affordance is baked into it (independent-review requirement:
+## painted landmarks must never suggest interactions that do not exist). Every
+## interactable keeps its own live node + visual. Legacy scenery that would
+## double up with the painted plate (display-only prop sprites and the
+## exit-gate marker polygon) is hidden inside the covered route; the ExitZone
+## Area2D, its prompt, and everything east of the seam are untouched.
 
 ## Copied production-prototype sources; provenance (LemonadeAI /
 ## Flux-2-Klein-9B-GGUF, non-commercial, prototype-only) is recorded in
-## assets/sprites/LICENSES.md.
+## assets/sprites/LICENSES.md. The background is the recomposed v2
+## no-affordance plate (assets/reference/.../encounter_room_background_v2.png).
 const BACKGROUND_TEXTURE: Texture2D = preload("res://assets/sprites/hd_prototype/encounter_room_background.png")
 const PLAYER_TEXTURE: Texture2D = preload("res://assets/sprites/hd_prototype/player_wanderer.png")
 const CHASER_TEXTURE: Texture2D = preload("res://assets/sprites/hd_prototype/relic_hound.png")
@@ -52,6 +61,8 @@ const HUD_PANEL_BG_COLOR: Color = Color(0.09, 0.11, 0.1, 0.92)
 const HUD_PANEL_BORDER_COLOR: Color = Color(0.3, 0.95, 1.0, 0.55)
 const HUD_PANEL_CONTENT_MARGIN_PX: float = 4.0
 
+@export var props_root_path: NodePath
+@export var exit_gate_visual_path: NodePath
 @export var player_path: NodePath
 @export var player_visual_path: NodePath
 @export var chaser_path: NodePath
@@ -60,6 +71,8 @@ const HUD_PANEL_CONTENT_MARGIN_PX: float = 4.0
 @export var checkpoint_visual_path: NodePath
 @export var hud_panel_path: NodePath
 
+var _props_root: Node2D
+var _exit_gate_visual: Polygon2D
 var _player: CharacterBody2D
 var _player_legacy_visual: AnimatedSprite2D
 var _chaser: EnemyBase
@@ -68,6 +81,8 @@ var _checkpoint: Checkpoint
 var _checkpoint_legacy_visual: Polygon2D
 var _hud_panel: PanelContainer
 
+var _hidden_legacy_scenery: Array[CanvasItem] = []
+
 var _background_sprite: Sprite2D
 var _player_sprite: Sprite2D
 var _chaser_sprite: Sprite2D
@@ -75,6 +90,8 @@ var _shrine_sprite: Sprite2D
 
 
 func _ready() -> void:
+	_props_root = get_node_or_null(props_root_path) as Node2D
+	_exit_gate_visual = get_node_or_null(exit_gate_visual_path) as Polygon2D
 	_player = get_node_or_null(player_path) as CharacterBody2D
 	_player_legacy_visual = get_node_or_null(player_visual_path) as AnimatedSprite2D
 	_chaser = get_node_or_null(chaser_path) as EnemyBase
@@ -83,7 +100,8 @@ func _ready() -> void:
 	_checkpoint_legacy_visual = get_node_or_null(checkpoint_visual_path) as Polygon2D
 	_hud_panel = get_node_or_null(hud_panel_path) as PanelContainer
 	if (
-		_player == null or _player_legacy_visual == null
+		_props_root == null or _exit_gate_visual == null
+		or _player == null or _player_legacy_visual == null
 		or _chaser == null or _chaser_legacy_visual == null
 		or _checkpoint == null or _checkpoint_legacy_visual == null
 		or _hud_panel == null
@@ -94,6 +112,7 @@ func _ready() -> void:
 
 	_background_sprite = _build_background_sprite()
 	add_child(_background_sprite)
+	_hide_covered_legacy_scenery()
 	_player_sprite = _install_actor_sprite(
 		_player, _player_legacy_visual, PLAYER_TEXTURE,
 		PLAYER_VISUAL_HEIGHT_PX, PLAYER_VISUAL_OFFSET
@@ -159,6 +178,12 @@ func get_hd_sprites() -> Array[Sprite2D]:
 	return [_background_sprite, _player_sprite, _chaser_sprite, _shrine_sprite]
 
 
+## Display-only legacy scenery hidden because it sits under the painted
+## plate, for tests proving the covered route carries no doubled-up visuals.
+func get_hidden_legacy_scenery() -> Array[CanvasItem]:
+	return _hidden_legacy_scenery
+
+
 ## Where the plate actually draws in zone-local pixels, for tests proving the
 ## entrance route is covered without leaking past the room B doorway.
 func get_background_world_rect() -> Rect2:
@@ -183,6 +208,24 @@ func _build_background_sprite() -> Sprite2D:
 		0, 0, COVERED_ROUTE_RECT.size.x / plate_scale, BACKGROUND_SOURCE_SIZE.y
 	)
 	return sprite
+
+
+## Hides the display-only legacy scenery the plate paints over: the prop
+## sprites whose position falls inside the covered route, and the exit-gate
+## marker Polygon2D at the entrance. Visibility only — no node is removed or
+## reparented, and nothing mechanical is touched: props carry no collision or
+## script, and the exit interaction lives on the separate ExitZone Area2D
+## (kept monitoring, with its prompt). Props east of the room B seam and the
+## secret-alcove reveal covers (mechanical, drawn above the plate) stay as
+## they are.
+func _hide_covered_legacy_scenery() -> void:
+	_exit_gate_visual.visible = false
+	_hidden_legacy_scenery = [_exit_gate_visual]
+	for child: Node in _props_root.get_children():
+		var prop: Node2D = child as Node2D
+		if prop != null and COVERED_ROUTE_RECT.has_point(prop.position):
+			prop.visible = false
+			_hidden_legacy_scenery.append(prop)
 
 
 ## Hides only the legacy display node and parents a static HD illustration on

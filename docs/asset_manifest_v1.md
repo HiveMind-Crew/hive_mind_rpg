@@ -40,22 +40,33 @@ this manifest and opens the conversion issues below.
 ### 2.2 Measured prototype decisions (issue #141)
 
 The Zone 1 entrance → encounter-room-A route now runs the HD presentation
-prototype via the zone-local `Zone1HdPresentation` helper. Measured decisions
-conversion issues may rely on:
+prototype via the zone-local `Zone1HdPresentation` helper. The rows below are
+**measured prototype decisions** (observed working in the integrated route
+and its test suite) that conversion issues may start from; they are not the
+complete final HD technical contract — see the follow-up list after the
+table:
 
 | Decision | Measured value |
 |---|---|
-| Environment source | 1024×576 wide painted plate (`assets/sprites/hd_prototype/encounter_room_background.png`), uniformly scaled 5/6 to the 480 px zone height and region-cropped so its seam lands on the room B doorway. |
+| Environment source | 1024×576 wide painted plate (`assets/sprites/hd_prototype/encounter_room_background.png`, the recomposed v2 environment-only plate with **no baked affordances** — no shrine/gate/pickup/characters; the first plate was rejected in review for a false shrine affordance), uniformly scaled 5/6 to the 480 px zone height and region-cropped so its seam lands on the room B doorway. Legacy display props and the exit-gate marker polygon under the plate are hidden; interact Areas, prompts, and collision are untouched. |
 | Actor sources | Chroma-key-extracted transparent PNGs at native size: player 180×274, melee chaser 162×286, checkpoint shrine 249×330; scaled per-node to the legacy play-size footprint (34/30/44 px tall). |
 | Filtering | Per-node `TEXTURE_FILTER_LINEAR` on HD nodes only; project default filter, snapping, and legacy nearest nodes unchanged. |
 | Camera | Existing 2× camera retained. |
 | Art state | Static single-pose prototype illustrations; mechanical state (facing, hit/invuln/death feedback, enemy state, shrine lit) mirrored from the hidden legacy display drivers — no fake animation. |
 | Provenance | LemonadeAI / `Flux-2-Klein-9B-GGUF`, `flux-non-commercial-license` — **prototype-only, non-commercial, not CC0**; rows in `assets/sprites/LICENSES.md`. Production conversion art requires a compatible license. |
 
-Still **provisional pending browser data**: mipmap/compression/alpha import
-settings, atlas/rig approach, animation workflow and runtime cost, per-group
-asset dimensions beyond this screen, and Web export size/load/performance
-budgets.
+Measured Web bundle size with the prototype assets included (release
+no-threads export via `tools/build_web.sh`, passing `tools/smoke_check_web.sh`):
+`index.wasm` 39,509,339 bytes (≈37.7 MiB), `index.pck` 6,227,072 bytes
+(≈5.9 MiB). This is size evidence only — no browser load-time or frame-time
+was measured.
+
+Follow-up validation items, **not established by this prototype** (no
+browser load/frame-time measurement has been taken): browser load-time and
+frame-time budgets, window-size/DPR/performance budgeting,
+mipmap/compression/alpha import settings, atlas/rig approach, animation
+workflow and runtime cost, and per-group asset dimensions beyond this
+screen.
 
 ## 3. Planned conversion groups
 

@@ -1,11 +1,14 @@
 extends GutTest
 ## Presentation contract for the Zone 1 HD 2D prototype (issue #141): the
-## copied source assets are real PNGs at the documented dimensions, the zone
-## installs the HD layer on the entrance → room A route, every new HD node
-## filters linearly per-node, only the selected legacy display nodes are
-## hidden (and only visually), gameplay/collision contracts are untouched,
-## live mechanical signals mirror onto the static art, and the zone-local HUD
-## treatment is applied without layout changes.
+## copied source assets are real PNGs at the documented dimensions, the
+## integrated background is the recomposed v2 plate with no baked gameplay
+## affordances (not the rejected v1 shrine plate), the zone installs the HD
+## layer on the entrance → room A route, every new HD node filters linearly
+## per-node, only the selected legacy display nodes and the covered-route
+## scenery (display props + exit-gate marker polygon) are hidden (and only
+## visually), gameplay/collision contracts are untouched, live mechanical
+## signals mirror onto the static art, and the zone-local HUD treatment is
+## applied without layout changes.
 
 const ZONE_SCENE: PackedScene = preload("res://scenes/world/zone1_graybox.tscn")
 const TEST_SAVE_PATH: String = "user://test_zone1_hd_presentation_savegame.json"
@@ -23,10 +26,40 @@ const EXPECTED_ASSET_DIMENSIONS: Dictionary[String, Vector2i] = {
 
 ## Un-deleted originals the copies were made from (provenance requirement).
 const SOURCE_REFERENCE_PATHS: Array[String] = [
-	"res://assets/reference/hd_prototype/source_plates/encounter_room_background.png",
+	"res://assets/reference/hd_prototype/source_plates/encounter_room_background_v2.png",
 	"res://assets/reference/hd_prototype/source_plates/extracted/player_wanderer.png",
 	"res://assets/reference/hd_prototype/source_plates/extracted/relic_hound.png",
 	"res://assets/reference/hd_prototype/source_plates/extracted/checkpoint_shrine.png",
+]
+
+## The integrated background must be the recomposed v2 plate with no baked
+## gameplay affordances, not the rejected v1 plate whose painted shrine at a
+## non-interactable location failed independent review.
+const BACKGROUND_COPY_PATH: String = "res://assets/sprites/hd_prototype/encounter_room_background.png"
+const BACKGROUND_V2_REFERENCE_PATH: String = "res://assets/reference/hd_prototype/source_plates/encounter_room_background_v2.png"
+const REJECTED_BACKGROUND_V1_PATH: String = "res://assets/reference/hd_prototype/source_plates/encounter_room_background.png"
+const BACKGROUND_V2_MD5: String = "b952852f4b8ce1acc1447525033a55c3"
+
+## Display-only prop sprites whose position lies inside COVERED_ROUTE_RECT —
+## the painted plate replaces them, so leaving them visible would double up
+## scenery over the HD art.
+const COVERED_ROUTE_PROP_NAMES: Array[String] = [
+	"TreeRoomA",
+	"RootRuinRoomA",
+	"StumpCorridorWest",
+	"StoneCorridorMiddle",
+	"StoneAlcoveSouth",
+]
+
+## Props east of the room B seam keep their legacy presentation.
+const UNCOVERED_PROP_NAMES: Array[String] = [
+	"TreeRoomB",
+	"RelicMachineRoomB",
+	"TreeRoomC",
+	"RelicMachineRoomC",
+	"RootRuinBossApproach",
+	"StumpCorridorEast",
+	"StumpAlcoveNorth",
 ]
 
 
@@ -88,6 +121,67 @@ func test_hd_assets_are_real_pngs_with_documented_dimensions() -> void:
 			FileAccess.file_exists(reference_path),
 			"Original source reference must not be deleted: %s" % reference_path
 		)
+
+
+func test_background_copy_is_the_v2_plate_without_baked_affordances() -> void:
+	assert_eq(
+		FileAccess.get_md5(BACKGROUND_COPY_PATH), BACKGROUND_V2_MD5,
+		"Integrated background must be the recomposed v2 no-affordance plate."
+	)
+	assert_eq(
+		FileAccess.get_md5(BACKGROUND_V2_REFERENCE_PATH), BACKGROUND_V2_MD5,
+		"v2 source reference must match the documented plate content."
+	)
+	assert_ne(
+		FileAccess.get_md5(BACKGROUND_COPY_PATH),
+		FileAccess.get_md5(REJECTED_BACKGROUND_V1_PATH),
+		"Rejected v1 plate (baked shrine, false affordance) must not be integrated."
+	)
+
+
+func test_covered_route_scenery_and_exit_gate_visual_are_hidden() -> void:
+	var zone: Zone1Graybox = _add_zone()
+	var presentation: Zone1HdPresentation = _presentation_of(zone)
+
+	# The plate paints the entrance route's scenery, so the legacy display
+	# props under it and the exit-gate marker polygon must not draw on top.
+	assert_false(
+		(zone.get_node("ExitGateVisual") as Polygon2D).visible,
+		"Exit-gate marker polygon must not draw over the HD plate."
+	)
+	for prop_name: String in COVERED_ROUTE_PROP_NAMES:
+		var prop: Node2D = zone.get_node("Props/%s" % prop_name) as Node2D
+		assert_true(
+			Zone1HdPresentation.COVERED_ROUTE_RECT.has_point(prop.position),
+			"%s belongs to the covered route." % prop_name
+		)
+		assert_false(prop.visible, "%s must be hidden under the HD plate." % prop_name)
+	for prop_name: String in UNCOVERED_PROP_NAMES:
+		var prop: Node2D = zone.get_node("Props/%s" % prop_name) as Node2D
+		assert_false(
+			Zone1HdPresentation.COVERED_ROUTE_RECT.has_point(prop.position),
+			"%s lies outside the covered route." % prop_name
+		)
+		assert_true(prop.visible, "%s must keep its legacy presentation." % prop_name)
+	# Exactly the exit-gate visual + the covered props are hidden, and only
+	# visually: every prop node stays in the tree under Props.
+	assert_eq(
+		presentation.get_hidden_legacy_scenery().size(),
+		COVERED_ROUTE_PROP_NAMES.size() + 1
+	)
+	assert_eq(zone.get_zone_props().size(), 12, "No prop node may be removed.")
+
+	# The exit interaction is untouched: the Area2D keeps sensing and the
+	# prompt survives — only the marker polygon is hidden.
+	var exit_zone: InteractableZone = zone.get_node("ExitZone") as InteractableZone
+	assert_true(exit_zone.monitoring, "ExitZone must keep sensing the player.")
+	assert_eq(exit_zone.prompt_text, "[E] Return to Hub")
+
+	# Secret-alcove reveal mechanics stay intact: covers are mechanical
+	# (hidden-room reveal), draw above the plate, and keep their pickups.
+	assert_true((zone.get_node("Secrets/AlcoveSouthReveal/Cover") as Polygon2D).visible)
+	assert_true((zone.get_node("Secrets/AlcoveSouthReveal") as Area2D).monitoring)
+	assert_eq(zone.get_secret_pickups().size(), 2)
 
 
 func test_zone_installs_hd_layer_on_entrance_first_encounter_route() -> void:

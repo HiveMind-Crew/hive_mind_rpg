@@ -103,8 +103,15 @@ current assets only while the migration is underway.
 
 The shipped project currently retains pixel snapping, nearest-filtered legacy
 textures, a 2× world camera configuration, and 1280×720 output. The Zone 1
-entrance-route prototype (issue #141) measured the following decisions, which
-replace the corresponding #139 deferrals:
+entrance-route prototype (issue #141) produced **measured prototype
+decisions** — settings observed working in the integrated route and its
+headless test suite. They are the starting point for conversion issues, but
+they do **not** yet constitute the complete final HD technical contract:
+no browser load-time or frame-time measurement has been taken, and full
+window-size/DPR/performance budgeting is an explicit follow-up validation
+item.
+
+Measured prototype decisions:
 
 - **Source dimensions:** a 1024×576 wide painted environment plate treated as
   a single background (uniformly scaled 5/6 to the 480 px zone height and
@@ -122,16 +129,24 @@ replace the corresponding #139 deferrals:
   drivers (facing flips, CombatFeedback flashes, enemy state tints, shrine
   lit state) onto the HD sprites; no fake frame animation was added.
 - **Composition:** the HD layer is a zone-local presentation helper
-  (`Zone1HdPresentation`) that hides only the selected legacy display nodes;
-  collision, spawns, Area2D contracts, combat, saves, and HUD behavior are
-  untouched.
+  (`Zone1HdPresentation`) that hides only the selected legacy display nodes
+  and the covered-route scenery it paints over (display-only prop sprites and
+  the exit-gate marker polygon); collision, spawns, Area2D contracts, combat,
+  saves, and HUD behavior are untouched.
+- **No painted affordances:** environment plates must depict environment
+  only. The first encounter-room plate was rejected in independent review for
+  baking a shrine at a location with no matching interactable (a false
+  affordance); the integrated plate is the recomposed v2 with no shrine,
+  gate, pickup, or characters. Anything interactable gets its own live node
+  and visual.
 
-Still **provisional pending browser/desktop playtest data**: mipmap,
-compression, and alpha import settings; atlas/rig approach; the production
-animation workflow and runtime cost; UI/world readability across browser and
-window sizes; and Web export size/load/frame-time budgets. Do not introduce
-fractional visual scaling, smoothing, renderer changes, or new asset settings
-in a conversion pass before those remaining decisions land.
+Follow-up validation items, **not established by this prototype**: browser
+load-time and frame-time measurement; window-size/DPR/performance budgeting;
+mipmap, compression, and alpha import settings; atlas/rig approach; the
+production animation workflow and runtime cost; and UI/world readability
+across browser and window sizes. Do not introduce fractional visual scaling,
+smoothing, renderer changes, or new asset settings in a conversion pass
+before those remaining decisions land.
 
 ## 8. UI and typography
 

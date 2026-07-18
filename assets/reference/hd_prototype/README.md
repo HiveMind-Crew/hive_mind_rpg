@@ -19,7 +19,8 @@ dimensions, and timing in each sidecar JSON):
 
 | File | Purpose |
 |---|---|
-| `encounter_room_background.png` | 1024×576 painted encounter-room environment plate (used by the prototype). |
+| `encounter_room_background.png` | **REJECTED — not used.** First 1024×576 encounter-room plate; independent review rejected it because it baked a shrine at a location with no matching interactable, creating a false affordance. Retained only as the review record of what was replaced; it must not be copied to `assets/sprites/`. |
+| `encounter_room_background_v2.png` | 1024×576 recomposed environment-only plate (used by the prototype). Intentionally contains **no** shrine, altar, gate, pickup, characters, or other gameplay affordances; every interactable keeps its own live node + visual in the scene. |
 | `player_wanderer_plate.png` / `extracted/player_wanderer.png` | Player illustration on chroma key / extracted to 180×274 transparent PNG (used by the prototype). |
 | `relic_hound_plate.png` / `extracted/relic_hound.png` | Melee-chaser illustration on chroma key / extracted to 162×286 transparent PNG (used by the prototype). |
 | `checkpoint_shrine_plate.png` / `extracted/checkpoint_shrine.png` | Checkpoint shrine on chroma key / extracted to 249×330 transparent PNG (used by the prototype). |
