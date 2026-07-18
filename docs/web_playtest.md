@@ -56,8 +56,9 @@ python3 tools/measure_web_playtest.py \
 
 The helper requires Playwright + Chromium. It writes ignored JSON evidence and
 screenshots under `.playtest-build/measurements/` for desktop 1280×720/DPR 1
-and Android-landscape 915×412/DPR 2.5 emulation. It catches canvas/layout,
-resource-transfer, and console regressions; its headless frame samples are
+and Android-landscape 915×412/DPR 2.5 emulation. It records canvas CSS and
+backing-store geometry, resource transfers, and console errors for review;
+it does not inspect Godot HUD/control content. Its headless frame samples are
 **not** valid device-performance measurements. Any art PR that materially
 increases bundle size or draw cost must also receive an authenticated,
 physical-phone landscape smoke test.

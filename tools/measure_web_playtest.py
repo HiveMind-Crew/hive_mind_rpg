@@ -112,13 +112,36 @@ async def _measure_case(
                 duration_ms: resource.duration,
                 transfer_size_bytes: resource.transferSize,
             }));
+            const canvas = document.querySelector('canvas');
+            const canvasRect = canvas ? canvas.getBoundingClientRect() : null;
+            const viewport = {
+                inner_width: innerWidth,
+                inner_height: innerHeight,
+                device_pixel_ratio: devicePixelRatio,
+                touch_points: navigator.maxTouchPoints,
+            };
+            const canvasMetrics = canvas && canvasRect ? {
+                css_left: canvasRect.left,
+                css_top: canvasRect.top,
+                css_width: canvasRect.width,
+                css_height: canvasRect.height,
+                backing_width: canvas.width,
+                backing_height: canvas.height,
+                css_aspect_ratio: canvasRect.width / canvasRect.height,
+                backing_scale_x: canvas.width / canvasRect.width,
+                backing_scale_y: canvas.height / canvasRect.height,
+                backing_matches_dpr: Math.abs(canvas.width / canvasRect.width - devicePixelRatio) < 0.05
+                    && Math.abs(canvas.height / canvasRect.height - devicePixelRatio) < 0.05,
+                inside_viewport: canvasRect.left >= 0 && canvasRect.top >= 0
+                    && canvasRect.right <= innerWidth && canvasRect.bottom <= innerHeight,
+                left_margin: canvasRect.left,
+                right_margin: innerWidth - canvasRect.right,
+                top_margin: canvasRect.top,
+                bottom_margin: innerHeight - canvasRect.bottom,
+            } : null;
             return {
-                viewport: {
-                    inner_width: innerWidth,
-                    inner_height: innerHeight,
-                    device_pixel_ratio: devicePixelRatio,
-                    touch_points: navigator.maxTouchPoints,
-                },
+                viewport,
+                canvas: canvasMetrics,
                 navigation: navigation ? {
                     dom_content_loaded_ms: navigation.domContentLoadedEventEnd,
                     load_ms: navigation.loadEventEnd,

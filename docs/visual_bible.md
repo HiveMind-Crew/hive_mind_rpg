@@ -148,9 +148,9 @@ rather than redefining it:
 
 - **Canvas and safe frame:** retain the `1280×720` viewport, `canvas_items`
   stretch mode, and `keep` aspect policy. Author gameplay-critical HD art for
-  the centered 16:9 canvas; landscape phones narrower than 16:9 may show
-  side bars rather than stretched art. Do not place required HUD, virtual
-  controls, prompts, or combat information in those bars.
+  the centered 16:9 canvas; landscape viewports wider than 16:9 may show
+  left/right side bars rather than stretched art. Do not place required HUD,
+  virtual controls, prompts, or combat information in those bars.
 - **Filtering and scaling:** HD nodes set `TEXTURE_FILTER_LINEAR` explicitly;
   the project default, pixel snapping, legacy nearest nodes, camera zoom, and
   renderer remain unchanged. Environment art composes from `1024×576`
@@ -183,10 +183,14 @@ rather than redefining it:
   the bundle or draw cost.
 
 Measured local Chromium evidence for the current release bundle is recorded
-in issue #149: both target layouts loaded with no console errors; emulated
-Android landscape displayed the virtual controls inside the retained 16:9
-canvas without clipping HUD or core play space. Its headless frame timing is
-not used as a performance target.
+in issue #149: both target layouts loaded with no console errors, and their
+full-viewport browser canvases had backing stores that matched the configured
+DPR. The 915×412 Android-landscape emulation is wider than 16:9; visual review
+of its screenshot showed the expected left/right bars around the preserved
+16:9 game-content frame. The helper records browser-canvas geometry but does
+not programmatically inspect Godot HUD/control content or prove touch
+detection; those remain authenticated physical-phone smoke-test checks. Its
+headless frame timing is not used as a performance target.
 
 ## 8. UI and typography
 
