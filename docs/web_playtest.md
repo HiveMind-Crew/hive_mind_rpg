@@ -44,6 +44,25 @@ python3 tools/serve_web.py        # http://127.0.0.1:8765/
 The server binds to loopback only. Do not open `index.html` from `file://`;
 browsers block wasm/fetch there.
 
+### Contract measurement (HD art passes)
+
+After building and serving a local bundle, record the repeatable layout/load
+baseline used by the HD technical-art contract:
+
+```sh
+python3 tools/measure_web_playtest.py \
+  --url http://127.0.0.1:8765/index.html
+```
+
+The helper requires Playwright + Chromium. It writes ignored JSON evidence and
+screenshots under `.playtest-build/measurements/` for desktop 1280×720/DPR 1
+and Android-landscape 915×412/DPR 2.5 emulation. It records canvas CSS and
+backing-store geometry, resource transfers, and console errors for review;
+it does not inspect Godot HUD/control content. Its headless frame samples are
+**not** valid device-performance measurements. Any art PR that materially
+increases bundle size or draw cost must also receive an authenticated,
+physical-phone landscape smoke test.
+
 ### Manual browser/controller test steps
 
 1. Open the URL in Chrome/Edge or Firefox (current release).
@@ -63,9 +82,11 @@ browsers block wasm/fetch there.
   (COOP/COEP) headers. Trade-off: audio runs on the main thread fallback and
   may crackle under load. If a host can send COOP/COEP headers, thread
   support can be enabled in the preset later.
-- **Browsers**: current Chrome/Edge/Firefox on desktop are the test targets.
-  Safari generally works but has the weakest wasm/audio behavior; mobile
-  browsers are untested and out of scope for playtests.
+- **Browsers**: current Chrome/Edge/Firefox on desktop are baseline targets.
+  Chromium mobile-landscape layout is covered by the measurement helper; a
+  physical authenticated-phone smoke test is required when a change raises
+  art bundle size or draw cost. Safari generally works but has the weakest
+  wasm/audio behavior.
 - **Controllers**: support depends on the browser's Gamepad API; pads appear
   only after a button press inside the page, and mappings can differ from
   desktop Godot.

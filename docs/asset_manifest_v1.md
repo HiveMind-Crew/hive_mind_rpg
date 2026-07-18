@@ -61,12 +61,14 @@ no-threads export via `tools/build_web.sh`, passing `tools/smoke_check_web.sh`):
 (≈5.9 MiB). This is size evidence only — no browser load-time or frame-time
 was measured.
 
-Follow-up validation items, **not established by this prototype** (no
-browser load/frame-time measurement has been taken): browser load-time and
-frame-time budgets, window-size/DPR/performance budgeting,
-mipmap/compression/alpha import settings, atlas/rig approach, animation
-workflow and runtime cost, and per-group asset dimensions beyond this
-screen.
+The remaining prototype follow-ups are now governed by the production contract
+in [`visual_bible.md` §7.1](visual_bible.md#71-production-hd-technical-art-contract-issue-149).
+It fixes the canonical canvas/safe-frame behavior, per-node filtering,
+texture-import defaults, animation/state ownership, Web-bundle guardrails, and
+a repeatable Chromium-emulation evidence method. Headless/emulated timing is
+not a substitute for physical-device performance measurement: focused art PRs
+that materially increase PCK size or draw cost still require an authenticated
+phone smoke test before merge.
 
 ## 3. Planned conversion groups
 

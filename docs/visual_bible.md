@@ -140,13 +140,57 @@ Measured prototype decisions:
   gate, pickup, or characters. Anything interactable gets its own live node
   and visual.
 
-Follow-up validation items, **not established by this prototype**: browser
-load-time and frame-time measurement; window-size/DPR/performance budgeting;
-mipmap, compression, and alpha import settings; atlas/rig approach; the
-production animation workflow and runtime cost; and UI/world readability
-across browser and window sizes. Do not introduce fractional visual scaling,
-smoothing, renderer changes, or new asset settings in a conversion pass
-before those remaining decisions land.
+### 7.1 Production HD technical-art contract (issue #149)
+
+These rules turn the accepted prototype into a shared production contract for
+focused conversion passes. They preserve the existing gameplay presentation
+rather than redefining it:
+
+- **Canvas and safe frame:** retain the `1280×720` viewport, `canvas_items`
+  stretch mode, and `keep` aspect policy. Author gameplay-critical HD art for
+  the centered 16:9 canvas; landscape viewports wider than 16:9 may show
+  left/right side bars rather than stretched art. Do not place required HUD,
+  virtual controls, prompts, or combat information in those bars.
+- **Filtering and scaling:** HD nodes set `TEXTURE_FILTER_LINEAR` explicitly;
+  the project default, pixel snapping, legacy nearest nodes, camera zoom, and
+  renderer remain unchanged. Environment art composes from `1024×576`
+  painterly plates or smaller modules, uniformly scaled/cropped to named room
+  boundaries. Actors keep an explicit display-height/offset contract so art
+  does not overstate collision.
+- **Texture import:** HD 2D color/alpha assets use the measured prototype
+  import settings: lossless `compress/mode=0`, mipmaps off, unpremultiplied
+  alpha, alpha-border fix on, and no size limit. A later issue may enable
+  mipmaps or lossy/VRAM compression only with an actual-size visual comparison
+  and recorded Web-size/performance evidence.
+- **Animation:** use authored `AnimatedSprite2D` frames for directional
+  movement/action states when a source sheet is available. A static or hybrid
+  illustration is acceptable only when the existing live state driver still
+  supplies facing, wind-up, attack, invulnerability, hit, defeat, and
+  pass-through feedback. Never make decorative frames the source of a
+  mechanical state.
+- **Web bundle guardrails:** the Godot 4.7 release/no-threads baseline on
+  2026-07-18 is `index.wasm` 39,509,339 bytes and `index.pck` 6,237,408
+  bytes. Art must not grow the wasm binary. Each art PR records its PCK delta;
+  a PCK above 12 MiB or a delta above 2 MiB requires an explicit asset budget
+  and physical-phone smoke test before merge.
+- **Evidence method:** run `tools/build_web.sh`, serve the bundle, and run
+  `python3 tools/measure_web_playtest.py --url <local-or-authenticated-url>`.
+  It records desktop 1280×720/DPR 1 and Android-landscape 915×412/DPR 2.5
+  emulation, screenshots, resource transfers, and browser console errors.
+  Headless frame samples are layout/regression evidence only; they are not
+  device-performance numbers. Each art pass still needs an authenticated
+  desktop and physical mobile-landscape route check when its new assets raise
+  the bundle or draw cost.
+
+Measured local Chromium evidence for the current release bundle is recorded
+in issue #149: both target layouts loaded with no console errors, and their
+full-viewport browser canvases had backing stores that matched the configured
+DPR. The 915×412 Android-landscape emulation is wider than 16:9; visual review
+of its screenshot showed the expected left/right bars around the preserved
+16:9 game-content frame. The helper records browser-canvas geometry but does
+not programmatically inspect Godot HUD/control content or prove touch
+detection; those remain authenticated physical-phone smoke-test checks. Its
+headless frame timing is not used as a performance target.
 
 ## 8. UI and typography
 
