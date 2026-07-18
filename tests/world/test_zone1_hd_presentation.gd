@@ -1,9 +1,9 @@
 extends GutTest
-## Presentation contract for the Zone 1 HD 2D prototype (issue #141): the
+## Presentation contract for the Zone 1 HD 2D migration (issues #141 and #152): the
 ## copied source assets are real PNGs at the documented dimensions, the
 ## integrated background is the recomposed v2 plate with no baked gameplay
 ## affordances (not the rejected v1 shrine plate), the zone installs the HD
-## layer on the entrance → room A route, every new HD node filters linearly
+## layer on the entrance → room C route, every new HD node filters linearly
 ## per-node, only the selected legacy display nodes and the covered-route
 ## scenery (display props + exit-gate marker polygon) are hidden (and only
 ## visually), gameplay/collision contracts are untouched, live mechanical
@@ -22,6 +22,7 @@ const EXPECTED_ASSET_DIMENSIONS: Dictionary[String, Vector2i] = {
 	"res://assets/sprites/hd_prototype/player_wanderer.png": Vector2i(180, 274),
 	"res://assets/sprites/hd_prototype/relic_hound.png": Vector2i(162, 286),
 	"res://assets/sprites/hd_prototype/checkpoint_shrine.png": Vector2i(249, 330),
+	"res://assets/sprites/world/hd/zone1_rooms_b_c.png": Vector2i(1024, 576),
 }
 
 ## Un-deleted originals the copies were made from (provenance requirement).
@@ -39,6 +40,8 @@ const BACKGROUND_COPY_PATH: String = "res://assets/sprites/hd_prototype/encounte
 const BACKGROUND_V2_REFERENCE_PATH: String = "res://assets/reference/hd_prototype/source_plates/encounter_room_background_v2.png"
 const REJECTED_BACKGROUND_V1_PATH: String = "res://assets/reference/hd_prototype/source_plates/encounter_room_background.png"
 const BACKGROUND_V2_MD5: String = "b952852f4b8ce1acc1447525033a55c3"
+const ROOMS_B_C_BACKGROUND_PATH: String = "res://assets/sprites/world/hd/zone1_rooms_b_c.png"
+const ROOMS_B_C_BACKGROUND_MD5: String = "944fa7d158f82033b3c7d55b52480837"
 
 ## Display-only prop sprites whose position lies inside COVERED_ROUTE_RECT —
 ## the painted plate replaces them, so leaving them visible would double up
@@ -49,17 +52,17 @@ const COVERED_ROUTE_PROP_NAMES: Array[String] = [
 	"StumpCorridorWest",
 	"StoneCorridorMiddle",
 	"StoneAlcoveSouth",
-]
-
-## Props east of the room B seam keep their legacy presentation.
-const UNCOVERED_PROP_NAMES: Array[String] = [
 	"TreeRoomB",
 	"RelicMachineRoomB",
 	"TreeRoomC",
 	"RelicMachineRoomC",
-	"RootRuinBossApproach",
 	"StumpCorridorEast",
 	"StumpAlcoveNorth",
+]
+
+## The boss-approach prop lies east of the current production-art seam.
+const UNCOVERED_PROP_NAMES: Array[String] = [
+	"RootRuinBossApproach",
 ]
 
 
@@ -97,6 +100,13 @@ func _add_zone() -> Zone1Graybox:
 
 func _presentation_of(zone: Zone1Graybox) -> Zone1HdPresentation:
 	return zone.get_node("HdPresentation") as Zone1HdPresentation
+
+
+func _is_in_covered_route(world_position: Vector2) -> bool:
+	for covered_rect: Rect2 in Zone1HdPresentation.COVERED_ROUTE_RECTS:
+		if covered_rect.has_point(world_position):
+			return true
+	return false
 
 
 func test_hd_assets_are_real_pngs_with_documented_dimensions() -> void:
@@ -137,6 +147,10 @@ func test_background_copy_is_the_v2_plate_without_baked_affordances() -> void:
 		FileAccess.get_md5(REJECTED_BACKGROUND_V1_PATH),
 		"Rejected v1 plate (baked shrine, false affordance) must not be integrated."
 	)
+	assert_eq(
+		FileAccess.get_md5(ROOMS_B_C_BACKGROUND_PATH), ROOMS_B_C_BACKGROUND_MD5,
+		"Room B/C art must stay pinned to the reviewed environment-only plate."
+	)
 
 
 func test_covered_route_scenery_and_exit_gate_visual_are_hidden() -> void:
@@ -152,14 +166,14 @@ func test_covered_route_scenery_and_exit_gate_visual_are_hidden() -> void:
 	for prop_name: String in COVERED_ROUTE_PROP_NAMES:
 		var prop: Node2D = zone.get_node("Props/%s" % prop_name) as Node2D
 		assert_true(
-			Zone1HdPresentation.COVERED_ROUTE_RECT.has_point(prop.position),
+			_is_in_covered_route(prop.position),
 			"%s belongs to the covered route." % prop_name
 		)
 		assert_false(prop.visible, "%s must be hidden under the HD plate." % prop_name)
 	for prop_name: String in UNCOVERED_PROP_NAMES:
 		var prop: Node2D = zone.get_node("Props/%s" % prop_name) as Node2D
 		assert_false(
-			Zone1HdPresentation.COVERED_ROUTE_RECT.has_point(prop.position),
+			_is_in_covered_route(prop.position),
 			"%s lies outside the covered route." % prop_name
 		)
 		assert_true(prop.visible, "%s must keep its legacy presentation." % prop_name)
@@ -181,10 +195,12 @@ func test_covered_route_scenery_and_exit_gate_visual_are_hidden() -> void:
 	# (hidden-room reveal), draw above the plate, and keep their pickups.
 	assert_true((zone.get_node("Secrets/AlcoveSouthReveal/Cover") as Polygon2D).visible)
 	assert_true((zone.get_node("Secrets/AlcoveSouthReveal") as Area2D).monitoring)
+	assert_true((zone.get_node("Secrets/AlcoveNorthReveal/Cover") as Polygon2D).visible)
+	assert_true((zone.get_node("Secrets/AlcoveNorthReveal") as Area2D).monitoring)
 	assert_eq(zone.get_secret_pickups().size(), 2)
 
 
-func test_zone_installs_hd_layer_on_entrance_first_encounter_route() -> void:
+func test_zone_installs_hd_layers_through_encounter_room_c() -> void:
 	var zone: Zone1Graybox = _add_zone()
 	var presentation: Zone1HdPresentation = _presentation_of(zone)
 
@@ -195,11 +211,35 @@ func test_zone_installs_hd_layer_on_entrance_first_encounter_route() -> void:
 		Zone1Graybox.FLOOR_RECTS[6].position.x * Zone1Graybox.TILE_SIZE.x
 	)
 	assert_eq(Zone1HdPresentation.COVERED_ROUTE_RECT, Rect2(0, 0, room_b_left_px, 480))
+	var boss_corridor_left_px: float = float(
+		Zone1Graybox.FLOOR_RECTS[11].position.x * Zone1Graybox.TILE_SIZE.x
+	)
+	assert_eq(
+		Zone1HdPresentation.ROOMS_B_C_ROUTE_RECT,
+		Rect2(room_b_left_px, 0, boss_corridor_left_px - room_b_left_px, 480)
+	)
 
-	var drawn: Rect2 = presentation.get_background_world_rect()
-	assert_almost_eq(drawn.position, Vector2.ZERO, Vector2(0.01, 0.01))
+	var drawn_rects: Array[Rect2] = presentation.get_background_world_rects()
+	assert_eq(drawn_rects.size(), 2)
 	assert_almost_eq(
-		drawn.size, Zone1HdPresentation.COVERED_ROUTE_RECT.size, Vector2(0.01, 0.01)
+		drawn_rects[0].position,
+		Zone1HdPresentation.COVERED_ROUTE_RECT.position,
+		Vector2(0.01, 0.01)
+	)
+	assert_almost_eq(
+		drawn_rects[0].size,
+		Zone1HdPresentation.COVERED_ROUTE_RECT.size,
+		Vector2(0.01, 0.01)
+	)
+	assert_almost_eq(
+		drawn_rects[1].position,
+		Zone1HdPresentation.ROOMS_B_C_ROUTE_RECT.position,
+		Vector2(0.01, 0.01)
+	)
+	assert_almost_eq(
+		drawn_rects[1].size,
+		Zone1HdPresentation.ROOMS_B_C_ROUTE_RECT.size,
+		Vector2(0.01, 0.01)
 	)
 
 	# Draw order: over the legacy tiles, under props/actors/interactables.
@@ -212,7 +252,7 @@ func test_all_hd_nodes_use_per_node_linear_filtering_only() -> void:
 	var presentation: Zone1HdPresentation = _presentation_of(zone)
 
 	var hd_sprites: Array[Sprite2D] = presentation.get_hd_sprites()
-	assert_eq(hd_sprites.size(), 4)
+	assert_eq(hd_sprites.size(), 5)
 	for sprite: Sprite2D in hd_sprites:
 		assert_not_null(sprite.texture)
 		assert_eq(

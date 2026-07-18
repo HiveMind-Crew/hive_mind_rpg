@@ -92,6 +92,15 @@ phone smoke test before merge.
 | Corrupted-forest environment | Floors, walls, foliage, ruins, relic corruption, route framing, and set dressing. | Tile/collision layout, camera bounds, secret route geometry, enemy placement, or room logic. |
 | Interactables | Checkpoints, gates, pickups, boss door, secret reveals, and associated affordance feedback. | Area2D contracts, reward values, save behavior, or transition logic. |
 
+Issue #152 has begun the production environment extension with
+`assets/sprites/world/hd/zone1_rooms_b_c.png`, a 1024×576 environment-only
+plate covering the named room-B → room-C route at the contract 5/6 scale. It
+adds no baked actors, interactables, gates, shrines, pickups, or hazards; live
+scene nodes and secret-reveal covers remain above the presentation layer. The
+boss corridor, boss approach, and arena remain on the legacy environment layer
+until the next focused plate lands, so this row does not yet mark the full
+Zone 1 environment group complete.
+
 ### 3.4 UI and combat FX
 
 | Group | Scope | Non-goals |
