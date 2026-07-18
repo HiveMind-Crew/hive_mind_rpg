@@ -1,0 +1,13 @@
+{
+  "generator": "LemonadeAI",
+  "model": "Flux-2-Klein-9B-GGUF",
+  "prompt": "orthographic straight-down top-down 2D action RPG gameplay screen, 16:9 wide composition, stylized HD hand-painted illustration, corrupted ancient forest encounter room, clearly walkable quiet moss-and-soil central route, large dark hand-worn stone walls and foliage framing the edges, one small teal-cloaked player silhouette viewed directly from above near lower left, one distinct violet relic hound enemy with a warm yellow wind-up cue in the middle, a small weathered checkpoint shrine on the upper edge with contained soft green light, buried alien relic machinery at the far edge with small contained cyan and magenta emissive seams, clear gameplay affordances, high-contrast silhouettes, soft top-down lighting, premium 2D game background concept, flat orthographic camera only, no isometric, no perspective tilt, no cinematic closeup, no text, no UI, no logo, no watermark, no pixel art, no photorealism",
+  "requested_size": "1024x576",
+  "actual_size": [
+    1024,
+    576
+  ],
+  "elapsed_seconds": 25.23,
+  "response_format": "b64_json",
+  "purpose": "Issue #141 strict top-down game-playfield reference; not yet integrated into a production scene."
+}

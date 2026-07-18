@@ -102,18 +102,51 @@ current assets only while the migration is underway.
 ## 7. Rendering and implementation transition
 
 The shipped project currently retains pixel snapping, nearest-filtered legacy
-textures, a 2× world camera configuration, and 1280×720 output. These settings
-remain untouched until the one-screen HD prototype proves the replacement.
-That prototype must set and document:
+textures, a 2× world camera configuration, and 1280×720 output. The Zone 1
+entrance-route prototype (issue #141) produced **measured prototype
+decisions** — settings observed working in the integrated route and its
+headless test suite. They are the starting point for conversion issues, but
+they do **not** yet constitute the complete final HD technical contract:
+no browser load-time or frame-time measurement has been taken, and full
+window-size/DPR/performance budgeting is an explicit follow-up validation
+item.
 
-- source texture dimensions and atlas/rig approach;
-- texture filtering, mipmap, compression, and alpha settings;
-- camera zoom/presentation and UI/world readability at supported displays;
-- animation workflow and runtime cost;
-- Web export size, load time, and frame-time budget.
+Measured prototype decisions:
 
-Do not introduce fractional visual scaling, smoothing, renderer changes, or
-new asset settings in a conversion pass before that prototype decision lands.
+- **Source dimensions:** a 1024×576 wide painted environment plate treated as
+  a single background (uniformly scaled 5/6 to the 480 px zone height and
+  region-cropped to end on a room boundary), plus chroma-key-extracted
+  transparent actor illustrations at native source size — player 180×274,
+  melee chaser 162×286, checkpoint shrine 249×330 — scaled per-node to the
+  legacy actor footprint at play size.
+- **Filtering:** per-node `TEXTURE_FILTER_LINEAR` on the new HD nodes only.
+  The project-wide default filter, pixel snapping, and every legacy
+  nearest-filtered node are unchanged.
+- **Camera:** the existing 2× world camera is retained for this measured
+  prototype; no zoom, bounds, or renderer changes.
+- **Animation:** static single-pose prototype art, honestly documented as
+  such. Live mechanical signals stay readable by mirroring the hidden legacy
+  drivers (facing flips, CombatFeedback flashes, enemy state tints, shrine
+  lit state) onto the HD sprites; no fake frame animation was added.
+- **Composition:** the HD layer is a zone-local presentation helper
+  (`Zone1HdPresentation`) that hides only the selected legacy display nodes
+  and the covered-route scenery it paints over (display-only prop sprites and
+  the exit-gate marker polygon); collision, spawns, Area2D contracts, combat,
+  saves, and HUD behavior are untouched.
+- **No painted affordances:** environment plates must depict environment
+  only. The first encounter-room plate was rejected in independent review for
+  baking a shrine at a location with no matching interactable (a false
+  affordance); the integrated plate is the recomposed v2 with no shrine,
+  gate, pickup, or characters. Anything interactable gets its own live node
+  and visual.
+
+Follow-up validation items, **not established by this prototype**: browser
+load-time and frame-time measurement; window-size/DPR/performance budgeting;
+mipmap, compression, and alpha import settings; atlas/rig approach; the
+production animation workflow and runtime cost; and UI/world readability
+across browser and window sizes. Do not introduce fractional visual scaling,
+smoothing, renderer changes, or new asset settings in a conversion pass
+before those remaining decisions land.
 
 ## 8. UI and typography
 

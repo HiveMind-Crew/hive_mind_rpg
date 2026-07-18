@@ -1,0 +1,13 @@
+{
+  "generator": "LemonadeAI",
+  "model": "Flux-2-Klein-9B-GGUF",
+  "prompt": "single full-body 2D action RPG player character asset, teal-cloaked lone wanderer with small magenta relic-facing accent, viewed directly from above, centered, stylized HD hand-painted illustration, clean readable silhouette, soft contact shadow, isolated on a perfectly flat solid lime green chroma-key background, no ground texture, no scenery, no text, no logo, no watermark, no pixel art, no isometric, no perspective tilt",
+  "requested_size": "512x512",
+  "actual_size": [
+    512,
+    512
+  ],
+  "elapsed_seconds": 10.86,
+  "response_format": "b64_json",
+  "purpose": "Issue #141 HD 2D modular source plate; requires visual acceptance, extraction, license-term confirmation, and integration validation before production use."
+}

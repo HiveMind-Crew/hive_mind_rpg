@@ -1,0 +1,13 @@
+{
+  "generator": "LemonadeAI",
+  "model": "Flux-2-Klein-9B-GGUF",
+  "prompt": "top-down 2D action RPG playable environment concept art, 16:9 wide composition, stylized HD hand-painted illustration, corrupted ancient forest encounter clearing, quiet moss and soil walkable floor through the center, hand-worn stone ruins and roots framing the route, one small teal-cloaked wanderer seen from above near the lower left, one distinct violet relic hound enemy in the clearing, a weathered stone checkpoint shrine with soft green light, buried alien machinery with restrained cyan and magenta emissive seams, high-contrast readable silhouettes, soft top-down lighting, premium fantasy game key art, no text, no interface, no pixel art, no isometric view, no photorealism, no side view, no logo, no watermark",
+  "requested_size": "1024x576",
+  "actual_size": [
+    1024,
+    576
+  ],
+  "elapsed_seconds": 49.26,
+  "response_format": "b64_json",
+  "purpose": "Issue #141 HD 2D Zone 1 art-direction keyframe; not yet integrated into a production scene."
+}

@@ -1,0 +1,13 @@
+{
+  "generator": "LemonadeAI",
+  "model": "Flux-2-Klein-9B-GGUF",
+  "prompt": "orthographic straight-down top-down 2D action RPG environment plate only, 16:9, stylized HD hand-painted corrupted ancient forest encounter room, quiet walkable moss-and-soil clearing in the center, dark hand-worn stone walls, roots and foliage framing the edges, a small weathered checkpoint shrine at the upper edge with soft green light, distant buried alien machinery with restrained cyan and magenta emissive seams, premium fantasy game background, no characters, no creatures, no UI, no text, no logo, no watermark, no pixel art, no isometric, no perspective tilt",
+  "requested_size": "1024x576",
+  "actual_size": [
+    1024,
+    576
+  ],
+  "elapsed_seconds": 35.8,
+  "response_format": "b64_json",
+  "purpose": "Issue #141 HD 2D modular source plate; requires visual acceptance, extraction, license-term confirmation, and integration validation before production use."
+}

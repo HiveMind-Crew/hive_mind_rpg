@@ -1,6 +1,7 @@
-[gd_scene load_steps=19 format=3]
+[gd_scene load_steps=20 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/zone1_graybox.gd" id="1_zone"]
+[ext_resource type="Script" path="res://scripts/world/zone1_hd_presentation.gd" id="16_hd_presentation"]
 [ext_resource type="PackedScene" path="res://scenes/world/interactable_zone.tscn" id="10_exit_zone"]
 [ext_resource type="Script" path="res://scripts/world/camera_limits.gd" id="9_camera_limits"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2_player"]
@@ -31,6 +32,19 @@ script = ExtResource("1_zone")
 [node name="FloorWalls" type="TileMapLayer" parent="."]
 unique_name_in_owner = true
 texture_filter = 1
+
+[node name="HdPresentation" type="Node2D" parent="."]
+unique_name_in_owner = true
+script = ExtResource("16_hd_presentation")
+props_root_path = NodePath("../Props")
+exit_gate_visual_path = NodePath("../ExitGateVisual")
+player_path = NodePath("../Player")
+player_visual_path = NodePath("../Player/Body")
+chaser_path = NodePath("../Enemies/ChaserRoomA")
+chaser_visual_path = NodePath("../Enemies/ChaserRoomA/BodyVisual")
+checkpoint_path = NodePath("../Checkpoints/CheckpointEntrance")
+checkpoint_visual_path = NodePath("../Checkpoints/CheckpointEntrance/Visual")
+hud_panel_path = NodePath("../Player/PlayerHud/MarginContainer/PanelContainer")
 
 [node name="Props" type="Node2D" parent="."]
 
