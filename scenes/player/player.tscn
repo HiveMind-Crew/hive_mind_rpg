@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/combat/hurtbox.tscn" id="2_hurtbox"]
@@ -10,6 +10,7 @@
 [ext_resource type="PackedScene" path="res://scenes/combat/combat_feedback.tscn" id="8_feedback"]
 [ext_resource type="Script" path="res://scripts/player/player_visual.gd" id="9_visual"]
 [ext_resource type="SpriteFrames" path="res://assets/sprites/player/player_frames.tres" id="10_frames"]
+[ext_resource type="Script" path="res://scripts/player/player_hd_presentation.gd" id="11_hd_presentation"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_player"]
 radius = 7.0
@@ -57,6 +58,10 @@ animation = &"idle_down"
 autoplay = "idle_down"
 script = ExtResource("9_visual")
 health_path = NodePath("../HealthComponent")
+
+[node name="HdPresentation" type="Node2D" parent="."]
+script = ExtResource("11_hd_presentation")
+visual_path = NodePath("../Body")
 
 [node name="Camera2D" type="Camera2D" parent="."]
 zoom = Vector2(2, 2)
