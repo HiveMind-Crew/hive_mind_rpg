@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/main/game_manager.gd" id="1_manager"]
 [ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="2_pause"]
+[ext_resource type="PackedScene" path="res://scenes/ui/mobile_virtual_controls.tscn" id="3_mobile_controls"]
 
 [node name="Main" type="Node"]
 script = ExtResource("1_manager")
@@ -10,4 +11,7 @@ script = ExtResource("1_manager")
 unique_name_in_owner = true
 
 [node name="PauseMenu" parent="." instance=ExtResource("2_pause")]
+unique_name_in_owner = true
+
+[node name="MobileVirtualControls" parent="." instance=ExtResource("3_mobile_controls")]
 unique_name_in_owner = true
