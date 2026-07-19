@@ -77,6 +77,7 @@ phone smoke test before merge.
 | Group | Scope | Non-goals |
 |---|---|---|
 | Player HD presentation | Implemented in issue #150: illustrated player body, directional cyan facing accent (magenta during dash/melee/relic), contact shadow, and state-driven presentation integration. | Movement, dash/melee/relic timing, hitboxes/hurtboxes, stats, saves, or player collision. |
+| Hub environment presentation | Implemented in issue #151: 1024×576 environment-only illustrated settlement plate, region-cropped/scaled by `HubHdPresentation` over the existing collision TileMapLayer. | Hub bounds/tile collision, spawn, checkpoint, skill-tree station, gate sensor/transition, camera, saves, or input behavior. |
 
 ### 3.2 Enemies and boss
 

@@ -1,0 +1,7 @@
+{
+  "generator": "LemonadeAI",
+  "model": "Flux-2-Klein-9B-GGUF",
+  "prompt": "top-down 2D action RPG playable map background, empty safe medieval settlement courtyard, stylized HD hand-painted illustration, muted warm worn stone plaza, mossy stone perimeter walls, small timber roofs only at the outer edges, soft top-down lighting, calm mid-value walkable floor, subtle cyan relic cables embedded in paving, no characters, no NPCs, no shrine, no checkpoint, no gate, no doorway, no pickup, no treasure, no text, no HUD, no logo, no watermark, not pixel art, no isometric or perspective camera",
+  "requested_size": "1024x576",
+  "purpose": "Issue #151 safe Hub environment-only source plate; live gameplay affordances remain separate nodes."
+}

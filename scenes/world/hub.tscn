@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/hub.gd" id="1_hub"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="2_player"]
@@ -7,6 +7,7 @@
 [ext_resource type="Script" path="res://scripts/world/respawn_controller.gd" id="5_respawn"]
 [ext_resource type="Script" path="res://scripts/world/camera_limits.gd" id="6_camera_limits"]
 [ext_resource type="PackedScene" path="res://scenes/world/skill_tree_station.tscn" id="7_station"]
+[ext_resource type="Script" path="res://scripts/world/hub_hd_presentation.gd" id="8_hd_presentation"]
 
 [node name="Hub" type="Node2D"]
 script = ExtResource("1_hub")
@@ -14,6 +15,10 @@ script = ExtResource("1_hub")
 [node name="FloorWalls" type="TileMapLayer" parent="."]
 unique_name_in_owner = true
 texture_filter = 1
+
+[node name="HubHdPresentation" type="Node2D" parent="."]
+script = ExtResource("8_hd_presentation")
+legacy_floor_path = NodePath("../FloorWalls")
 
 [node name="PlayerSpawn" type="Marker2D" parent="."]
 unique_name_in_owner = true
