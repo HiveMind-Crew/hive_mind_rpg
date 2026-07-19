@@ -1,10 +1,12 @@
 class_name PlayerHdPresentation
 extends Node2D
-## HD player display layer for issues #150/#165. It mirrors the existing
+## HD player display layer for issues #150/#165/#168. It mirrors the existing
 ## PlayerVisual state driver instead of taking ownership of movement, combat,
 ## collision, or health. The body texture is a four-cell directional atlas
 ## curated from non-commercial Flux prototype output; see
-## assets/sprites/LICENSES.md before distributing it beyond this project.
+## assets/sprites/LICENSES.md before distributing it beyond this project. The
+## steel weapon child (issue #168) is deterministic CC0 art; its melee sweep is
+## display-only and the CombatFxSpawner slash stays the single slash FX owner.
 
 const ATLAS_TEXTURE: Texture2D = preload("res://assets/sprites/player/hd/player_directional_atlas.png")
 const HD_TEXTURE_FILTER: CanvasItem.TextureFilter = CanvasItem.TEXTURE_FILTER_LINEAR
@@ -41,8 +43,12 @@ var _legacy_visual: PlayerVisual
 var _display_sprite: Sprite2D
 var _contact_shadow: Polygon2D
 var _facing_accent: Polygon2D
+var _weapon: PlayerWeaponHdPresentation
 var _animation_state: StringName = PlayerVisual.IDLE_ANIMATION
 var _elapsed: float = 0.0
+# Presentation time since the current logical state began; drives the weapon
+# swing sweep without reading any gameplay timer.
+var _state_elapsed: float = 0.0
 
 
 func _ready() -> void:
@@ -59,17 +65,24 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_elapsed += delta
+	_state_elapsed += delta
 	if _legacy_visual == null:
 		return
 	_update_atlas_region()
 	_display_sprite.self_modulate = _state_modulate() * _legacy_visual.self_modulate
 	_apply_state_pose()
 	_update_facing_accent()
+	_update_weapon()
 
 
 func get_display_sprite() -> Sprite2D:
 	_ensure_display_nodes()
 	return _display_sprite
+
+
+func get_weapon_sprite() -> PlayerWeaponHdPresentation:
+	_ensure_display_nodes()
+	return _weapon
 
 
 func _ensure_display_nodes() -> void:
@@ -78,8 +91,10 @@ func _ensure_display_nodes() -> void:
 	_display_sprite = _create_display_sprite()
 	_contact_shadow = _create_contact_shadow()
 	_facing_accent = _create_facing_accent()
+	_weapon = PlayerWeaponHdPresentation.new()
 	add_child(_contact_shadow)
 	add_child(_display_sprite)
+	add_child(_weapon)
 	add_child(_facing_accent)
 
 
@@ -124,6 +139,7 @@ func _create_facing_accent() -> Polygon2D:
 
 func _on_animation_state_changed(next_state: StringName) -> void:
 	_animation_state = next_state
+	_state_elapsed = 0.0
 
 
 func _base_scale() -> float:
@@ -147,7 +163,7 @@ func _apply_state_pose() -> void:
 		PlayerVisual.MOVE_ANIMATION:
 			# Presentation-only gait: vertical bob plus a half-frequency lean so
 			# locomotion reads alive without touching movement timing.
-			_display_sprite.position.y += sin(_elapsed * MOVE_BOB_FREQUENCY) * MOVE_BOB_HEIGHT_PX
+			_display_sprite.position.y += _move_bob_offset_y()
 			_display_sprite.rotation = (
 				sin(_elapsed * MOVE_BOB_FREQUENCY * 0.5) * deg_to_rad(MOVE_SWAY_DEGREES)
 			)
@@ -159,6 +175,18 @@ func _apply_state_pose() -> void:
 			_display_sprite.rotation = deg_to_rad(
 				-90.0 if _legacy_visual.facing_label == &"west" else 90.0
 			)
+
+
+func _update_weapon() -> void:
+	_weapon.self_modulate = _state_modulate() * _legacy_visual.self_modulate
+	_weapon.update_presentation(_legacy_visual.facing_label, _animation_state, _state_elapsed)
+	if _animation_state == PlayerVisual.MOVE_ANIMATION:
+		# Keep the carried weapon attached to the bobbing body silhouette.
+		_weapon.position.y += _move_bob_offset_y()
+
+
+func _move_bob_offset_y() -> float:
+	return sin(_elapsed * MOVE_BOB_FREQUENCY) * MOVE_BOB_HEIGHT_PX
 
 
 func _update_facing_accent() -> void:

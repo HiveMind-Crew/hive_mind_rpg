@@ -76,7 +76,7 @@ phone smoke test before merge.
 
 | Group | Scope | Non-goals |
 |---|---|---|
-| Player HD presentation | Implemented in issue #150; body source upgraded in issue #165: a 1024×256 four-cell directional atlas (`assets/sprites/player/hd/player_directional_atlas.png`, 256×256 cells with a 190 px content box, north/east/south/west at columns 0–3, west authored as a baked mirror of the side pose — never a runtime flip) selected by `PlayerHdPresentation` from the live `PlayerVisual.facing_label`, shown at a 42 px display-height contract with presentation-only bob/lean gait, plus the retained directional cyan facing accent (magenta during dash/melee/relic) as a supporting cue and contact shadow. | Movement, dash/melee/relic timing, hitboxes/hurtboxes, stats, saves, or player collision. |
+| Player HD presentation | Implemented in issue #150; body source upgraded in issue #165: a 1024×256 four-cell directional atlas (`assets/sprites/player/hd/player_directional_atlas.png`, 256×256 cells with a 190 px content box, north/east/south/west at columns 0–3, west authored as a baked mirror of the side pose — never a runtime flip) selected by `PlayerHdPresentation` from the live `PlayerVisual.facing_label`, shown at a 42 px display-height contract with presentation-only bob/lean gait, plus the retained directional cyan facing accent (magenta during dash/melee/relic) as a supporting cue and contact shadow. Issue #168 added the presentation-owned steel weapon: a deterministic CC0 512×128 two-cell atlas (`assets/sprites/player/hd/steel_weapon_atlas.png` from `assets/sprites/generate_hd_steel_weapon.py`) shown by `PlayerWeaponHdPresentation` at a 24 px length contract with the grip pivot on the hand anchor. Idle/move/dash/relic carry the held cell at a 55° down-forward rest tilt off the live facing (mirrored on west so both side stances match); melee switches to the authored swing cell and sweeps a 150° arc that crosses the exact `play_melee` facing (west sweep and its leading-edge art mirrored the same way), drawn behind the body only when facing north and hidden on death. The `CombatFxSpawner` slash stays the single complementary slash FX owner. | Movement, dash/melee/relic timing, hitboxes/hurtboxes, stats, saves, or player collision. |
 | Hub environment presentation | Implemented in issue #151: 1024×576 environment-only illustrated settlement plate, region-cropped/scaled by `HubHdPresentation` over the existing collision TileMapLayer. | Hub bounds/tile collision, spawn, checkpoint, skill-tree station, gate sensor/transition, camera, saves, or input behavior. |
 
 ### 3.2 Enemies and boss
@@ -139,7 +139,7 @@ Zone 1 environment group complete.
 | Group | Scope | Non-goals |
 |---|---|---|
 | UI skin and typography | **Production conversion in issue #156:** shared dark iron/stone material theme, semantic HP/energy and skill-state colors, eight illustrated HD emblems, larger typography, focus treatment, and readable desktop/mobile-landscape HUD, prompts, pause, skill tree, and touch controls. | UI layout behavior, skill costs, input flow, pause behavior, mobile input ownership, or save state. |
-| Combat and relic FX | Attacks, impacts, dash/relic feedback, projectiles, enemy telegraphs, and death presentation. **Starter relic orb converted in issue #169:** deterministic CC0 stylized-HD sheet (`assets/sprites/fx/relic_orb_fx.png` from `assets/sprites/generate_relic_orb_fx.py`) drives a cast-origin flare, a collision-truthful flight orb/trail rotated to the exact launch angle, and an impact burst — all spawned from the existing `EnergyBolt`/`PlayerController` signals with per-node linear filtering; the legacy `fx/energy_bolt.png` sheet is retired. Melee/dash/dissolve feedback and enemy telegraphs remain legacy pending their own pass. | Damage, hitboxes/hurtboxes, hitstop, timing, AI, or time-scale ownership. |
+| Combat and relic FX | Attacks, impacts, dash/relic feedback, projectiles, enemy telegraphs, and death presentation. **Starter relic orb converted in issue #169:** deterministic CC0 stylized-HD sheet (`assets/sprites/fx/relic_orb_fx.png` from `assets/sprites/generate_relic_orb_fx.py`) drives a cast-origin flare, a collision-truthful flight orb/trail rotated to the exact launch angle, and an impact burst — all spawned from the existing `EnergyBolt`/`PlayerController` signals with per-node linear filtering; the legacy `fx/energy_bolt.png` sheet is retired. Melee readability upgraded in issue #168 by the HD steel weapon sweep (§3.1); the legacy nearest-filtered slash burst is retained as its single complementary impact cue. Dash/dissolve feedback and enemy telegraphs remain legacy pending their own pass. | Damage, hitboxes/hurtboxes, hitstop, timing, AI, or time-scale ownership. |
 
 Issue #154 desktop Web evidence used the production `1280×720` canvas and the
 real Zone 1 route. All four bodies remained distinct at the shipped 2× camera;
@@ -178,6 +178,19 @@ engine version — below the 2 MiB physical-device-review threshold. Only the
 runtime atlas ships; the raw generation source sheets were not committed
 (JSON prompt metadata is retained at `assets/reference/hd_player_animation/`),
 so the all-resources export packages no unused reference PNGs.
+
+Issue #168 added the presentation-owned HD steel weapon described in §3.1.
+The deterministic generator produced byte-identical output across reruns
+(MD5 `b6d5401ddcc13d3023223eb0f42bd324`), Godot 4.7 headless import left the
+worktree clean, the focused weapon-presentation tests (9 tests) and the full
+GUT suite (497 tests) passed, and the release/no-threads Web export passed
+`tools/smoke_check_web.sh`. The export kept `index.wasm` at 39,509,339 bytes
+and produced a 4,348,172-byte PCK, a +10,364-byte delta from the
+4,337,808-byte pre-change baseline rebuilt with the identical method at the
+same commit and engine version — far below the 2 MiB physical-device-review
+threshold. (Baseline and result were measured as a same-machine pair; earlier
+issues' absolute PCK numbers came from other environments and are not directly
+comparable.)
 
 ## 4. Legacy inventory
 
