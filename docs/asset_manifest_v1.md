@@ -84,7 +84,28 @@ phone smoke test before merge.
 | Group | Scope | Non-goals |
 |---|---|---|
 | Regular enemy roster | **Production conversion in issue #154:** four distinct transparent illustrated bodies under `assets/sprites/enemies/hd/`; scene-local adapters mirror live facing, telegraph, hit, death, and shield state while legacy SpriteFrames remain hidden mechanical drivers. | AI, attacks, damage, ranges, collision, rewards, or encounter composition. |
-| Zone boss | Illustrated boss body, phase/readability cues, arena-facing presentation, and boss-specific FX. | Boss logic, phase thresholds, rewards, arena collision, or progression. |
+| Zone boss | **Production conversion in issue #155:** matched dormant/awakened illustrated Rootheart bodies, grounded contact treatment, live slam tell, eight-direction radial cue, and defeat presentation. | Boss AI, phase thresholds, attack timing, projectiles, hitboxes/hurtboxes, rewards, arena collision, boss-door behavior, camera, or progression. |
+
+Issue #155 keeps the Rootheart's existing `BossBase`/`EnemyBase` signals as
+the sole state authority. A scene-local `RootheartHdPresentation` hides only
+the legacy body/tell polygons, swaps the matched 96 px-tall dormant and
+awakened bodies at the existing half-health threshold, mirrors wind-up/attack/
+defeat colors, and removes its contact shadow on defeat. The authored slam
+ring is 78 px across to match the live 40 px attack range; the 68 px radial
+sigil pulses only when the existing eight-bolt phase wake or post-slam burst
+fires. All four PNGs use lossless, unmipmapped, unpremultiplied-alpha imports
+with alpha-border correction and per-node linear filtering. The boss's 16 px
+collision radius, attack offsets, timing, burst spawning, rewards, and arena
+geometry are unchanged.
+
+Issue #155 Web evidence used the real boss arena at the production `1280×720`
+canvas. The dormant body, awakened cyan/magenta core, amber slam wind-up ring,
+and existing eight-direction burst all remained distinct at the shipped 2×
+camera without changing their live hit areas; browser console inspection
+reported no warnings or errors. Downsampling the four overspecified generation
+plates to 256×256 retained actual-size detail while keeping `index.wasm` at
+39,509,339 bytes and producing a 9,200,556-byte PCK, a +271,396-byte delta from
+the 8,929,160-byte `main` baseline and below both Web-bundle guardrails.
 
 ### 3.3 Zone 1 environment and interactables
 

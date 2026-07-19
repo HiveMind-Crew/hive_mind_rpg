@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/rootheart_colossus.gd" id="1_boss"]
 [ext_resource type="Resource" path="res://data/enemies/rootheart_colossus.tres" id="2_stats"]
@@ -6,6 +6,11 @@
 [ext_resource type="PackedScene" path="res://scenes/combat/hurtbox.tscn" id="4_hurtbox"]
 [ext_resource type="PackedScene" path="res://scenes/combat/hitbox.tscn" id="5_hitbox"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/enemy_bolt.tscn" id="6_bolt"]
+[ext_resource type="Script" path="res://scripts/enemies/rootheart_hd_presentation.gd" id="7_hd"]
+[ext_resource type="Texture2D" path="res://assets/sprites/enemies/hd/boss/rootheart_phase_one.png" id="8_phase_one"]
+[ext_resource type="Texture2D" path="res://assets/sprites/enemies/hd/boss/rootheart_phase_two.png" id="9_phase_two"]
+[ext_resource type="Texture2D" path="res://assets/sprites/enemies/hd/boss/rootheart_slam_tell.png" id="10_slam"]
+[ext_resource type="Texture2D" path="res://assets/sprites/enemies/hd/boss/rootheart_radial_burst.png" id="11_radial"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
 radius = 16.0
@@ -31,6 +36,13 @@ visible = false
 polygon = PackedVector2Array(-24, -24, 24, -24, 24, 24, -24, 24)
 color = Color(1, 0.78, 0.18, 0.28)
 show_behind_parent = true
+
+[node name="HdPresentation" type="Node2D" parent="."]
+script = ExtResource("7_hd")
+phase_one_texture = ExtResource("8_phase_one")
+phase_two_texture = ExtResource("9_phase_two")
+slam_tell_texture = ExtResource("10_slam")
+radial_burst_texture = ExtResource("11_radial")
 
 [node name="Hurtbox" parent="." instance=ExtResource("4_hurtbox")]
 unique_name_in_owner = true
