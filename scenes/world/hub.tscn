@@ -19,9 +19,6 @@ texture_filter = 1
 [node name="HubHdPresentation" type="Node2D" parent="."]
 script = ExtResource("8_hd_presentation")
 legacy_floor_path = NodePath("../FloorWalls")
-checkpoint_path = NodePath("../Checkpoint")
-station_path = NodePath("../SkillTreeStation")
-gate_visual_path = NodePath("../GateVisual")
 
 [node name="PlayerSpawn" type="Marker2D" parent="."]
 unique_name_in_owner = true
