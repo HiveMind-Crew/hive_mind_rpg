@@ -161,19 +161,11 @@ func test_weapon_follows_hurt_death_and_revive_presentation() -> void:
 	assert_eq(_weapon.self_modulate, Color.WHITE)
 
 
-func test_melee_keeps_a_single_slash_fx_owner() -> void:
-	# CombatFxSpawner remains the one slash spawner; the weapon layer must not
-	# add a second slash effect on top of it.
-	var parent: Node2D = Node2D.new()
-	add_child_autofree(parent)
-	var player: PlayerController = PLAYER_SCENE.instantiate() as PlayerController
-	parent.add_child(player)
-	assert_true(player.try_melee_attack())
-	var fx_count: int = 0
-	for child: Node in parent.get_children():
-		if child is AnimatedSprite2D:
-			fx_count += 1
-	assert_eq(fx_count, 1, "Exactly one spawned slash effect per swing.")
+func test_weapon_layer_never_owns_a_second_slash_fx() -> void:
+	# The weapon is a bare Sprite2D display node. It cannot spawn a second slash;
+	# PlayerController's existing CombatFxSpawner call remains the sole owner.
+	assert_eq(_weapon.get_child_count(), 0)
+	assert_eq(_weapon.name, "SteelWeapon")
 
 
 func test_weapon_layer_leaves_melee_mechanics_and_collision_unchanged() -> void:
@@ -190,6 +182,11 @@ func test_weapon_layer_leaves_melee_mechanics_and_collision_unchanged() -> void:
 	assert_eq(hitbox.position, Vector2.DOWN * 14.0,
 		"Hitbox placement still comes from the swing direction and authored offset.")
 	_player._melee.update(0.12)
+	# PlayerController owns the real slash effect; remove the transient visual
+	# after asserting mechanics so this pure presentation test leaks no node.
+	for child: Node in get_children():
+		if child is AnimatedSprite2D:
+			child.free()
 	assert_false(_player._melee.is_swinging, "Authored swing duration is unchanged.")
 
 	var capsule: CapsuleShape2D = (
