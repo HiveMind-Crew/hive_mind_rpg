@@ -118,7 +118,7 @@ Zone 1 environment group complete.
 | Group | Scope | Non-goals |
 |---|---|---|
 | UI skin and typography | **Production conversion in issue #156:** shared dark iron/stone material theme, semantic HP/energy and skill-state colors, eight illustrated HD emblems, larger typography, focus treatment, and readable desktop/mobile-landscape HUD, prompts, pause, skill tree, and touch controls. | UI layout behavior, skill costs, input flow, pause behavior, mobile input ownership, or save state. |
-| Combat and relic FX | Attacks, impacts, dash/relic feedback, projectiles, enemy telegraphs, and death presentation. | Damage, hitboxes/hurtboxes, hitstop, timing, AI, or time-scale ownership. |
+| Combat and relic FX | Attacks, impacts, dash/relic feedback, projectiles, enemy telegraphs, and death presentation. **Starter relic orb converted in issue #169:** deterministic CC0 stylized-HD sheet (`assets/sprites/fx/relic_orb_fx.png` from `assets/sprites/generate_relic_orb_fx.py`) drives a cast-origin flare, a collision-truthful flight orb/trail rotated to the exact launch angle, and an impact burst — all spawned from the existing `EnergyBolt`/`PlayerController` signals with per-node linear filtering; the legacy `fx/energy_bolt.png` sheet is retired. Melee/dash/dissolve feedback and enemy telegraphs remain legacy pending their own pass. | Damage, hitboxes/hurtboxes, hitstop, timing, AI, or time-scale ownership. |
 
 Issue #154 desktop Web evidence used the production `1280×720` canvas and the
 real Zone 1 route. All four bodies remained distinct at the shipped 2× camera;
@@ -168,7 +168,7 @@ focused group issue after prototype decisions land:
 | Player pixel sheet and SpriteFrames | `assets/sprites/player/`, `scenes/player/` | Functional legacy presentation. |
 | Enemy pixel sheets and frames | `assets/sprites/enemies/`, `scenes/enemies/` | Retained as hidden state/animation drivers behind the production HD regular-enemy bodies (issue #154). |
 | Zone 1 forest/properties | `assets/sprites/world/`, `scenes/world/` | Functional legacy presentation. |
-| Combat/projectile sheets | `assets/sprites/fx/`, combat/player scenes | Functional legacy presentation. |
+| Combat/projectile sheets | `assets/sprites/fx/`, combat/player scenes | Melee/dash/dissolve feedback remains functional legacy presentation; the relic-bolt rows were replaced by the issue #169 HD sheet and `fx/energy_bolt.png` was removed. |
 | Pixel-era reference sheet and test textures | `scenes/reference/`, `assets/sprites/testing/` | Retained until HD readability/reference coverage replaces their role. |
 | Pixel UI defaults | UI scenes and `assets/fonts/` | Functional legacy presentation. |
 

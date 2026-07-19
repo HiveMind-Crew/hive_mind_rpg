@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d3bqqukayd1n8"
-path="res://.godot/imported/energy_bolt.png-18393c286b3d6e72d819e83586ca4f02.ctex"
+uid="uid://c61w7038v6na8"
+path="res://.godot/imported/relic_orb_fx.png-2a939d9c4b78c1ec7df252568d8f15b6.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/fx/energy_bolt.png"
-dest_files=["res://.godot/imported/energy_bolt.png-18393c286b3d6e72d819e83586ca4f02.ctex"]
+source_file="res://assets/sprites/fx/relic_orb_fx.png"
+dest_files=["res://.godot/imported/relic_orb_fx.png-2a939d9c4b78c1ec7df252568d8f15b6.ctex"]
 
 [params]
 

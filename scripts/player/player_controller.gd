@@ -175,6 +175,9 @@ func try_relic_ability() -> bool:
 	var projectile_parent: Node = get_parent()
 	projectile_parent.add_child(bolt)
 	bolt.global_position = global_position + aim_direction * energy_bolt_spawn_offset
+	# Presentation-only cast flare, spawned strictly after the real bolt exists
+	# so blocked/no-energy attempts never show a fake cast.
+	CombatFxSpawner.spawn_relic_cast(projectile_parent, bolt.global_position, aim_direction)
 	AudioManager.play_sfx(&"relic_cast")
 	_body_visual.play_relic(aim_direction)
 	relic_ability_fired.emit(aim_direction)

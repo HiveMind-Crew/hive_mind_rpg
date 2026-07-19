@@ -4,16 +4,39 @@ extends RefCounted
 ## collision, damage, and time-scale ownership; this helper only displays art.
 
 const COMBAT_TEXTURE: Texture2D = preload("res://assets/sprites/fx/combat_fx.png")
-const BOLT_TEXTURE: Texture2D = preload("res://assets/sprites/fx/energy_bolt.png")
+const RELIC_ORB_TEXTURE: Texture2D = preload("res://assets/sprites/fx/relic_orb_fx.png")
 const SLASH: StringName = &"slash"
 const SPARK: StringName = &"spark"
 const DASH: StringName = &"dash"
 const DISSOLVE: StringName = &"dissolve"
-const BOLT_IMPACT: StringName = &"bolt_impact"
-const BOLT_FLIGHT: StringName = &"bolt_flight"
+const RELIC_CAST: StringName = &"relic_cast"
+const RELIC_FLIGHT: StringName = &"relic_flight"
+const RELIC_IMPACT: StringName = &"relic_impact"
 const COMBAT_FPS: float = 12.0
-const BOLT_FPS: float = 14.0
+const RELIC_CAST_FPS: float = 24.0
+const RELIC_FLIGHT_FPS: float = 14.0
+const RELIC_IMPACT_FPS: float = 20.0
 const QUARTER_TURN: float = PI / 2.0
+
+# Stylized-HD relic sheet layout (assets/sprites/generate_relic_orb_fx.py):
+# cast 6×96×96 at y=0, flight 4×128×64 at y=96 (orb core on the exact cell
+# center so the display never overstates the collision position, trail toward
+# -x), impact 6×128×128 at y=160. Frames are authored facing +x and rotated to
+# the true launch direction at runtime.
+const RELIC_CAST_CELL: Vector2i = Vector2i(96, 96)
+const RELIC_CAST_FRAMES: int = 6
+const RELIC_FLIGHT_CELL: Vector2i = Vector2i(128, 64)
+const RELIC_FLIGHT_FRAMES: int = 4
+const RELIC_FLIGHT_ROW_Y: int = 96
+const RELIC_IMPACT_CELL: Vector2i = Vector2i(128, 128)
+const RELIC_IMPACT_FRAMES: int = 6
+const RELIC_IMPACT_ROW_Y: int = 160
+# Display contracts at the shipped 2× camera: ≈29 px peak cast flare, ≈11 px
+# orb core with a ≈21 px trail, ≈36 px peak impact burst.
+const RELIC_CAST_SCALE: float = 0.35
+const RELIC_FLIGHT_SCALE: float = 0.36
+const RELIC_IMPACT_SCALE: float = 0.3
+const HD_TEXTURE_FILTER: CanvasItem.TextureFilter = CanvasItem.TEXTURE_FILTER_LINEAR
 
 
 static func spawn_slash(parent: Node, position: Vector2, direction: Vector2) -> void:
@@ -32,19 +55,55 @@ static func spawn_dissolve(parent: Node, position: Vector2) -> void:
 	_spawn(parent, position, _combat_frames(DISSOLVE), DISSOLVE, 0.0)
 
 
-static func spawn_bolt_impact(parent: Node, position: Vector2) -> void:
-	_spawn(parent, position, _bolt_frames(), BOLT_IMPACT, 0.0)
+## Cast-origin flare for the starter relic orb. Callers spawn it only after
+## the real EnergyBolt exists, so a blocked cast never shows a fake effect.
+static func spawn_relic_cast(parent: Node, position: Vector2, direction: Vector2) -> void:
+	_spawn(
+		parent,
+		position,
+		_relic_cast_frames(),
+		RELIC_CAST,
+		_true_rotation(direction),
+		HD_TEXTURE_FILTER,
+		RELIC_CAST_SCALE
+	)
+
+
+static func spawn_relic_impact(parent: Node, position: Vector2) -> void:
+	_spawn(
+		parent, position, _relic_impact_frames(), RELIC_IMPACT, 0.0, HD_TEXTURE_FILTER, RELIC_IMPACT_SCALE
+	)
+
+
+## Builds the configured (unparented) flight visual; the owning EnergyBolt
+## adds it as a child and keeps every gameplay property to itself.
+static func create_relic_flight_visual(direction: Vector2) -> AnimatedSprite2D:
+	var visual: AnimatedSprite2D = AnimatedSprite2D.new()
+	visual.name = "FlightVisual"
+	visual.sprite_frames = _relic_flight_frames()
+	visual.animation = RELIC_FLIGHT
+	visual.texture_filter = HD_TEXTURE_FILTER
+	visual.scale = Vector2.ONE * RELIC_FLIGHT_SCALE
+	visual.rotation = _true_rotation(direction)
+	return visual
 
 
 static func _spawn(
-	parent: Node, position: Vector2, frames: SpriteFrames, animation: StringName, rotation_value: float
+	parent: Node,
+	position: Vector2,
+	frames: SpriteFrames,
+	animation: StringName,
+	rotation_value: float,
+	texture_filter: CanvasItem.TextureFilter = CanvasItem.TEXTURE_FILTER_NEAREST,
+	display_scale: float = 1.0
 ) -> void:
 	if parent == null:
 		return
 	var visual: AnimatedSprite2D = AnimatedSprite2D.new()
 	visual.sprite_frames = frames
 	visual.animation = animation
-	visual.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	visual.texture_filter = texture_filter
+	visual.scale = Vector2.ONE * display_scale
 	visual.global_position = position
 	visual.rotation = rotation_value
 	visual.z_index = 2
@@ -78,23 +137,35 @@ static func _combat_frames(animation_name: StringName) -> SpriteFrames:
 	return frames
 
 
-static func bolt_flight_frames() -> SpriteFrames:
-	var frames: SpriteFrames = SpriteFrames.new()
-	frames.add_animation(BOLT_FLIGHT)
-	frames.set_animation_loop(BOLT_FLIGHT, true)
-	frames.set_animation_speed(BOLT_FLIGHT, BOLT_FPS)
-	for frame_index: int in 4:
-		frames.add_frame(BOLT_FLIGHT, _atlas(BOLT_TEXTURE, Rect2i(frame_index * 8, 0, 8, 8)))
-	return frames
+static func _relic_cast_frames() -> SpriteFrames:
+	return _relic_frames(
+		RELIC_CAST, RELIC_CAST_FRAMES, RELIC_CAST_CELL, 0, false, RELIC_CAST_FPS
+	)
 
 
-static func _bolt_frames() -> SpriteFrames:
+static func _relic_flight_frames() -> SpriteFrames:
+	return _relic_frames(
+		RELIC_FLIGHT, RELIC_FLIGHT_FRAMES, RELIC_FLIGHT_CELL, RELIC_FLIGHT_ROW_Y, true, RELIC_FLIGHT_FPS
+	)
+
+
+static func _relic_impact_frames() -> SpriteFrames:
+	return _relic_frames(
+		RELIC_IMPACT, RELIC_IMPACT_FRAMES, RELIC_IMPACT_CELL, RELIC_IMPACT_ROW_Y, false, RELIC_IMPACT_FPS
+	)
+
+
+static func _relic_frames(
+	animation_name: StringName, frame_count: int, cell: Vector2i, row_y: int, loop: bool, fps: float
+) -> SpriteFrames:
 	var frames: SpriteFrames = SpriteFrames.new()
-	frames.add_animation(BOLT_IMPACT)
-	frames.set_animation_loop(BOLT_IMPACT, false)
-	frames.set_animation_speed(BOLT_IMPACT, BOLT_FPS)
-	for frame_index: int in 5:
-		frames.add_frame(BOLT_IMPACT, _atlas(BOLT_TEXTURE, Rect2i(frame_index * 16, 8, 16, 16)))
+	frames.add_animation(animation_name)
+	frames.set_animation_loop(animation_name, loop)
+	frames.set_animation_speed(animation_name, fps)
+	for frame_index: int in frame_count:
+		frames.add_frame(
+			animation_name, _atlas(RELIC_ORB_TEXTURE, Rect2i(Vector2i(frame_index * cell.x, row_y), cell))
+		)
 	return frames
 
 
@@ -109,3 +180,11 @@ static func _cardinal_rotation(direction: Vector2) -> float:
 	if direction.is_zero_approx():
 		return 0.0
 	return snappedf(direction.angle(), QUARTER_TURN)
+
+
+## Exact aim rotation for +x-authored relic art, truthful for all eight
+## normalized launch directions (and any other normalized vector).
+static func _true_rotation(direction: Vector2) -> float:
+	if direction.is_zero_approx():
+		return 0.0
+	return direction.angle()

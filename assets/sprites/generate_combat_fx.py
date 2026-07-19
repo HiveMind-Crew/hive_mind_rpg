@@ -6,7 +6,6 @@ from PIL import Image, ImageDraw
 ROOT = Path(__file__).resolve().parent / "fx"
 CLEAR = (0, 0, 0, 0)
 CYAN = (77, 229, 255, 255)
-CYAN_LIGHT = (184, 249, 255, 255)
 MAGENTA = (242, 89, 184, 255)
 GOLD = (255, 199, 46, 255)
 WHITE = (255, 255, 255, 255)
@@ -42,28 +41,11 @@ def combat_sheet() -> Image.Image:
     return image
 
 
-def bolt_sheet() -> Image.Image:
-    image = Image.new("RGBA", (80, 24), CLEAR)
-    draw = ImageDraw.Draw(image)
-    # flight: four 8×8 cells along top row
-    for frame in range(4):
-        x = frame * 8
-        draw.rectangle((x + 2, 2, x + 5, 4), fill=CYAN)
-        draw.point((x + 1, 3), fill=CYAN_LIGHT)
-        draw.point((x + 6, 4), fill=WHITE)
-    # impact: five 16×16 cells along lower row
-    for frame in range(5):
-        x = frame * 16
-        radius = 2 + min(frame, 3)
-        draw.ellipse((x + 8 - radius, 16 - radius, x + 8 + radius, 16 + radius), outline=CYAN_LIGHT, width=1)
-        draw.point((x + 8, 16), fill=WHITE)
-    return image
-
-
 def main() -> None:
+    # The former bolt_sheet() output (fx/energy_bolt.png) was retired by the
+    # issue #169 HD relic pass; generate_relic_orb_fx.py owns those visuals now.
     ROOT.mkdir(parents=True, exist_ok=True)
     combat_sheet().save(ROOT / "combat_fx.png")
-    bolt_sheet().save(ROOT / "energy_bolt.png")
     print("wrote deterministic combat FX PNGs")
 
 
