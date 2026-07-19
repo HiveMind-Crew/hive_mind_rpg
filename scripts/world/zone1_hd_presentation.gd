@@ -1,7 +1,7 @@
 class_name Zone1HdPresentation
 extends Node2D
-## Zone 1 HD 2D presentation prototype (issue #141). Lays a painted background
-## plate over the entrance → encounter-room-A route and swaps the player, the
+## Zone 1 HD 2D presentation layer (issues #141 and #152). Lays environment-only
+## painted plates over the entrance → encounter-room-C route and swaps the player, the
 ## room-A melee chaser, and the entrance shrine to static HD illustrations —
 ## presentation only. Collision, combat, Area2D contracts, spawns, camera, and
 ## save flow are untouched: the legacy display nodes stay in the tree (hidden)
@@ -17,14 +17,15 @@ extends Node2D
 ## painted landmarks must never suggest interactions that do not exist). Every
 ## interactable keeps its own live node + visual. Legacy scenery that would
 ## double up with the painted plate (display-only prop sprites and the
-## exit-gate marker polygon) is hidden inside the covered route; the ExitZone
-## Area2D, its prompt, and everything east of the seam are untouched.
+## exit-gate marker polygon) is hidden inside the covered routes; the ExitZone
+## Area2D, its prompt, and everything east of the boss-corridor seam are untouched.
 
 ## Copied production-prototype sources; provenance (LemonadeAI /
 ## Flux-2-Klein-9B-GGUF, non-commercial, prototype-only) is recorded in
 ## assets/sprites/LICENSES.md. The background is the recomposed v2
 ## no-affordance plate (assets/reference/.../encounter_room_background_v2.png).
-const BACKGROUND_TEXTURE: Texture2D = preload("res://assets/sprites/hd_prototype/encounter_room_background.png")
+const ENTRANCE_BACKGROUND_TEXTURE: Texture2D = preload("res://assets/sprites/hd_prototype/encounter_room_background.png")
+const ROOMS_B_C_BACKGROUND_TEXTURE: Texture2D = preload("res://assets/sprites/world/hd/zone1_rooms_b_c.png")
 const PLAYER_TEXTURE: Texture2D = preload("res://assets/sprites/hd_prototype/player_wanderer.png")
 const CHASER_TEXTURE: Texture2D = preload("res://assets/sprites/hd_prototype/relic_hound.png")
 const SHRINE_TEXTURE: Texture2D = preload("res://assets/sprites/hd_prototype/checkpoint_shrine.png")
@@ -38,6 +39,10 @@ const HD_TEXTURE_FILTER: CanvasItem.TextureFilter = CanvasItem.TEXTURE_FILTER_LI
 ## east edge lands exactly on encounter room B's doorway wall so the
 ## HD-vs-legacy seam reads as a room boundary, not a random cut.
 const COVERED_ROUTE_RECT: Rect2 = Rect2(0, 0, 624, 480)
+## Encounter room B + east corridor + encounter room C (including its north
+## secret alcove): tiles x 39..79. The east edge lands on the boss corridor.
+const ROOMS_B_C_ROUTE_RECT: Rect2 = Rect2(624, 0, 640, 480)
+const COVERED_ROUTE_RECTS: Array[Rect2] = [COVERED_ROUTE_RECT, ROOMS_B_C_ROUTE_RECT]
 const BACKGROUND_SOURCE_SIZE: Vector2 = Vector2(1024, 576)
 
 ## On-screen actor sizes chosen against the existing 2× camera so HD bodies
@@ -54,13 +59,6 @@ const SHRINE_VISUAL_OFFSET: Vector2 = Vector2(0, -8)
 const SHRINE_DORMANT_MODULATE: Color = Color(0.62, 0.66, 0.68, 1.0)
 const SHRINE_LIT_MODULATE: Color = Color.WHITE
 
-## Zone-local HUD skin: a mossy dark panel with a contained cyan energy
-## accent. Applied as theme overrides only, so shared HUD behavior/layout in
-## player_hud.gd and player_hud.tscn stay intact.
-const HUD_PANEL_BG_COLOR: Color = Color(0.09, 0.11, 0.1, 0.92)
-const HUD_PANEL_BORDER_COLOR: Color = Color(0.3, 0.95, 1.0, 0.55)
-const HUD_PANEL_CONTENT_MARGIN_PX: float = 4.0
-
 @export var props_root_path: NodePath
 @export var exit_gate_visual_path: NodePath
 @export var player_path: NodePath
@@ -69,7 +67,6 @@ const HUD_PANEL_CONTENT_MARGIN_PX: float = 4.0
 @export var chaser_visual_path: NodePath
 @export var checkpoint_path: NodePath
 @export var checkpoint_visual_path: NodePath
-@export var hud_panel_path: NodePath
 
 var _props_root: Node2D
 var _exit_gate_visual: Polygon2D
@@ -79,13 +76,13 @@ var _chaser: EnemyBase
 var _chaser_legacy_visual: AnimatedSprite2D
 var _checkpoint: Checkpoint
 var _checkpoint_legacy_visual: Polygon2D
-var _hud_panel: PanelContainer
 
 var _hidden_legacy_scenery: Array[CanvasItem] = []
 
-var _background_sprite: Sprite2D
+var _background_sprites: Array[Sprite2D] = []
 var _player_sprite: Sprite2D
 var _chaser_sprite: Sprite2D
+var _uses_prototype_chaser_fallback: bool = false
 var _shrine_sprite: Sprite2D
 
 
@@ -98,20 +95,26 @@ func _ready() -> void:
 	_chaser_legacy_visual = get_node_or_null(chaser_visual_path) as AnimatedSprite2D
 	_checkpoint = get_node_or_null(checkpoint_path) as Checkpoint
 	_checkpoint_legacy_visual = get_node_or_null(checkpoint_visual_path) as Polygon2D
-	_hud_panel = get_node_or_null(hud_panel_path) as PanelContainer
 	if (
 		_props_root == null or _exit_gate_visual == null
 		or _player == null or _player_legacy_visual == null
 		or _chaser == null or _chaser_legacy_visual == null
 		or _checkpoint == null or _checkpoint_legacy_visual == null
-		or _hud_panel == null
 	):
-		push_error("Zone1HdPresentation requires valid actor/visual/HUD paths.")
+		push_error("Zone1HdPresentation requires valid actor/visual paths.")
 		set_process(false)
 		return
 
-	_background_sprite = _build_background_sprite()
-	add_child(_background_sprite)
+	_background_sprites = [
+		_build_background_sprite(
+			"HdBackgroundEntrance", ENTRANCE_BACKGROUND_TEXTURE, COVERED_ROUTE_RECT
+		),
+		_build_background_sprite(
+			"HdBackgroundRoomsBC", ROOMS_B_C_BACKGROUND_TEXTURE, ROOMS_B_C_ROUTE_RECT
+		),
+	]
+	for background_sprite: Sprite2D in _background_sprites:
+		add_child(background_sprite)
 	_hide_covered_legacy_scenery()
 	var player_hd_presentation: PlayerHdPresentation = (
 		_player.get_node_or_null("HdPresentation") as PlayerHdPresentation
@@ -125,17 +128,23 @@ func _ready() -> void:
 			_player, _player_legacy_visual, PLAYER_TEXTURE,
 			PLAYER_VISUAL_HEIGHT_PX, PLAYER_VISUAL_OFFSET
 		)
-	_chaser_sprite = _install_actor_sprite(
-		_chaser, _chaser_legacy_visual, CHASER_TEXTURE,
-		CHASER_VISUAL_HEIGHT_PX, Vector2.ZERO
+	# The production regular-enemy pass owns the roster body. Retain the old
+	# prototype hound only as a compatibility fallback for stripped fixtures.
+	var roster_presentation: EnemyHdPresentation = (
+		_chaser.get_node_or_null("HdPresentation") as EnemyHdPresentation
 	)
-	_shrine_sprite = _install_actor_sprite(
-		_checkpoint, _checkpoint_legacy_visual, SHRINE_TEXTURE,
-		SHRINE_VISUAL_HEIGHT_PX, SHRINE_VISUAL_OFFSET
-	)
-	_shrine_sprite.modulate = SHRINE_DORMANT_MODULATE
+	if roster_presentation != null:
+		_chaser_sprite = roster_presentation.get_body_sprite()
+	else:
+		_uses_prototype_chaser_fallback = true
+		_chaser_sprite = _install_actor_sprite(
+			_chaser, _chaser_legacy_visual, CHASER_TEXTURE,
+			CHASER_VISUAL_HEIGHT_PX, Vector2.ZERO
+		)
+	# Issue #153 gives every checkpoint its own production HD display. Resolve
+	# it lazily because this helper may become ready before the checkpoint.
+	_shrine_sprite = _checkpoint.get_hd_visual()
 	_checkpoint.checkpoint_reached.connect(_on_checkpoint_reached)
-	_apply_hud_treatment()
 
 
 func _process(_delta: float) -> void:
@@ -144,9 +153,10 @@ func _process(_delta: float) -> void:
 	# feedback honest on the static HD art without touching those systems.
 	_player_sprite.flip_h = _player_legacy_visual.flip_h
 	_player_sprite.self_modulate = _player_legacy_visual.self_modulate
-	_chaser_sprite.flip_h = _chaser_legacy_visual.flip_h
-	_chaser_sprite.self_modulate = _chaser_legacy_visual.self_modulate
-	_chaser_sprite.modulate = state_tint_for(_chaser.state)
+	if _uses_prototype_chaser_fallback:
+		_chaser_sprite.flip_h = _chaser_legacy_visual.flip_h
+		_chaser_sprite.self_modulate = _chaser_legacy_visual.self_modulate
+		_chaser_sprite.modulate = state_tint_for(_chaser.state)
 
 
 ## Semantic state color for a static enemy body, mirroring the Polygon2D-enemy
@@ -167,7 +177,11 @@ static func state_tint_for(state: EnemyBase.State) -> Color:
 
 
 func get_background_sprite() -> Sprite2D:
-	return _background_sprite
+	return _background_sprites[0]
+
+
+func get_background_sprites() -> Array[Sprite2D]:
+	return _background_sprites
 
 
 func get_player_sprite() -> Sprite2D:
@@ -175,15 +189,28 @@ func get_player_sprite() -> Sprite2D:
 
 
 func get_chaser_sprite() -> Sprite2D:
+	# HdPresentation is ordered before Enemies in the zone scene, so the
+	# roster adapter can exist while its dynamically built Body is not ready
+	# yet. Resolve lazily after the scene's full ready cascade.
+	if _chaser_sprite == null and is_instance_valid(_chaser):
+		var roster_presentation: EnemyHdPresentation = (
+			_chaser.get_node_or_null("HdPresentation") as EnemyHdPresentation
+		)
+		if roster_presentation != null:
+			_chaser_sprite = roster_presentation.get_body_sprite()
 	return _chaser_sprite
 
 
 func get_shrine_sprite() -> Sprite2D:
+	if _shrine_sprite == null and is_instance_valid(_checkpoint):
+		_shrine_sprite = _checkpoint.get_hd_visual()
 	return _shrine_sprite
 
 
 func get_hd_sprites() -> Array[Sprite2D]:
-	return [_background_sprite, _player_sprite, _chaser_sprite, _shrine_sprite]
+	var sprites: Array[Sprite2D] = _background_sprites.duplicate()
+	sprites.append_array([_player_sprite, get_chaser_sprite(), get_shrine_sprite()])
+	return sprites
 
 
 ## Display-only legacy scenery hidden because it sits under the painted
@@ -195,27 +222,42 @@ func get_hidden_legacy_scenery() -> Array[CanvasItem]:
 ## Where the plate actually draws in zone-local pixels, for tests proving the
 ## entrance route is covered without leaking past the room B doorway.
 func get_background_world_rect() -> Rect2:
-	var drawn_size: Vector2 = _background_sprite.region_rect.size * _background_sprite.scale
-	return Rect2(_background_sprite.position, drawn_size)
+	return _get_sprite_world_rect(_background_sprites[0])
 
 
-func _build_background_sprite() -> Sprite2D:
+func get_background_world_rects() -> Array[Rect2]:
+	var rects: Array[Rect2] = []
+	for background_sprite: Sprite2D in _background_sprites:
+		rects.append(_get_sprite_world_rect(background_sprite))
+	return rects
+
+
+func _build_background_sprite(
+	sprite_name: StringName,
+	texture: Texture2D,
+	covered_rect: Rect2,
+) -> Sprite2D:
 	var sprite: Sprite2D = Sprite2D.new()
-	sprite.name = "HdBackground"
-	sprite.texture = BACKGROUND_TEXTURE
+	sprite.name = sprite_name
+	sprite.texture = texture
 	sprite.texture_filter = HD_TEXTURE_FILTER
 	sprite.centered = false
-	sprite.position = COVERED_ROUTE_RECT.position
+	sprite.position = covered_rect.position
 	# Uniform scale fits the 576 px-tall plate to the 480 px zone height; the
 	# region crops the source width so the drawn rect ends exactly on the
 	# route boundary instead of stretching the art.
-	var plate_scale: float = COVERED_ROUTE_RECT.size.y / BACKGROUND_SOURCE_SIZE.y
+	var plate_scale: float = covered_rect.size.y / BACKGROUND_SOURCE_SIZE.y
 	sprite.scale = Vector2(plate_scale, plate_scale)
 	sprite.region_enabled = true
 	sprite.region_rect = Rect2(
-		0, 0, COVERED_ROUTE_RECT.size.x / plate_scale, BACKGROUND_SOURCE_SIZE.y
+		0, 0, covered_rect.size.x / plate_scale, BACKGROUND_SOURCE_SIZE.y
 	)
 	return sprite
+
+
+func _get_sprite_world_rect(sprite: Sprite2D) -> Rect2:
+	var drawn_size: Vector2 = sprite.region_rect.size * sprite.scale
+	return Rect2(sprite.position, drawn_size)
 
 
 ## Hides the display-only legacy scenery the plate paints over: the prop
@@ -231,9 +273,16 @@ func _hide_covered_legacy_scenery() -> void:
 	_hidden_legacy_scenery = [_exit_gate_visual]
 	for child: Node in _props_root.get_children():
 		var prop: Node2D = child as Node2D
-		if prop != null and COVERED_ROUTE_RECT.has_point(prop.position):
+		if prop != null and _is_position_covered(prop.position):
 			prop.visible = false
 			_hidden_legacy_scenery.append(prop)
+
+
+func _is_position_covered(world_position: Vector2) -> bool:
+	for covered_rect: Rect2 in COVERED_ROUTE_RECTS:
+		if covered_rect.has_point(world_position):
+			return true
+	return false
 
 
 ## Hides only the legacy display node and parents a static HD illustration on
@@ -259,14 +308,6 @@ func _install_actor_sprite(
 
 
 func _on_checkpoint_reached(_respawn_position: Vector2) -> void:
-	_shrine_sprite.modulate = SHRINE_LIT_MODULATE
-
-
-func _apply_hud_treatment() -> void:
-	var style: StyleBoxFlat = StyleBoxFlat.new()
-	style.bg_color = HUD_PANEL_BG_COLOR
-	style.border_color = HUD_PANEL_BORDER_COLOR
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(3)
-	style.set_content_margin_all(HUD_PANEL_CONTENT_MARGIN_PX)
-	_hud_panel.add_theme_stylebox_override("panel", style)
+	var shrine_sprite: Sprite2D = get_shrine_sprite()
+	if shrine_sprite != null:
+		shrine_sprite.modulate = SHRINE_LIT_MODULATE

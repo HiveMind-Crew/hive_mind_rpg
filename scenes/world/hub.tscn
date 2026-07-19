@@ -34,6 +34,7 @@ player_path = NodePath("../Player")
 screen_layer_path = NodePath("../ScreenLayer")
 
 [node name="GateVisual" type="Polygon2D" parent="."]
+visible = false
 position = Vector2(612, 176)
 polygon = PackedVector2Array(-8, -36, 8, -36, 8, 36, -8, 36)
 color = Color(0.55, 0.45, 0.65, 1)

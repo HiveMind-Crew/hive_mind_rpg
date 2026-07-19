@@ -83,7 +83,7 @@ phone smoke test before merge.
 
 | Group | Scope | Non-goals |
 |---|---|---|
-| Regular enemy roster | Distinct illustrated identities, directional/telegraph/death presentation, and readability validation for each v1 enemy. | AI, attacks, damage, ranges, collision, rewards, or encounter composition. |
+| Regular enemy roster | **Production conversion in issue #154:** four distinct transparent illustrated bodies under `assets/sprites/enemies/hd/`; scene-local adapters mirror live facing, telegraph, hit, death, and shield state while legacy SpriteFrames remain hidden mechanical drivers. | AI, attacks, damage, ranges, collision, rewards, or encounter composition. |
 | Zone boss | Illustrated boss body, phase/readability cues, arena-facing presentation, and boss-specific FX. | Boss logic, phase thresholds, rewards, arena collision, or progression. |
 
 ### 3.3 Zone 1 environment and interactables
@@ -91,14 +91,61 @@ phone smoke test before merge.
 | Group | Scope | Non-goals |
 |---|---|---|
 | Corrupted-forest environment | Floors, walls, foliage, ruins, relic corruption, route framing, and set dressing. | Tile/collision layout, camera bounds, secret route geometry, enemy placement, or room logic. |
-| Interactables | Checkpoints, gates, pickups, boss door, secret reveals, and associated affordance feedback. | Area2D contracts, reward values, save behavior, or transition logic. |
+| Interactables | **Production conversion in issue #153:** six distinct transparent illustrated assets under `assets/sprites/world/hd/interactables/`; each display is parented to its live checkpoint, gate sensor, pickup, station, hidden-room trigger, or boss-door body. Dormant/lit, nearby, collected, screen-open, revealed, and sealed/open presentation follows the existing mechanical signals and state. | Area2D contracts, reward values, save behavior, transition logic, secret geometry, or boss-door collision. |
+
+Issue #153 uses explicit display-height/offset contracts at the shipped 2×
+camera: checkpoint 44 px, travel gate 54 px, pickup 24 px, station 52 px,
+secret-reveal pulse 48 px, and boss door 88 px. The neutral gate and station
+reserve cyan, the checkpoint changes from a dim neutral state to restoration
+green/white, pickups and reveal feedback use cyan, and the sealed boss door
+uses threat-side magenta. Legacy polygons remain hidden in the tree where
+their owning scene previously used them; collision shapes and sensors are
+unchanged. All six PNG imports are lossless, unmipmapped, unpremultiplied-alpha
+textures with alpha-border correction, and every live Sprite2D filters
+linearly per node.
+
+Issue #152 has begun the production environment extension with
+`assets/sprites/world/hd/zone1_rooms_b_c.png`, a 1024×576 environment-only
+plate covering the named room-B → room-C route at the contract 5/6 scale. It
+adds no baked actors, interactables, gates, shrines, pickups, or hazards; live
+scene nodes and secret-reveal covers remain above the presentation layer. The
+boss corridor, boss approach, and arena remain on the legacy environment layer
+until the next focused plate lands, so this row does not yet mark the full
+Zone 1 environment group complete.
 
 ### 3.4 UI and combat FX
 
 | Group | Scope | Non-goals |
 |---|---|---|
-| UI skin and typography | HUD, skill tree, prompts, panels, icons, and accessibility/readability treatment. | UI layout behavior, skill costs, input flow, pause behavior, or save state. |
+| UI skin and typography | **Production conversion in issue #156:** shared dark iron/stone material theme, semantic HP/energy and skill-state colors, eight illustrated HD emblems, larger typography, focus treatment, and readable desktop/mobile-landscape HUD, prompts, pause, skill tree, and touch controls. | UI layout behavior, skill costs, input flow, pause behavior, mobile input ownership, or save state. |
 | Combat and relic FX | Attacks, impacts, dash/relic feedback, projectiles, enemy telegraphs, and death presentation. | Damage, hitboxes/hurtboxes, hitstop, timing, AI, or time-scale ownership. |
+
+Issue #154 desktop Web evidence used the production `1280×720` canvas and the
+real Zone 1 route. All four bodies remained distinct at the shipped 2× camera;
+the ranged mask/relic, brute shield, flanker limbs, and chaser quadruped profile
+read without changing their collision footprints. The release/no-threads Web
+export kept `index.wasm` at 39,509,339 bytes and produced a 6,712,544-byte PCK,
+a +475,136-byte delta from the issue #149 baseline — below the 2 MiB review
+threshold. Browser console inspection reported no warnings or errors.
+
+Issue #153 browser evidence covered the live Hub and the real Zone 1 scene at
+the production `1280×720` canvas. The checkpoint, travel gate, skill station,
+pickup, and route-facing state cues remained distinct against both the Hub
+graybox and the accepted forest background at the shipped 2× camera; the
+browser console reported no warnings or errors. The release/no-threads export
+kept `index.wasm` at 39,509,339 bytes and produced an 8,095,056-byte PCK after
+merging the issue #152 environment extension, a +364,220-byte delta from that
+7,730,836-byte `main` baseline and below the 2 MiB physical-device-review
+threshold.
+
+Issue #156 browser evidence covered the live HUD and pause overlay at
+`1280×720`, the standalone skill tree at the same canvas, and forced touch
+controls in the production Android-landscape `915×412` viewport. Resource
+labels, focus outlines, semantic colors, and all eight emblems remained within
+their panels and controls; the browser console reported no warnings or errors.
+The release/no-threads export kept `index.wasm` at 39,509,339 bytes and produced
+a 7,028,548-byte PCK, a +316,004-byte delta from issue #154 and below the 2 MiB
+physical-device-review threshold.
 
 ## 4. Legacy inventory
 
@@ -108,7 +155,7 @@ focused group issue after prototype decisions land:
 | Legacy group | Current location | Transition status |
 |---|---|---|
 | Player pixel sheet and SpriteFrames | `assets/sprites/player/`, `scenes/player/` | Functional legacy presentation. |
-| Enemy pixel sheets and frames | `assets/sprites/enemies/`, `scenes/enemies/` | Functional legacy presentation. |
+| Enemy pixel sheets and frames | `assets/sprites/enemies/`, `scenes/enemies/` | Retained as hidden state/animation drivers behind the production HD regular-enemy bodies (issue #154). |
 | Zone 1 forest/properties | `assets/sprites/world/`, `scenes/world/` | Functional legacy presentation. |
 | Combat/projectile sheets | `assets/sprites/fx/`, combat/player scenes | Functional legacy presentation. |
 | Pixel-era reference sheet and test textures | `scenes/reference/`, `assets/sprites/testing/` | Retained until HD readability/reference coverage replaces their role. |

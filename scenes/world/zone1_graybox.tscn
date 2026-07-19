@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3]
+[gd_scene load_steps=21 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/zone1_graybox.gd" id="1_zone"]
 [ext_resource type="Script" path="res://scripts/world/zone1_hd_presentation.gd" id="16_hd_presentation"]
@@ -16,6 +16,7 @@
 [ext_resource type="PackedScene" path="res://scenes/world/skill_point_pickup.tscn" id="6_pickup"]
 [ext_resource type="Script" path="res://scripts/world/hidden_room_reveal.gd" id="7_reveal"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/rootheart_colossus.tscn" id="8_boss"]
+[ext_resource type="Texture2D" path="res://assets/sprites/world/hd/interactables/boss_door.png" id="17_boss_door_hd"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_boss_door"]
 size = Vector2(16, 80)
@@ -44,7 +45,6 @@ chaser_path = NodePath("../Enemies/ChaserRoomA")
 chaser_visual_path = NodePath("../Enemies/ChaserRoomA/BodyVisual")
 checkpoint_path = NodePath("../Checkpoints/CheckpointEntrance")
 checkpoint_visual_path = NodePath("../Checkpoints/CheckpointEntrance/Visual")
-hud_panel_path = NodePath("../Player/PlayerHud/MarginContainer/PanelContainer")
 
 [node name="Props" type="Node2D" parent="."]
 
@@ -252,8 +252,15 @@ unique_name_in_owner = true
 position = Vector2(1320, 248)
 
 [node name="DoorVisual" type="Polygon2D" parent="BossDoor"]
+visible = false
 polygon = PackedVector2Array(-8, -40, 8, -40, 8, 40, -8, 40)
 color = Color(0.62, 0.16, 0.4, 1)
+
+[node name="DoorHdVisual" type="Sprite2D" parent="BossDoor"]
+texture_filter = 2
+position = Vector2(0, -4)
+scale = Vector2(0.229167, 0.229167)
+texture = ExtResource("17_boss_door_hd")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="BossDoor"]
 shape = SubResource("RectangleShape2D_boss_door")

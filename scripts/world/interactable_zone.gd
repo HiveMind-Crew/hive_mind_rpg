@@ -12,11 +12,21 @@ signal interacted()
 signal player_nearby_changed(nearby: bool)
 
 const INTERACT_ACTION: StringName = &"interact"
+const GATE_TEXTURE: Texture2D = preload(
+	"res://assets/sprites/world/hd/interactables/travel_gate.png"
+)
+const GATE_VISUAL_HEIGHT_PX: float = 54.0
+const GATE_VISUAL_OFFSET: Vector2 = Vector2(0, -7)
+const HD_TEXTURE_FILTER: CanvasItem.TextureFilter = CanvasItem.TEXTURE_FILTER_LINEAR
+const NEARBY_MODULATE: Color = Color(0.72, 1.0, 1.0, 1.0)
 
 @export var player_group: StringName = &"player"
 @export var prompt_text: String = "[E] Interact"
+## Disable for owners such as the skill station that provide their own body.
+@export var show_gate_visual: bool = true
 
 var _player_nearby: bool = false
+var _hd_visual: Sprite2D
 
 @onready var _prompt_label: Label = %PromptLabel
 
@@ -30,6 +40,10 @@ func _ready() -> void:
 	collision_mask = CollisionLayers.PLAYER_BODY
 	_prompt_label.text = prompt_text
 	_prompt_label.hide()
+	if show_gate_visual:
+		_hd_visual = _build_gate_visual()
+		add_child(_hd_visual)
+		move_child(_hd_visual, 0)
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
 
@@ -45,6 +59,10 @@ func is_player_nearby() -> bool:
 	return _player_nearby
 
 
+func get_hd_visual() -> Sprite2D:
+	return _hd_visual
+
+
 ## The explicit interaction contract (also the _unhandled_input path). Public
 ## so owners and tests can trigger it without synthesizing input events.
 func interact() -> void:
@@ -56,6 +74,8 @@ func _on_body_entered(body: Node2D) -> void:
 		return
 	_player_nearby = true
 	_prompt_label.show()
+	if _hd_visual != null:
+		_hd_visual.modulate = NEARBY_MODULATE
 	player_nearby_changed.emit(true)
 
 
@@ -64,4 +84,17 @@ func _on_body_exited(body: Node2D) -> void:
 		return
 	_player_nearby = false
 	_prompt_label.hide()
+	if _hd_visual != null:
+		_hd_visual.modulate = Color.WHITE
 	player_nearby_changed.emit(false)
+
+
+func _build_gate_visual() -> Sprite2D:
+	var sprite: Sprite2D = Sprite2D.new()
+	sprite.name = "HdVisual"
+	sprite.texture = GATE_TEXTURE
+	sprite.texture_filter = HD_TEXTURE_FILTER
+	sprite.position = GATE_VISUAL_OFFSET
+	var visual_scale: float = GATE_VISUAL_HEIGHT_PX / float(GATE_TEXTURE.get_height())
+	sprite.scale = Vector2(visual_scale, visual_scale)
+	return sprite

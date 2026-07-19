@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/ranged_harasser.gd" id="1_enemy"]
 [ext_resource type="SpriteFrames" path="res://assets/sprites/enemies/ranged_harasser_frames.tres" id="7_frames"]
@@ -7,6 +7,8 @@
 [ext_resource type="PackedScene" path="res://scenes/combat/hurtbox.tscn" id="4_hurtbox"]
 [ext_resource type="PackedScene" path="res://scenes/combat/hitbox.tscn" id="5_hitbox"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/enemy_bolt.tscn" id="6_bolt"]
+[ext_resource type="Script" path="res://scripts/enemies/enemy_hd_presentation.gd" id="8_hd_script"]
+[ext_resource type="Texture2D" path="res://assets/sprites/enemies/hd/ranged_harasser.png" id="9_hd_texture"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
 radius = 10.0
@@ -28,6 +30,12 @@ sprite_frames = ExtResource("7_frames")
 animation = &"idle_down"
 autoplay = "idle_down"
 playing = true
+
+[node name="HdPresentation" type="Node2D" parent="."]
+script = ExtResource("8_hd_script")
+body_texture = ExtResource("9_hd_texture")
+display_height_px = 36.0
+body_offset = Vector2(0, -5)
 
 [node name="TellVisual" type="Polygon2D" parent="."]
 unique_name_in_owner = true
