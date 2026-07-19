@@ -366,16 +366,28 @@ func test_live_mechanical_signals_mirror_onto_static_hd_art() -> void:
 	var chaser: EnemyBase = zone.get_node("Enemies/ChaserRoomA") as EnemyBase
 
 	var flash_tint: Color = Color(1.0, 0.45, 0.45, 1.0)
-	player_body.flip_h = true
+	(player_body as PlayerVisual).set_facing_direction(Vector2.LEFT)
 	player_body.self_modulate = flash_tint
 	chaser.state = EnemyBase.State.WIND_UP
 	presentation._process(0.0)
+	var player_presentation: PlayerHdPresentation = (
+		zone.get_node("Player/HdPresentation") as PlayerHdPresentation
+	)
+	player_presentation._process(0.0)
 	var enemy_presentation: EnemyHdPresentation = (
 		chaser.get_node("HdPresentation") as EnemyHdPresentation
 	)
 	enemy_presentation._process(0.0)
 
-	assert_true(presentation.get_player_sprite().flip_h)
+	# The player body is the shared PlayerHdPresentation directional-atlas
+	# sprite (issue #165): facing feedback is an authored west region, never a
+	# runtime mirror, and the CombatFeedback tint still passes through.
+	assert_false(presentation.get_player_sprite().flip_h)
+	assert_eq(
+		presentation.get_player_sprite().region_rect,
+		Rect2(Vector2(PlayerHdPresentation.ATLAS_CELL_SIZE.x * 3.0, 0.0),
+			PlayerHdPresentation.ATLAS_CELL_SIZE)
+	)
 	assert_eq(presentation.get_player_sprite().self_modulate, flash_tint)
 	assert_eq(enemy_presentation.get_body_sprite().modulate, EnemyBase.WIND_UP_COLOR)
 	assert_eq(

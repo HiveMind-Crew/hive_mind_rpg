@@ -1,0 +1,7 @@
+{
+  "generator": "LemonadeAI",
+  "model": "Flux-2-Klein-9B-GGUF",
+  "prompt": "STRICT ORTHOGRAPHIC TOP-DOWN sprite atlas for a 2D RPG, NOT a front portrait and NOT a character sheet, exactly four isolated full-body game sprites in one 2x2 grid, same teal-cloaked wanderer, upper-left facing down/south, upper-right facing right/east, lower-left facing up/north, lower-right facing left/west, all four viewed from directly above with visible head and shoulders, small magenta relic gauntlet, consistent 3/4 top-down gameplay scale and centered alignment, clear silhouette, stylized HD hand-painted illustration, flat solid lime-green chroma-key background, no shadows, no scenery, no ground, no text, no UI, no logos, no pixel art, no front-facing portrait, no eye-level camera, no perspective, no extra characters",
+  "requested_size": "1024x1024",
+  "purpose": "Issue #165 directional player body source sheet; requires curation and extraction before runtime use."
+}

@@ -76,7 +76,7 @@ phone smoke test before merge.
 
 | Group | Scope | Non-goals |
 |---|---|---|
-| Player HD presentation | Implemented in issue #150: illustrated player body, directional cyan facing accent (magenta during dash/melee/relic), contact shadow, and state-driven presentation integration. | Movement, dash/melee/relic timing, hitboxes/hurtboxes, stats, saves, or player collision. |
+| Player HD presentation | Implemented in issue #150; body source upgraded in issue #165: a 1024×256 four-cell directional atlas (`assets/sprites/player/hd/player_directional_atlas.png`, 256×256 cells with a 190 px content box, north/east/south/west at columns 0–3, west authored as a baked mirror of the side pose — never a runtime flip) selected by `PlayerHdPresentation` from the live `PlayerVisual.facing_label`, shown at a 42 px display-height contract with presentation-only bob/lean gait, plus the retained directional cyan facing accent (magenta during dash/melee/relic) as a supporting cue and contact shadow. | Movement, dash/melee/relic timing, hitboxes/hurtboxes, stats, saves, or player collision. |
 | Hub environment presentation | Implemented in issue #151: 1024×576 environment-only illustrated settlement plate, region-cropped/scaled by `HubHdPresentation` over the existing collision TileMapLayer. | Hub bounds/tile collision, spawn, checkpoint, skill-tree station, gate sensor/transition, camera, saves, or input behavior. |
 
 ### 3.2 Enemies and boss
@@ -146,6 +146,17 @@ their panels and controls; the browser console reported no warnings or errors.
 The release/no-threads export kept `index.wasm` at 39,509,339 bytes and produced
 a 7,028,548-byte PCK, a +316,004-byte delta from issue #154 and below the 2 MiB
 physical-device-review threshold.
+
+Issue #165 replaced the static HD player body with the four-cell directional
+atlas described in §3.1. Godot 4.7 headless import, the focused player/Zone 1
+presentation tests, and the full GUT suite (481 tests) all passed, and the
+release/no-threads Web export passed `tools/smoke_check_web.sh`. The export
+kept `index.wasm` at 39,509,339 bytes and produced a 9,021,368-byte PCK, a
++92,208-byte delta from the rebuilt 8,929,160-byte `main` baseline at the same
+engine version — below the 2 MiB physical-device-review threshold. Only the
+runtime atlas ships; the raw generation source sheets were not committed
+(JSON prompt metadata is retained at `assets/reference/hd_player_animation/`),
+so the all-resources export packages no unused reference PNGs.
 
 ## 4. Legacy inventory
 

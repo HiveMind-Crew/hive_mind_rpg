@@ -1,0 +1,7 @@
+{
+  "generator": "LemonadeAI",
+  "model": "Flux-2-Klein-9B-GGUF",
+  "prompt": "top-down videogame sprite turnaround reference, four DIFFERENT views of the SAME hooded teal wanderer, laid out as a 2x2 grid on pure lime-green background. Each figure is viewed from directly overhead, full body, small and centered with large empty margin. Top-left: BACK VIEW, only hood back and cloak back visible, face fully hidden. Top-right: RIGHT SIDE VIEW, right shoulder and profile visible. Bottom-left: FRONT VIEW, face under hood visible. Bottom-right: LEFT SIDE VIEW, left shoulder and profile visible. Magenta relic bracer. Strong directional silhouette differences, consistent same proportions, 2D stylized HD action RPG sprite art, NO four copies of front view, no portrait, no text, no UI, no shadows, no scenery, no pixel art, no perspective camera",
+  "requested_size": "1024x1024",
+  "purpose": "Issue #165 directional player view source candidate."
+}

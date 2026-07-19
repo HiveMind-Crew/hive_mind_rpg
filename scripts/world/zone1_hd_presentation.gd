@@ -83,6 +83,7 @@ var _background_sprites: Array[Sprite2D] = []
 var _player_sprite: Sprite2D
 var _chaser_sprite: Sprite2D
 var _uses_prototype_chaser_fallback: bool = false
+var _uses_prototype_player_fallback: bool = false
 var _shrine_sprite: Sprite2D
 
 
@@ -124,6 +125,7 @@ func _ready() -> void:
 		# not add a duplicate HD body over the actor it already renders.
 		_player_sprite = player_hd_presentation.get_display_sprite()
 	else:
+		_uses_prototype_player_fallback = true
 		_player_sprite = _install_actor_sprite(
 			_player, _player_legacy_visual, PLAYER_TEXTURE,
 			PLAYER_VISUAL_HEIGHT_PX, PLAYER_VISUAL_OFFSET
@@ -150,9 +152,12 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	# The hidden legacy visuals stay driven by PlayerVisual, EnemyBase, and
 	# CombatFeedback; mirroring each frame keeps facing and hit/invuln/death
-	# feedback honest on the static HD art without touching those systems.
-	_player_sprite.flip_h = _player_legacy_visual.flip_h
-	_player_sprite.self_modulate = _player_legacy_visual.self_modulate
+	# feedback honest on the static fallback art without touching those systems.
+	# The shared PlayerHdPresentation body owns its own facing (directional
+	# atlas regions, issue #165) and tinting, so it is never mirrored here.
+	if _uses_prototype_player_fallback:
+		_player_sprite.flip_h = _player_legacy_visual.flip_h
+		_player_sprite.self_modulate = _player_legacy_visual.self_modulate
 	if _uses_prototype_chaser_fallback:
 		_chaser_sprite.flip_h = _chaser_legacy_visual.flip_h
 		_chaser_sprite.self_modulate = _chaser_legacy_visual.self_modulate
