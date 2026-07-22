@@ -1,12 +1,12 @@
 extends GutTest
 
-const COMBAT_TEXTURE: Texture2D = preload("res://assets/sprites/fx/combat_fx.png")
+const COMBAT_TEXTURE: Texture2D = preload("res://assets/sprites/fx/combat_fx_hd.png")
 const RELIC_ORB_TEXTURE: Texture2D = preload("res://assets/sprites/fx/relic_orb_fx.png")
 const PLAYER_SCENE: PackedScene = preload("res://scenes/player/player.tscn")
 
 
 func test_generated_fx_sheets_have_manifest_dimensions() -> void:
-	assert_eq(COMBAT_TEXTURE.get_size(), Vector2(264.0, 64.0))
+	assert_eq(COMBAT_TEXTURE.get_size(), Vector2(384.0, 256.0))
 	assert_eq(RELIC_ORB_TEXTURE.get_size(), Vector2(768.0, 288.0))
 
 
@@ -95,7 +95,11 @@ func _assert_effect(animation_name: StringName, expected_frames: int) -> void:
 	assert_not_null(effect)
 	assert_eq(effect.sprite_frames.get_frame_count(animation_name), expected_frames)
 	assert_false(effect.sprite_frames.get_animation_loop(animation_name))
-	assert_eq(effect.texture_filter, CanvasItem.TEXTURE_FILTER_NEAREST)
+	# Combat feedback is now stylized-HD and linear-filtered, matching the relic FX.
+	assert_eq(effect.texture_filter, CanvasItem.TEXTURE_FILTER_LINEAR)
+	var first_frame: AtlasTexture = effect.sprite_frames.get_frame_texture(animation_name, 0) as AtlasTexture
+	assert_not_null(first_frame)
+	assert_eq(first_frame.atlas, COMBAT_TEXTURE, "HD combat effects read from the shared HD sheet.")
 
 
 func _animated_fx_count(parent: Node2D) -> int:
