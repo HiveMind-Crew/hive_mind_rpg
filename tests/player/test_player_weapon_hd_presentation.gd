@@ -1,8 +1,8 @@
 extends GutTest
-## Contract coverage for the issue #168 presentation-only HD steel weapon.
-## PlayerVisual stays the logical state/facing owner; the weapon sprite only
-## mirrors it, and gameplay (controller, melee hitbox, timing, collision) must
-## be byte-for-byte unaffected by the new display layer.
+## Contract coverage for the authoritative presentation-only HD steel weapon
+## (issues #168/#175). PlayerVisual stays the logical state/facing owner; the
+## single weapon sprite mirrors it, and gameplay (controller, melee hitbox,
+## timing, collision) remains unchanged.
 
 const PLAYER_SCENE: PackedScene = preload("res://scenes/player/player.tscn")
 const ATLAS_PATH: String = "res://assets/sprites/player/hd/steel_weapon_atlas.png"
@@ -51,6 +51,23 @@ func test_weapon_exists_as_presentation_owned_display_only_sprite() -> void:
 			0.0,
 		),
 		"Rotation must pivot on the authored grip center.",
+	)
+
+
+func test_player_has_exactly_one_weapon_display_owned_by_hd_presentation() -> void:
+	assert_null(
+		_player.get_node_or_null("WeaponPresentation"),
+		"The retired parallel weapon owner must not remain in the player scene.",
+	)
+	assert_eq(
+	_weapon_display_count(_player),
+		1,
+		"Exactly one PlayerWeaponHdPresentation may be active at runtime.",
+	)
+	assert_eq(
+		_weapon.get_parent(),
+		_presentation,
+		"HdPresentation is the sole weapon-display owner.",
 	)
 
 
@@ -205,4 +222,11 @@ func _opaque_pixel_count(image: Image, region: Rect2i) -> int:
 		for x: int in region.size.x:
 			if image.get_pixel(region.position.x + x, region.position.y + y).a > 0.0:
 				count += 1
+	return count
+
+
+func _weapon_display_count(node: Node) -> int:
+	var count: int = 1 if node is PlayerWeaponHdPresentation else 0
+	for child: Node in node.get_children():
+		count += _weapon_display_count(child)
 	return count
