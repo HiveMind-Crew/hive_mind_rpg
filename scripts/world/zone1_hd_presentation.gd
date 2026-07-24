@@ -17,8 +17,8 @@ extends Node2D
 ## painted landmarks must never suggest interactions that do not exist). Every
 ## interactable keeps its own live node + visual. Legacy scenery that would
 ## double up with the painted plate (display-only prop sprites and the
-## exit-gate marker polygon) is hidden inside the covered routes; the ExitZone
-## Area2D, its prompt, and everything east of the boss-corridor seam are untouched.
+## gate marker polygon) is hidden inside the covered routes; the ExitZone
+## Area2D, its prompt, and all gameplay nodes remain untouched.
 
 ## Copied production-prototype sources; provenance (LemonadeAI /
 ## Flux-2-Klein-9B-GGUF, non-commercial, prototype-only) is recorded in
@@ -26,6 +26,7 @@ extends Node2D
 ## no-affordance plate (assets/reference/.../encounter_room_background_v2.png).
 const ENTRANCE_BACKGROUND_TEXTURE: Texture2D = preload("res://assets/sprites/hd_prototype/encounter_room_background.png")
 const ROOMS_B_C_BACKGROUND_TEXTURE: Texture2D = preload("res://assets/sprites/world/hd/zone1_rooms_b_c.png")
+const BOSS_ROUTE_BACKGROUND_TEXTURE: Texture2D = preload("res://assets/sprites/world/hd/zone1_boss_route.png")
 const PLAYER_TEXTURE: Texture2D = preload("res://assets/sprites/hd_prototype/player_wanderer.png")
 const CHASER_TEXTURE: Texture2D = preload("res://assets/sprites/hd_prototype/relic_hound.png")
 const SHRINE_TEXTURE: Texture2D = preload("res://assets/sprites/hd_prototype/checkpoint_shrine.png")
@@ -42,7 +43,14 @@ const COVERED_ROUTE_RECT: Rect2 = Rect2(0, 0, 624, 480)
 ## Encounter room B + east corridor + encounter room C (including its north
 ## secret alcove): tiles x 39..79. The east edge lands on the boss corridor.
 const ROOMS_B_C_ROUTE_RECT: Rect2 = Rect2(624, 0, 640, 480)
-const COVERED_ROUTE_RECTS: Array[Rect2] = [COVERED_ROUTE_RECT, ROOMS_B_C_ROUTE_RECT]
+## Boss corridor and arena: tiles x 79..108. The curated crop renders only the
+## source's no-affordance left/center area, excluding the rejected red accent.
+const BOSS_ROUTE_RECT: Rect2 = Rect2(1264, 0, 464, 480)
+const COVERED_ROUTE_RECTS: Array[Rect2] = [
+	COVERED_ROUTE_RECT,
+	ROOMS_B_C_ROUTE_RECT,
+	BOSS_ROUTE_RECT,
+]
 const BACKGROUND_SOURCE_SIZE: Vector2 = Vector2(1024, 576)
 
 ## On-screen actor sizes chosen against the existing 2× camera so HD bodies
@@ -112,6 +120,9 @@ func _ready() -> void:
 		),
 		_build_background_sprite(
 			"HdBackgroundRoomsBC", ROOMS_B_C_BACKGROUND_TEXTURE, ROOMS_B_C_ROUTE_RECT
+		),
+		_build_background_sprite(
+			"HdBackgroundBossRoute", BOSS_ROUTE_BACKGROUND_TEXTURE, BOSS_ROUTE_RECT
 		),
 	]
 	for background_sprite: Sprite2D in _background_sprites:

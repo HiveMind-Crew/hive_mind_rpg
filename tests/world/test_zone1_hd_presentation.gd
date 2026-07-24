@@ -23,6 +23,7 @@ const EXPECTED_ASSET_DIMENSIONS: Dictionary[String, Vector2i] = {
 	"res://assets/sprites/hd_prototype/relic_hound.png": Vector2i(162, 286),
 	"res://assets/sprites/hd_prototype/checkpoint_shrine.png": Vector2i(249, 330),
 	"res://assets/sprites/world/hd/zone1_rooms_b_c.png": Vector2i(1024, 576),
+	"res://assets/sprites/world/hd/zone1_boss_route.png": Vector2i(1024, 576),
 }
 
 ## Un-deleted originals the copies were made from (provenance requirement).
@@ -42,6 +43,8 @@ const REJECTED_BACKGROUND_V1_PATH: String = "res://assets/reference/hd_prototype
 const BACKGROUND_V2_MD5: String = "b952852f4b8ce1acc1447525033a55c3"
 const ROOMS_B_C_BACKGROUND_PATH: String = "res://assets/sprites/world/hd/zone1_rooms_b_c.png"
 const ROOMS_B_C_BACKGROUND_MD5: String = "944fa7d158f82033b3c7d55b52480837"
+const BOSS_ROUTE_BACKGROUND_PATH: String = "res://assets/sprites/world/hd/zone1_boss_route.png"
+const BOSS_ROUTE_BACKGROUND_MD5: String = "e8778556731f4b24562f657711e51763"
 
 ## Display-only prop sprites whose position lies inside COVERED_ROUTE_RECT —
 ## the painted plate replaces them, so leaving them visible would double up
@@ -58,12 +61,10 @@ const COVERED_ROUTE_PROP_NAMES: Array[String] = [
 	"RelicMachineRoomC",
 	"StumpCorridorEast",
 	"StumpAlcoveNorth",
-]
-
-## The boss-approach prop lies east of the current production-art seam.
-const UNCOVERED_PROP_NAMES: Array[String] = [
 	"RootRuinBossApproach",
 ]
+
+const UNCOVERED_PROP_NAMES: Array[String] = []
 
 
 func before_each() -> void:
@@ -151,6 +152,10 @@ func test_background_copy_is_the_v2_plate_without_baked_affordances() -> void:
 		FileAccess.get_md5(ROOMS_B_C_BACKGROUND_PATH), ROOMS_B_C_BACKGROUND_MD5,
 		"Room B/C art must stay pinned to the reviewed environment-only plate."
 	)
+	assert_eq(
+		FileAccess.get_md5(BOSS_ROUTE_BACKGROUND_PATH), BOSS_ROUTE_BACKGROUND_MD5,
+		"Boss-route art must stay pinned to the reviewed environment-only plate."
+	)
 
 
 func test_covered_route_scenery_and_exit_gate_visual_are_hidden() -> void:
@@ -220,7 +225,7 @@ func test_zone_installs_hd_layers_through_encounter_room_c() -> void:
 	)
 
 	var drawn_rects: Array[Rect2] = presentation.get_background_world_rects()
-	assert_eq(drawn_rects.size(), 2)
+	assert_eq(drawn_rects.size(), 3)
 	assert_almost_eq(
 		drawn_rects[0].position,
 		Zone1HdPresentation.COVERED_ROUTE_RECT.position,
@@ -241,6 +246,16 @@ func test_zone_installs_hd_layers_through_encounter_room_c() -> void:
 		Zone1HdPresentation.ROOMS_B_C_ROUTE_RECT.size,
 		Vector2(0.01, 0.01)
 	)
+	assert_almost_eq(
+		drawn_rects[2].position,
+		Zone1HdPresentation.BOSS_ROUTE_RECT.position,
+		Vector2(0.01, 0.01)
+	)
+	assert_almost_eq(
+		drawn_rects[2].size,
+		Zone1HdPresentation.BOSS_ROUTE_RECT.size,
+		Vector2(0.01, 0.01)
+	)
 
 	# Draw order: over the legacy tiles, under props/actors/interactables.
 	assert_gt(presentation.get_index(), zone.get_node("FloorWalls").get_index())
@@ -252,7 +267,7 @@ func test_all_hd_nodes_use_per_node_linear_filtering_only() -> void:
 	var presentation: Zone1HdPresentation = _presentation_of(zone)
 
 	var hd_sprites: Array[Sprite2D] = presentation.get_hd_sprites()
-	assert_eq(hd_sprites.size(), 5)
+	assert_eq(hd_sprites.size(), 6)
 	for sprite: Sprite2D in hd_sprites:
 		assert_not_null(sprite.texture)
 		assert_eq(
