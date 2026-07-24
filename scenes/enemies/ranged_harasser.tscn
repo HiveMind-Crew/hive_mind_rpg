@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/ranged_harasser.gd" id="1_enemy"]
 [ext_resource type="SpriteFrames" path="res://assets/sprites/enemies/ranged_harasser_frames.tres" id="7_frames"]
@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" path="res://scenes/enemies/enemy_bolt.tscn" id="6_bolt"]
 [ext_resource type="Script" path="res://scripts/enemies/enemy_hd_presentation.gd" id="8_hd_script"]
 [ext_resource type="Texture2D" path="res://assets/sprites/enemies/hd/ranged_harasser.png" id="9_hd_texture"]
+[ext_resource type="Texture2D" path="res://assets/sprites/enemies/hd/enemy_windup_tell.png" id="10_tell"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
 radius = 10.0
@@ -37,12 +38,13 @@ body_texture = ExtResource("9_hd_texture")
 display_height_px = 36.0
 body_offset = Vector2(0, -5)
 
-[node name="TellVisual" type="Polygon2D" parent="."]
+[node name="TellVisual" type="Sprite2D" parent="."]
 unique_name_in_owner = true
+texture_filter = 2
 visible = false
-polygon = PackedVector2Array(-14, -14, 14, -14, 14, 14, -14, 14)
-color = Color(1, 0.78, 0.18, 0.28)
 show_behind_parent = true
+texture = ExtResource("10_tell")
+scale = Vector2(0.5, 0.5)
 
 [node name="Hurtbox" parent="." instance=ExtResource("4_hurtbox")]
 unique_name_in_owner = true

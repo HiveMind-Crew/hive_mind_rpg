@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/fast_flanker.gd" id="1_enemy"]
 [ext_resource type="SpriteFrames" path="res://assets/sprites/enemies/fast_flanker_frames.tres" id="6_frames"]
@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" path="res://scenes/combat/hitbox.tscn" id="5_hitbox"]
 [ext_resource type="Script" path="res://scripts/enemies/enemy_hd_presentation.gd" id="7_hd_script"]
 [ext_resource type="Texture2D" path="res://assets/sprites/enemies/hd/fast_flanker.png" id="8_hd_texture"]
+[ext_resource type="Texture2D" path="res://assets/sprites/enemies/hd/enemy_windup_tell.png" id="9_tell"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
 radius = 7.0
@@ -35,12 +36,13 @@ body_texture = ExtResource("8_hd_texture")
 display_height_px = 30.0
 body_offset = Vector2(0, -3)
 
-[node name="TellVisual" type="Polygon2D" parent="."]
+[node name="TellVisual" type="Sprite2D" parent="."]
 unique_name_in_owner = true
+texture_filter = 2
 visible = false
-polygon = PackedVector2Array(-12, -12, 12, -12, 12, 12, -12, 12)
-color = Color(1, 0.78, 0.18, 0.28)
 show_behind_parent = true
+texture = ExtResource("9_tell")
+scale = Vector2(0.42, 0.42)
 
 [node name="Hurtbox" parent="." instance=ExtResource("4_hurtbox")]
 unique_name_in_owner = true

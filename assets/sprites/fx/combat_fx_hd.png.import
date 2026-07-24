@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://7vc1u5gl2qk3"
-path="res://.godot/imported/combat_fx.png-c2b77086312d93d96b852fd8cd9546fa.ctex"
+uid="uid://dq3n7v8k2p6ma"
+path="res://.godot/imported/combat_fx_hd.png-4490377f8e6f29b21270b616bd253d27.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/fx/combat_fx.png"
-dest_files=["res://.godot/imported/combat_fx.png-c2b77086312d93d96b852fd8cd9546fa.ctex"]
+source_file="res://assets/sprites/fx/combat_fx_hd.png"
+dest_files=["res://.godot/imported/combat_fx_hd.png-4490377f8e6f29b21270b616bd253d27.ctex"]
 
 [params]
 

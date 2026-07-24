@@ -3,7 +3,7 @@ extends RefCounted
 ## Visual-only, self-cleaning combat bursts. Gameplay callers keep all timing,
 ## collision, damage, and time-scale ownership; this helper only displays art.
 
-const COMBAT_TEXTURE: Texture2D = preload("res://assets/sprites/fx/combat_fx.png")
+const COMBAT_TEXTURE: Texture2D = preload("res://assets/sprites/fx/combat_fx_hd.png")
 const RELIC_ORB_TEXTURE: Texture2D = preload("res://assets/sprites/fx/relic_orb_fx.png")
 const SLASH: StringName = &"slash"
 const SPARK: StringName = &"spark"
@@ -38,21 +38,42 @@ const RELIC_FLIGHT_SCALE: float = 0.36
 const RELIC_IMPACT_SCALE: float = 0.3
 const HD_TEXTURE_FILTER: CanvasItem.TextureFilter = CanvasItem.TEXTURE_FILTER_LINEAR
 
+# Stylized-HD combat sheet layout (assets/sprites/generate_combat_fx_hd.py):
+# uniform 64×64 cells in four rows — slash 4 (y=0), spark 4 (y=64), dash 3
+# (y=128), dissolve 6 (y=192). Slash/dash are authored facing +x and rotated to
+# the true action direction at runtime. Per-effect display scales keep the HD
+# frames at their previous on-screen footprint at the shipped 2× camera.
+const COMBAT_CELL: int = 64
+const SLASH_ROW_Y: int = 0
+const SPARK_ROW_Y: int = 64
+const DASH_ROW_Y: int = 128
+const DISSOLVE_ROW_Y: int = 192
+const SLASH_SCALE: float = 0.62
+const SPARK_SCALE: float = 0.5
+const DASH_SCALE: float = 0.55
+const DISSOLVE_SCALE: float = 0.6
+
 
 static func spawn_slash(parent: Node, position: Vector2, direction: Vector2) -> void:
-	_spawn(parent, position, _combat_frames(SLASH), SLASH, _cardinal_rotation(direction))
+	_spawn(
+		parent, position, _combat_frames(SLASH), SLASH, _cardinal_rotation(direction),
+		HD_TEXTURE_FILTER, SLASH_SCALE
+	)
 
 
 static func spawn_spark(parent: Node, position: Vector2) -> void:
-	_spawn(parent, position, _combat_frames(SPARK), SPARK, 0.0)
+	_spawn(parent, position, _combat_frames(SPARK), SPARK, 0.0, HD_TEXTURE_FILTER, SPARK_SCALE)
 
 
 static func spawn_dash_trail(parent: Node, position: Vector2, direction: Vector2) -> void:
-	_spawn(parent, position, _combat_frames(DASH), DASH, _cardinal_rotation(direction))
+	_spawn(
+		parent, position, _combat_frames(DASH), DASH, _cardinal_rotation(direction),
+		HD_TEXTURE_FILTER, DASH_SCALE
+	)
 
 
 static func spawn_dissolve(parent: Node, position: Vector2) -> void:
-	_spawn(parent, position, _combat_frames(DISSOLVE), DISSOLVE, 0.0)
+	_spawn(parent, position, _combat_frames(DISSOLVE), DISSOLVE, 0.0, HD_TEXTURE_FILTER, DISSOLVE_SCALE)
 
 
 ## Cast-origin flare for the starter relic orb. Callers spawn it only after
@@ -117,23 +138,24 @@ static func _combat_frames(animation_name: StringName) -> SpriteFrames:
 	frames.add_animation(animation_name)
 	frames.set_animation_loop(animation_name, false)
 	frames.set_animation_speed(animation_name, COMBAT_FPS)
-	var region_size: Vector2i = Vector2i(32, 32)
-	var origin: Vector2i = Vector2i.ZERO
+	# Every HD combat effect is a row of uniform 64×64 cells; only the row origin
+	# and frame count differ.
+	var row_y: int = SLASH_ROW_Y
 	var frame_count: int = 4
 	match animation_name:
 		SPARK:
-			region_size = Vector2i(16, 16)
-			origin = Vector2i(128, 0)
+			row_y = SPARK_ROW_Y
 		DASH:
-			region_size = Vector2i(24, 24)
-			origin = Vector2i(192, 0)
+			row_y = DASH_ROW_Y
 			frame_count = 3
 		DISSOLVE:
-			region_size = Vector2i(24, 24)
-			origin = Vector2i(0, 32)
+			row_y = DISSOLVE_ROW_Y
 			frame_count = 6
 	for frame_index: int in frame_count:
-		frames.add_frame(animation_name, _atlas(COMBAT_TEXTURE, Rect2i(origin + Vector2i(region_size.x * frame_index, 0), region_size)))
+		frames.add_frame(
+			animation_name,
+			_atlas(COMBAT_TEXTURE, Rect2i(Vector2i(COMBAT_CELL * frame_index, row_y), Vector2i(COMBAT_CELL, COMBAT_CELL)))
+		)
 	return frames
 
 
