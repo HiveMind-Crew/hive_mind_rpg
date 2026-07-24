@@ -125,14 +125,7 @@ unchanged. All six PNG imports are lossless, unmipmapped, unpremultiplied-alpha
 textures with alpha-border correction, and every live Sprite2D filters
 linearly per node.
 
-Issue #152 has begun the production environment extension with
-`assets/sprites/world/hd/zone1_rooms_b_c.png`, a 1024×576 environment-only
-plate covering the named room-B → room-C route at the contract 5/6 scale. It
-adds no baked actors, interactables, gates, shrines, pickups, or hazards; live
-scene nodes and secret-reveal covers remain above the presentation layer. The
-boss corridor, boss approach, and arena remain on the legacy environment layer
-until the next focused plate lands, so this row does not yet mark the full
-Zone 1 environment group complete.
+Issue #152 began the production extension with the Room B→C plate. **Issue #179 completes the remaining boss corridor, approach, and arena** with `assets/sprites/world/hd/zone1_boss_route.png`: an environment-only 1024×576 LemonadeAI / Flux-2-Klein-9B plate, uniformly scaled 5/6 and region-cropped so its reviewed left/center source area exactly covers the 464×480 tile-backed boss route. The boss, production boss door, collision, sensors, camera, and reward remain separate live nodes; the legacy boss-approach prop is hidden only as doubled presentation.
 
 ### 3.4 UI and combat FX
 
