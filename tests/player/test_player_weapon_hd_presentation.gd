@@ -181,16 +181,17 @@ func test_weapon_follows_hurt_death_and_revive_presentation() -> void:
 func test_melee_keeps_a_single_slash_fx_owner() -> void:
 	# CombatFxSpawner remains the one slash spawner; the weapon layer must not
 	# add a second slash effect on top of it.
-	var parent: Node2D = Node2D.new()
-	add_child_autofree(parent)
-	var player: PlayerController = PLAYER_SCENE.instantiate() as PlayerController
-	parent.add_child(player)
-	assert_true(player.try_melee_attack())
-	var fx_count: int = 0
-	for child: Node in parent.get_children():
-		if child is AnimatedSprite2D:
-			fx_count += 1
-	assert_eq(fx_count, 1, "Exactly one spawned slash effect per swing.")
+	assert_true(_player.try_melee_attack())
+	assert_eq(_animated_child_count(self), 1, "Exactly one spawned slash effect per swing.")
+	var slash: Node = _first_animated_child(self)
+	assert_not_null(slash)
+	if slash == null:
+		return
+
+	# The real non-looping slash owns its own lifetime; it must be gone before
+	# this asynchronous test reaches GUT teardown.
+	await get_tree().create_timer(0.5).timeout
+	assert_false(is_instance_valid(slash), "The slash frees itself after its authored animation.")
 
 
 func test_weapon_layer_leaves_melee_mechanics_and_collision_unchanged() -> void:
@@ -214,6 +215,29 @@ func test_weapon_layer_leaves_melee_mechanics_and_collision_unchanged() -> void:
 	).shape as CapsuleShape2D
 	assert_eq(capsule.radius, 7.0)
 	assert_eq(capsule.height, 20.0)
+	_free_animated_children(self)
+	assert_eq(_animated_child_count(self), 0, "The mechanics probe leaves no transient slash for teardown.")
+
+
+func _free_animated_children(parent: Node) -> void:
+	for child: Node in parent.get_children():
+		if child is AnimatedSprite2D:
+			child.free()
+
+
+func _first_animated_child(parent: Node) -> Node:
+	for child: Node in parent.get_children():
+		if child is AnimatedSprite2D:
+			return child
+	return null
+
+
+func _animated_child_count(parent: Node) -> int:
+	var count: int = 0
+	for child: Node in parent.get_children():
+		if child is AnimatedSprite2D:
+			count += 1
+	return count
 
 
 func _opaque_pixel_count(image: Image, region: Rect2i) -> int:
