@@ -1,8 +1,8 @@
 extends GutTest
-## Contract coverage for the issue #168 presentation-only HD steel weapon.
-## PlayerVisual stays the logical state/facing owner; the weapon sprite only
-## mirrors it, and gameplay (controller, melee hitbox, timing, collision) must
-## be byte-for-byte unaffected by the new display layer.
+## Contract coverage for the authoritative presentation-only HD steel weapon
+## (issues #168/#175). PlayerVisual stays the logical state/facing owner; the
+## single weapon sprite mirrors it, and gameplay (controller, melee hitbox,
+## timing, collision) remains unchanged.
 
 const PLAYER_SCENE: PackedScene = preload("res://scenes/player/player.tscn")
 const ATLAS_PATH: String = "res://assets/sprites/player/hd/steel_weapon_atlas.png"
@@ -51,6 +51,23 @@ func test_weapon_exists_as_presentation_owned_display_only_sprite() -> void:
 			0.0,
 		),
 		"Rotation must pivot on the authored grip center.",
+	)
+
+
+func test_player_has_exactly_one_weapon_display_owned_by_hd_presentation() -> void:
+	assert_null(
+		_player.get_node_or_null("WeaponPresentation"),
+		"The retired parallel weapon owner must not remain in the player scene.",
+	)
+	assert_eq(
+	_weapon_display_count(_player),
+		1,
+		"Exactly one PlayerWeaponHdPresentation may be active at runtime.",
+	)
+	assert_eq(
+		_weapon.get_parent(),
+		_presentation,
+		"HdPresentation is the sole weapon-display owner.",
 	)
 
 
@@ -164,16 +181,17 @@ func test_weapon_follows_hurt_death_and_revive_presentation() -> void:
 func test_melee_keeps_a_single_slash_fx_owner() -> void:
 	# CombatFxSpawner remains the one slash spawner; the weapon layer must not
 	# add a second slash effect on top of it.
-	var parent: Node2D = Node2D.new()
-	add_child_autofree(parent)
-	var player: PlayerController = PLAYER_SCENE.instantiate() as PlayerController
-	parent.add_child(player)
-	assert_true(player.try_melee_attack())
-	var fx_count: int = 0
-	for child: Node in parent.get_children():
-		if child is AnimatedSprite2D:
-			fx_count += 1
-	assert_eq(fx_count, 1, "Exactly one spawned slash effect per swing.")
+	assert_true(_player.try_melee_attack())
+	assert_eq(_animated_child_count(self), 1, "Exactly one spawned slash effect per swing.")
+	var slash: Node = _first_animated_child(self)
+	assert_not_null(slash)
+	if slash == null:
+		return
+
+	# The real non-looping slash owns its own lifetime; it must be gone before
+	# this asynchronous test reaches GUT teardown.
+	await get_tree().create_timer(0.5).timeout
+	assert_false(is_instance_valid(slash), "The slash frees itself after its authored animation.")
 
 
 func test_weapon_layer_leaves_melee_mechanics_and_collision_unchanged() -> void:
@@ -197,6 +215,29 @@ func test_weapon_layer_leaves_melee_mechanics_and_collision_unchanged() -> void:
 	).shape as CapsuleShape2D
 	assert_eq(capsule.radius, 7.0)
 	assert_eq(capsule.height, 20.0)
+	_free_animated_children(self)
+	assert_eq(_animated_child_count(self), 0, "The mechanics probe leaves no transient slash for teardown.")
+
+
+func _free_animated_children(parent: Node) -> void:
+	for child: Node in parent.get_children():
+		if child is AnimatedSprite2D:
+			child.free()
+
+
+func _first_animated_child(parent: Node) -> Node:
+	for child: Node in parent.get_children():
+		if child is AnimatedSprite2D:
+			return child
+	return null
+
+
+func _animated_child_count(parent: Node) -> int:
+	var count: int = 0
+	for child: Node in parent.get_children():
+		if child is AnimatedSprite2D:
+			count += 1
+	return count
 
 
 func _opaque_pixel_count(image: Image, region: Rect2i) -> int:
@@ -205,4 +246,11 @@ func _opaque_pixel_count(image: Image, region: Rect2i) -> int:
 		for x: int in region.size.x:
 			if image.get_pixel(region.position.x + x, region.position.y + y).a > 0.0:
 				count += 1
+	return count
+
+
+func _weapon_display_count(node: Node) -> int:
+	var count: int = 1 if node is PlayerWeaponHdPresentation else 0
+	for child: Node in node.get_children():
+		count += _weapon_display_count(child)
 	return count
