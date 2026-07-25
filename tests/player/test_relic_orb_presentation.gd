@@ -1,6 +1,6 @@
 extends GutTest
-## Focused issue #169 coverage: the stylized-HD relic orb presentation must be
-## driven by the real EnergyBolt/PlayerController pathways only — truthful
+## Focused issues #169/#190 coverage: the stylized-HD relic-lightning
+## presentation must be driven by the real EnergyBolt/PlayerController pathways only — truthful
 ## launch rotation, cast strictly after a real spawn, one impact per bolt, and
 ## no mechanics drift on the scene-authored projectile contract.
 
