@@ -70,6 +70,28 @@ func test_relic_cast_and_impact_are_linear_filtered_one_shots() -> void:
 	assert_eq(impact.rotation, 0.0)
 
 
+func test_relic_orb_sheet_keeps_readable_core_trail_and_contained_impact() -> void:
+	var image: Image = RELIC_ORB_TEXTURE.get_image()
+	# The exact collision center stays a bright visual anchor in every looping
+	# frame, while pixels behind it significantly outnumber the quiet lead side.
+	for frame: int in CombatFxSpawner.RELIC_FLIGHT_FRAMES:
+		var origin: Vector2i = Vector2i(frame * CombatFxSpawner.RELIC_FLIGHT_CELL.x, CombatFxSpawner.RELIC_FLIGHT_ROW_Y)
+		var core: Color = image.get_pixelv(origin + Vector2i(64, 32))
+		assert_gt(core.a, 0.95, "Flight frame %d keeps an opaque core at collision center." % frame)
+		assert_gt(core.r, 0.8, "Flight frame %d keeps the core white-hot." % frame)
+		var rear_pixels: int = _opaque_pixel_count(image, Rect2i(origin + Vector2i(14, 18), Vector2i(44, 28)))
+		var lead_pixels: int = _opaque_pixel_count(image, Rect2i(origin + Vector2i(78, 18), Vector2i(36, 28)))
+		assert_gt(rear_pixels, 200, "Flight frame %d has a substantial rearward trail." % frame)
+		assert_lt(lead_pixels, 8, "Flight frame %d keeps the leading side quiet." % frame)
+	# The impact dissipates inside its atlas cell rather than touching an edge.
+	for frame: int in CombatFxSpawner.RELIC_IMPACT_FRAMES:
+		var impact_origin: Vector2i = Vector2i(frame * CombatFxSpawner.RELIC_IMPACT_CELL.x, CombatFxSpawner.RELIC_IMPACT_ROW_Y)
+		assert_eq(_opaque_pixel_count(image, Rect2i(impact_origin, Vector2i(128, 12))), 0)
+		assert_eq(_opaque_pixel_count(image, Rect2i(impact_origin + Vector2i(0, 116), Vector2i(128, 12))), 0)
+		assert_eq(_opaque_pixel_count(image, Rect2i(impact_origin, Vector2i(12, 128))), 0)
+		assert_eq(_opaque_pixel_count(image, Rect2i(impact_origin + Vector2i(116, 0), Vector2i(12, 128))), 0)
+
+
 func test_relic_cast_rotation_is_truthful_for_all_eight_directions() -> void:
 	for direction: Vector2 in [
 		Vector2.RIGHT, Vector2.DOWN, Vector2.LEFT, Vector2.UP,
@@ -136,4 +158,13 @@ func _animated_fx_count(parent: Node2D) -> int:
 	for child: Node in parent.get_children():
 		if child is AnimatedSprite2D:
 			count += 1
+	return count
+
+
+func _opaque_pixel_count(image: Image, region: Rect2i) -> int:
+	var count: int = 0
+	for y: int in region.size.y:
+		for x: int in region.size.x:
+			if image.get_pixelv(region.position + Vector2i(x, y)).a > 0.0:
+				count += 1
 	return count
