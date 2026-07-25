@@ -6,6 +6,7 @@ extends GutTest
 const PLAYER_SCENE: PackedScene = preload("res://scenes/player/player.tscn")
 const ATLAS_PATH: String = "res://assets/sprites/player/hd/player_directional_atlas.png"
 const HD_ATLAS: Texture2D = preload("res://assets/sprites/player/hd/player_directional_atlas.png")
+const MELEE_ATLAS_PATH: String = "res://assets/sprites/player/hd/player_melee_body_atlas.png"
 const PNG_SIGNATURE: PackedByteArray = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]
 
 var _player: PlayerController
@@ -81,6 +82,85 @@ func test_atlas_region_follows_player_visual_facing_for_all_four_directions() ->
 			display.flip_h,
 			"West is authored atlas art, not a runtime mirror of the east cell."
 		)
+
+
+func test_melee_body_atlas_has_three_distinct_authored_poses_for_each_facing() -> void:
+	var melee_atlas: Texture2D = load(MELEE_ATLAS_PATH) as Texture2D
+	assert_not_null(melee_atlas, "Issue #189 requires a dedicated HD body melee atlas.")
+	if melee_atlas == null:
+		return
+	var file: FileAccess = FileAccess.open(MELEE_ATLAS_PATH, FileAccess.READ)
+	assert_not_null(file)
+	if file == null:
+		return
+	assert_eq(file.get_buffer(PNG_SIGNATURE.size()), PNG_SIGNATURE)
+	file.close()
+	assert_eq(
+		Vector2i(melee_atlas.get_width(), melee_atlas.get_height()),
+		Vector2i(768, 1024),
+		"The body attack sheet is three 256px phase columns by four directional rows.",
+	)
+	var image: Image = melee_atlas.get_image()
+	for row: int in PlayerHdPresentation.MELEE_DIRECTION_ROWS.size():
+		var windup: int = _opaque_pixel_count(image, Rect2i(0, row * 256, 256, 256))
+		var contact: int = _opaque_pixel_count(image, Rect2i(256, row * 256, 256, 256))
+		var recovery: int = _opaque_pixel_count(image, Rect2i(512, row * 256, 256, 256))
+		assert_gt(windup, 0, "Each facing needs an authored body/arm wind-up silhouette.")
+		assert_gt(contact, windup, "Contact must visibly extend the body/arms into the strike.")
+		assert_gt(recovery, 0, "Recovery must remain an authored pose, not a static-body pop.")
+
+
+func test_melee_body_uses_windup_contact_recovery_and_returns_at_the_existing_window() -> void:
+	var display: Sprite2D = _presentation.get_display_sprite()
+	var directions: Array[Vector2] = [Vector2.UP, Vector2.RIGHT, Vector2.DOWN, Vector2.LEFT]
+	for direction: Vector2 in directions:
+		_legacy_visual.play_melee(direction)
+		_presentation._process(0.0)
+		assert_eq(display.texture, PlayerHdPresentation.MELEE_ATLAS_TEXTURE)
+		assert_eq(display.region_rect, _presentation._melee_atlas_region_for(
+			_legacy_visual.facing_label, PlayerHdPresentation.MELEE_WINDUP_COLUMN))
+		_presentation._process(PlayerHdPresentation.MELEE_WINDUP_SECONDS)
+		assert_eq(display.region_rect, _presentation._melee_atlas_region_for(
+			_legacy_visual.facing_label, PlayerHdPresentation.MELEE_CONTACT_COLUMN))
+		_presentation._process(PlayerHdPresentation.MELEE_CONTACT_SECONDS)
+		assert_eq(display.region_rect, _presentation._melee_atlas_region_for(
+			_legacy_visual.facing_label, PlayerHdPresentation.MELEE_RECOVERY_COLUMN))
+		_presentation._process(PlayerHdPresentation.MELEE_RECOVERY_SECONDS)
+		assert_eq(display.texture, HD_ATLAS,
+			"The HD body must stop advertising the swing when the 0.12s gameplay window ends.")
+		assert_eq(display.region_rect, _presentation._atlas_region_for(_legacy_visual.facing_label))
+		_legacy_visual._on_clip_finished()
+
+
+func test_melee_body_phases_exactly_partition_existing_melee_mechanics() -> void:
+	assert_almost_eq(
+		PlayerHdPresentation.MELEE_WINDUP_SECONDS
+		+ PlayerHdPresentation.MELEE_CONTACT_SECONDS
+		+ PlayerHdPresentation.MELEE_RECOVERY_SECONDS,
+		_player.melee_duration,
+		0.0001,
+	)
+	assert_eq(_player.melee_damage, 1)
+	assert_eq(_player.melee_hitbox_offset, 14.0)
+
+
+func test_real_player_melee_event_drives_the_body_pose_without_extending_combat() -> void:
+	var display: Sprite2D = _presentation.get_display_sprite()
+	assert_true(_player.try_melee_attack())
+	assert_eq(_legacy_visual.animation_name, PlayerVisual.MELEE_ANIMATION)
+	_presentation._process(0.0)
+	assert_eq(display.texture, PlayerHdPresentation.MELEE_ATLAS_TEXTURE)
+	_presentation._process(_player.melee_duration)
+	assert_eq(display.texture, HD_ATLAS)
+
+
+func _opaque_pixel_count(image: Image, region: Rect2i) -> int:
+	var count: int = 0
+	for y: int in region.size.y:
+		for x: int in region.size.x:
+			if image.get_pixel(region.position.x + x, region.position.y + y).a > 0.0:
+				count += 1
+	return count
 
 
 func test_hd_presentation_mirrors_move_state_with_presentation_only_gait() -> void:
