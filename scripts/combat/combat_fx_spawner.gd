@@ -4,7 +4,7 @@ extends RefCounted
 ## collision, damage, and time-scale ownership; this helper only displays art.
 
 const COMBAT_TEXTURE: Texture2D = preload("res://assets/sprites/fx/combat_fx_hd.png")
-const RELIC_ORB_TEXTURE: Texture2D = preload("res://assets/sprites/fx/relic_orb_fx.png")
+const RELIC_LIGHTNING_TEXTURE: Texture2D = preload("res://assets/sprites/fx/relic_lightning_fx.png")
 const SLASH: StringName = &"slash"
 const SPARK: StringName = &"spark"
 const DASH: StringName = &"dash"
@@ -18,10 +18,10 @@ const RELIC_FLIGHT_FPS: float = 14.0
 const RELIC_IMPACT_FPS: float = 20.0
 const QUARTER_TURN: float = PI / 2.0
 
-# Stylized-HD relic sheet layout (assets/sprites/generate_relic_orb_fx.py):
-# cast 6×96×96 at y=0, flight 4×128×64 at y=96 (orb core on the exact cell
-# center so the display never overstates the collision position, trail toward
-# -x), impact 6×128×128 at y=160. Frames are authored facing +x and rotated to
+# Stylized-HD relic-lightning sheet layout (assets/sprites/generate_relic_lightning_fx.py):
+# cast 6×96×96 at y=0, flight 4×128×64 at y=96 (the compact charge knot is
+# centered exactly on collision while the angular branch/trail extends toward
+# -x), impact 6×128×128 at y=160. Frames are authored facing +x and rotate to
 # the true launch direction at runtime.
 const RELIC_CAST_CELL: Vector2i = Vector2i(96, 96)
 const RELIC_CAST_FRAMES: int = 6
@@ -76,7 +76,7 @@ static func spawn_dissolve(parent: Node, position: Vector2) -> void:
 	_spawn(parent, position, _combat_frames(DISSOLVE), DISSOLVE, 0.0, HD_TEXTURE_FILTER, DISSOLVE_SCALE)
 
 
-## Cast-origin flare for the starter relic orb. Callers spawn it only after
+## Cast-origin lightning fork for the starter relic bolt. Callers spawn it only after
 ## the real EnergyBolt exists, so a blocked cast never shows a fake effect.
 static func spawn_relic_cast(parent: Node, position: Vector2, direction: Vector2) -> void:
 	_spawn(
@@ -186,7 +186,7 @@ static func _relic_frames(
 	frames.set_animation_speed(animation_name, fps)
 	for frame_index: int in frame_count:
 		frames.add_frame(
-			animation_name, _atlas(RELIC_ORB_TEXTURE, Rect2i(Vector2i(frame_index * cell.x, row_y), cell))
+			animation_name, _atlas(RELIC_LIGHTNING_TEXTURE, Rect2i(Vector2i(frame_index * cell.x, row_y), cell))
 		)
 	return frames
 

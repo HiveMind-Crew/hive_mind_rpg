@@ -1,13 +1,13 @@
 extends GutTest
 
 const COMBAT_TEXTURE: Texture2D = preload("res://assets/sprites/fx/combat_fx_hd.png")
-const RELIC_ORB_TEXTURE: Texture2D = preload("res://assets/sprites/fx/relic_orb_fx.png")
+const RELIC_LIGHTNING_TEXTURE: Texture2D = preload("res://assets/sprites/fx/relic_lightning_fx.png")
 const PLAYER_SCENE: PackedScene = preload("res://scenes/player/player.tscn")
 
 
 func test_generated_fx_sheets_have_manifest_dimensions() -> void:
 	assert_eq(COMBAT_TEXTURE.get_size(), Vector2(384.0, 256.0))
-	assert_eq(RELIC_ORB_TEXTURE.get_size(), Vector2(768.0, 288.0))
+	assert_eq(RELIC_LIGHTNING_TEXTURE.get_size(), Vector2(768.0, 288.0))
 
 
 func test_combat_effects_have_authored_frame_counts_and_do_not_loop() -> void:
@@ -48,7 +48,7 @@ func test_relic_flight_loops_and_reads_from_the_hd_sheet() -> void:
 	assert_eq(visual.scale, Vector2.ONE * CombatFxSpawner.RELIC_FLIGHT_SCALE)
 	var first_frame: AtlasTexture = flight.get_frame_texture(CombatFxSpawner.RELIC_FLIGHT, 0) as AtlasTexture
 	assert_not_null(first_frame)
-	assert_eq(first_frame.atlas, RELIC_ORB_TEXTURE)
+	assert_eq(first_frame.atlas, RELIC_LIGHTNING_TEXTURE)
 	assert_eq(first_frame.region, Rect2(0.0, 96.0, 128.0, 64.0))
 
 
@@ -70,10 +70,11 @@ func test_relic_cast_and_impact_are_linear_filtered_one_shots() -> void:
 	assert_eq(impact.rotation, 0.0)
 
 
-func test_relic_orb_sheet_keeps_readable_core_trail_and_contained_impact() -> void:
-	var image: Image = RELIC_ORB_TEXTURE.get_image()
+func test_relic_lightning_sheet_keeps_a_centered_charge_knot_branching_trail_and_contained_impact() -> void:
+	var image: Image = RELIC_LIGHTNING_TEXTURE.get_image()
 	# The exact collision center stays a bright visual anchor in every looping
-	# frame, while pixels behind it significantly outnumber the quiet lead side.
+	# frame, but the authored silhouette must be an angular bolt with branching
+	# rearward energy — not the retired circular orb and halo.
 	for frame: int in CombatFxSpawner.RELIC_FLIGHT_FRAMES:
 		var origin: Vector2i = Vector2i(frame * CombatFxSpawner.RELIC_FLIGHT_CELL.x, CombatFxSpawner.RELIC_FLIGHT_ROW_Y)
 		var core: Color = image.get_pixelv(origin + Vector2i(64, 32))
@@ -81,15 +82,17 @@ func test_relic_orb_sheet_keeps_readable_core_trail_and_contained_impact() -> vo
 		assert_gt(core.r, 0.8, "Flight frame %d keeps the core white-hot." % frame)
 		var rear_pixels: int = _opaque_pixel_count(image, Rect2i(origin + Vector2i(14, 18), Vector2i(44, 28)))
 		var lead_pixels: int = _opaque_pixel_count(image, Rect2i(origin + Vector2i(78, 18), Vector2i(36, 28)))
-		assert_gt(rear_pixels, 200, "Flight frame %d has a substantial rearward trail." % frame)
-		assert_lt(lead_pixels, 8, "Flight frame %d keeps the leading side quiet." % frame)
+		assert_gt(rear_pixels, 200, "Flight frame %d has a substantial rearward lightning trail." % frame)
+		assert_gt(lead_pixels, 120, "Flight frame %d keeps an angular lightning head ahead of collision center." % frame)
 	# The impact dissipates inside its atlas cell rather than touching an edge.
 	for frame: int in CombatFxSpawner.RELIC_IMPACT_FRAMES:
 		var impact_origin: Vector2i = Vector2i(frame * CombatFxSpawner.RELIC_IMPACT_CELL.x, CombatFxSpawner.RELIC_IMPACT_ROW_Y)
-		assert_eq(_opaque_pixel_count(image, Rect2i(impact_origin, Vector2i(128, 12))), 0)
-		assert_eq(_opaque_pixel_count(image, Rect2i(impact_origin + Vector2i(0, 116), Vector2i(128, 12))), 0)
-		assert_eq(_opaque_pixel_count(image, Rect2i(impact_origin, Vector2i(12, 128))), 0)
-		assert_eq(_opaque_pixel_count(image, Rect2i(impact_origin + Vector2i(116, 0), Vector2i(12, 128))), 0)
+		assert_eq(_opaque_pixel_count(image, Rect2i(impact_origin, Vector2i(128, 6))), 0)
+		assert_eq(_opaque_pixel_count(image, Rect2i(impact_origin + Vector2i(0, 122), Vector2i(128, 6))), 0)
+		assert_eq(_opaque_pixel_count(image, Rect2i(impact_origin, Vector2i(6, 128))), 0)
+		assert_eq(_opaque_pixel_count(image, Rect2i(impact_origin + Vector2i(122, 0), Vector2i(6, 128))), 0)
+		assert_gt(_magenta_pixel_count(image, Rect2i(impact_origin, Vector2i(128, 128))), 6,
+			"Impact frame %d retains its magenta charged fragments." % frame)
 
 
 func test_relic_cast_rotation_is_truthful_for_all_eight_directions() -> void:
@@ -158,6 +161,16 @@ func _animated_fx_count(parent: Node2D) -> int:
 	for child: Node in parent.get_children():
 		if child is AnimatedSprite2D:
 			count += 1
+	return count
+
+
+func _magenta_pixel_count(image: Image, region: Rect2i) -> int:
+	var count: int = 0
+	for y: int in region.size.y:
+		for x: int in region.size.x:
+			var color: Color = image.get_pixelv(region.position + Vector2i(x, y))
+			if color.a > 0.0 and color.r > color.g * 1.2 and color.b > color.g * 1.1:
+				count += 1
 	return count
 
 
