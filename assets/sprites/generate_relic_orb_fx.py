@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the deterministic stylized-HD relic orb FX sheet for issue #169.
+"""Build the deterministic stylized-HD relic orb FX sheet for issues #169/#185.
 
 Layout of assets/sprites/fx/relic_orb_fx.png (768x288, straight alpha):
   row y=0   : cast flare,   6 frames of  96x96, authored radially with a
@@ -10,8 +10,9 @@ Layout of assets/sprites/fx/relic_orb_fx.png (768x288, straight alpha):
 
 Every pixel is computed from closed-form math (no randomness, no external
 source imagery), so reruns are byte-identical and the output is CC0-safe
-hand-authored art. Emissives follow the visual-bible relic language: white-hot
-core, cyan energy body, restrained magenta corruption fringe.
+hand-authored art. The #185 readability pass keeps a white-hot core visible at
+gameplay scale, makes the flight tail unmistakably directional, and holds the
+impact inside its cell rather than expanding into a screen-filling ring.
 """
 import math
 from pathlib import Path
@@ -68,31 +69,34 @@ def _cast_contributions(x: float, y: float, progress: float) -> list:
     distance = math.hypot(dx, dy)
     fade = 1.0 - progress
     contributions = []
-    # Collapsing white-hot origin flash.
-    flash = _glow(distance, 2.0 + 9.0 * fade, 6.0 + 17.0 * fade) * fade ** 1.2
+    # A persistent compact core gives the cast a clear launch point even after
+    # the expanding halo has begun to dissipate.
+    flash = _glow(distance, 3.0 + 4.0 * fade, 10.0 + 7.0 * fade) * (0.45 + 0.55 * fade)
     if flash > 0.0:
         contributions.append((flash, _lerp_color(CYAN_CORE, WHITE_HOT, fade)))
-    # Expanding energy ring: cyan inside, magenta corruption on the leading edge.
-    ring_radius = 6.0 + 34.0 * progress
-    ring = _band(distance, ring_radius, 3.0 + 5.0 * fade) * fade * 0.95
+    # Compact broken halo, held well inside the cell so it reads as a cast
+    # flash instead of a large empty circle.
+    ring_radius = 10.0 + 24.0 * progress
+    ring = _band(distance, ring_radius, 2.5 + 2.0 * fade) * fade * 0.7
     if ring > 0.0:
-        rim_shift = 0.75 if distance > ring_radius else 0.15
-        contributions.append((ring, _lerp_color(CYAN_CORE, MAGENTA, rim_shift * progress + 0.1)))
-    # Three forward petals biased toward +x so aim rotation stays readable.
+        rim_shift = 0.45 if distance > ring_radius else 0.08
+        contributions.append((ring, _lerp_color(CYAN_CORE, MAGENTA, rim_shift * progress)))
+    # A tight forward fan keeps the aim legible before the projectile clears
+    # the muzzle. This +x-authored silhouette rotates with the true aim.
     if distance > 1.0:
         theta = math.atan2(dy, dx)
-        for petal_angle in (-0.45, 0.0, 0.45):
+        for petal_angle in (-0.30, 0.0, 0.30):
             alignment = math.cos(theta - petal_angle)
             if alignment <= 0.0:
                 continue
             petal = (
-                alignment ** 22
-                * _glow(distance, ring_radius * 0.4, ring_radius + 12.0)
-                * fade
-                * 0.8
+                alignment ** 30
+                * _glow(distance, 7.0, 24.0 + 10.0 * fade)
+                * (0.25 + 0.75 * fade)
+                * 0.9
             )
             if petal > 0.0:
-                contributions.append((petal, _lerp_color(WHITE_HOT, CYAN_CORE, progress)))
+                contributions.append((petal, _lerp_color(WHITE_HOT, CYAN_CORE, 0.35 + 0.45 * progress)))
     return contributions
 
 
@@ -100,32 +104,40 @@ def _flight_contributions(x: float, y: float, phase: float) -> list:
     core_x = FLIGHT_CELL[0] / 2.0
     core_y = FLIGHT_CELL[1] / 2.0
     distance = math.hypot(x - core_x, y - core_y)
-    pulse = 0.9 + 0.1 * math.sin(phase)
+    pulse = 0.94 + 0.06 * math.sin(phase)
     contributions = []
-    core = _glow(distance, 3.0 * pulse, 7.0 * pulse)
+    # Keep the collision-center core near-white in every flight frame. The
+    # broad cyan body is deliberately secondary to that gameplay anchor.
+    core = _glow(distance, 4.0 * pulse, 8.0 * pulse)
     if core > 0.0:
-        contributions.append((core, WHITE_HOT))
-    body = _glow(distance, 6.0 * pulse, 15.0 * pulse) * 0.9
+        # Weight the white core above its translucent body so straight-alpha
+        # compositing preserves an actually white center instead of averaging
+        # it into cyan.
+        contributions.append((core * 3.5, WHITE_HOT))
+    body = _glow(distance, 7.0 * pulse, 14.0 * pulse) * 0.72
     if body > 0.0:
         contributions.append((body, CYAN_CORE))
-    rim = _band(distance, 13.0 * pulse, 3.0) * 0.35
+    rim = _band(distance, 12.5 * pulse, 2.2) * 0.25
     if rim > 0.0:
         contributions.append((rim, MAGENTA))
-    # Tapering trail behind the orb (toward -x); the runtime rotates the whole
-    # sprite so the trail always streams opposite the true flight direction.
-    if x < core_x:
-        tail = (core_x - x) / (core_x - 6.0)
-        if tail <= 1.0:
-            half_width = 8.0 * (1.0 - tail) ** 1.2 + 1.0
-            wave = 2.0 * math.sin(x / 9.0 + phase) * tail
-            lateral = 1.0 - abs(y - core_y - wave) / half_width
-            if lateral > 0.0:
-                ripple = 0.8 + 0.2 * math.sin(x / 5.0 - phase)
-                strength = lateral ** 1.8 * (1.0 - tail) ** 1.5 * 0.85 * ripple
-                edge = 1.0 - lateral
-                color = _lerp_color(CYAN_CORE, MAGENTA, 0.7 * tail + 0.3 * edge)
-                color = _lerp_color(color, CYAN_DEEP, tail * 0.4)
-                contributions.append((strength, color))
+    # Long, tapered +x-authored tail. It is made from a dense core streak plus
+    # two broken wisps, avoiding the former tiny smear at gameplay scale while
+    # leaving the leading half visually quiet. Runtime rotation keeps it behind
+    # all eight true launch directions.
+    if 14.0 <= x < core_x - 4.0:
+        tail = (core_x - 4.0 - x) / (core_x - 18.0)
+        half_width = 1.2 + 5.0 * (1.0 - tail) ** 0.7
+        wave = math.sin(x / 7.0 + phase) * (0.7 + 1.4 * tail)
+        lateral = 1.0 - abs(y - core_y - wave) / half_width
+        if lateral > 0.0:
+            strength = lateral ** 1.7 * (0.32 + 0.62 * (1.0 - tail))
+            contributions.append((strength, _lerp_color(CYAN_DEEP, CYAN_CORE, 1.0 - tail)))
+        # Magenta remains an intermittent thin fringe, never the tail body.
+        wisp_offset = 3.0 + 2.0 * tail
+        wisp = 1.0 - abs(abs(y - core_y) - wisp_offset) / 1.15
+        gaps = 0.45 + 0.55 * max(0.0, math.sin(x * 0.34 - phase))
+        if wisp > 0.0:
+            contributions.append((wisp ** 2 * (1.0 - tail) * 0.26 * gaps, MAGENTA))
     return contributions
 
 
@@ -136,36 +148,33 @@ def _impact_contributions(x: float, y: float, progress: float) -> list:
     distance = math.hypot(dx, dy)
     fade = 1.0 - progress
     contributions = []
-    # Collapsing detonation flash.
-    flash = _glow(distance, 14.0 * fade, 6.0 + 28.0 * fade) * fade ** 1.1
+    # White-hot contact flash, followed by a compact cyan body. The maximum
+    # radius remains inside the cell so impact never reads as a giant aura.
+    flash = _glow(distance, 5.0 + 13.0 * fade, 12.0 + 17.0 * fade) * (0.18 + 0.82 * fade)
     if flash > 0.0:
         contributions.append((flash, _lerp_color(CYAN_CORE, WHITE_HOT, fade)))
-    # Expanding shockwave ring, magenta on the outer edge.
-    ring_radius = 8.0 + 52.0 * progress
-    ring = _band(distance, ring_radius, 4.0 + 8.0 * fade) * fade ** 0.8
+    # A dense contained shock ring makes the hit read distinctly from cast.
+    ring_radius = 12.0 + 31.0 * progress
+    ring = _band(distance, ring_radius, 2.5 + 3.5 * fade) * fade ** 0.85
     if ring > 0.0:
-        rim_shift = 0.8 if distance > ring_radius else 0.2
+        rim_shift = 0.35 if distance > ring_radius else 0.08
         contributions.append((ring, _lerp_color(CYAN_CORE, MAGENTA, rim_shift * progress)))
-    # Eight radial spark spokes with corruption-tinted tips.
+    # Eight short radial sparks remain inside the shock ring's silhouette.
     if distance > 1.0:
         theta = math.atan2(dy, dx)
-        spoke_length = 20.0 + 60.0 * progress
+        spoke_length = 14.0 + 34.0 * progress
         for spoke_index in range(8):
-            spoke_angle = math.tau * (spoke_index + 0.5) / 8.0
+            spoke_angle = math.tau * (spoke_index + 0.5 + 0.12 * math.sin(progress * math.tau)) / 8.0
             alignment = math.cos(theta - spoke_angle)
             if alignment <= 0.0:
                 continue
-            radial = 1.0 - abs(distance - 0.8 * spoke_length) / (0.5 * spoke_length)
+            radial = 1.0 - abs(distance - 0.78 * spoke_length) / (0.3 * spoke_length)
             if radial <= 0.0:
                 continue
-            spoke = alignment ** 30 * radial * fade * 0.9
+            spoke = alignment ** 34 * radial * fade * 0.55
             if spoke > 0.0:
-                # Cyan-dominant sparks; magenta stays a late outer-tip fringe so
-                # the player burst never reads as threat-side corruption.
                 tip = min(1.0, distance / spoke_length)
-                contributions.append(
-                    (spoke, _lerp_color(CYAN_CORE, MAGENTA, tip * (0.25 + 0.5 * progress)))
-                )
+                contributions.append((spoke, _lerp_color(CYAN_CORE, MAGENTA, tip * 0.22 * progress)))
     return contributions
 
 
