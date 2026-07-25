@@ -1,17 +1,20 @@
 class_name PlayerHdPresentation
 extends Node2D
-## HD player display layer for issues #150/#165/#168. It mirrors the existing
+## HD player display layer for issues #150/#165/#168/#189. It mirrors the existing
 ## PlayerVisual state driver instead of taking ownership of movement, combat,
 ## collision, or health. The body texture is a four-cell directional atlas
 ## curated from non-commercial Flux prototype output; see
 ## assets/sprites/LICENSES.md before distributing it beyond this project. The
 ## steel weapon child (issues #168/#184) is deterministic CC0 art; its hand-
 ## anchored wind-up/contact/recovery is display-only and the CombatFxSpawner
-## slash stays the single slash FX owner.
+## slash stays the single slash FX owner. Issue #189 adds a deterministic body
+## pose atlas so melee visibly moves the HD body and arms as well as the weapon.
 
 const ATLAS_TEXTURE: Texture2D = preload("res://assets/sprites/player/hd/player_directional_atlas.png")
+const MELEE_ATLAS_TEXTURE: Texture2D = preload("res://assets/sprites/player/hd/player_melee_body_atlas.png")
 const HD_TEXTURE_FILTER: CanvasItem.TextureFilter = CanvasItem.TEXTURE_FILTER_LINEAR
 const ATLAS_CELL_SIZE: Vector2 = Vector2(256.0, 256.0)
+const MELEE_ATLAS_CELL_SIZE: Vector2 = Vector2(256.0, 256.0)
 ## Opaque art height inside every atlas cell (curation contract in
 ## tools/curate_player_directional_atlas.py); the rest is safe transparent border.
 const ATLAS_CONTENT_HEIGHT_PX: float = 190.0
@@ -23,6 +26,24 @@ const DIRECTION_ATLAS_COLUMNS: Dictionary[StringName, int] = {
 	&"south": 2,
 	&"west": 1,
 }
+## The authored melee atlas rows are north, west, south, east. They are full
+## cardinal poses, never runtime-flipped, so the body/arms agree with the live
+## facing even while the held atlas uses a different cell ordering.
+const MELEE_DIRECTION_ROWS: Dictionary[StringName, int] = {
+	&"north": 0,
+	&"west": 1,
+	&"south": 2,
+	&"east": 3,
+}
+const MELEE_WINDUP_COLUMN: int = 0
+const MELEE_CONTACT_COLUMN: int = 1
+const MELEE_RECOVERY_COLUMN: int = 2
+## These presentation phases partition, but never own or extend, the existing
+## PlayerMeleeAttack 0.12 second combat window.
+const MELEE_WINDOW_SECONDS: float = 0.12
+const MELEE_WINDUP_SECONDS: float = 0.04
+const MELEE_CONTACT_SECONDS: float = 0.04
+const MELEE_RECOVERY_SECONDS: float = 0.04
 const DISPLAY_HEIGHT_PX: float = 42.0
 const BODY_POSITION: Vector2 = Vector2(0.0, -10.0)
 const CONTACT_SHADOW_SCALE: Vector2 = Vector2(0.55, 0.18)
@@ -152,8 +173,41 @@ func _atlas_region_for(facing: StringName) -> Rect2:
 	return Rect2(Vector2(ATLAS_CELL_SIZE.x * float(column), 0.0), ATLAS_CELL_SIZE)
 
 
+func _melee_atlas_region_for(facing: StringName, phase_column: int) -> Rect2:
+	var row: int = MELEE_DIRECTION_ROWS.get(facing, MELEE_DIRECTION_ROWS[&"south"])
+	return Rect2(
+		Vector2(
+			MELEE_ATLAS_CELL_SIZE.x * float(phase_column),
+			MELEE_ATLAS_CELL_SIZE.y * float(row),
+		),
+		MELEE_ATLAS_CELL_SIZE,
+	)
+
+
 func _update_atlas_region() -> void:
+	if _is_active_melee_body():
+		_display_sprite.texture = MELEE_ATLAS_TEXTURE
+		_display_sprite.region_rect = _melee_atlas_region_for(
+			_legacy_visual.facing_label, _melee_phase_column(_state_elapsed)
+		)
+		return
+	_display_sprite.texture = ATLAS_TEXTURE
 	_display_sprite.region_rect = _atlas_region_for(_legacy_visual.facing_label)
+
+
+func _is_active_melee_body() -> bool:
+	return (
+		_animation_state == PlayerVisual.MELEE_ANIMATION
+		and _state_elapsed < MELEE_WINDOW_SECONDS
+	)
+
+
+func _melee_phase_column(state_elapsed: float) -> int:
+	if state_elapsed < MELEE_WINDUP_SECONDS:
+		return MELEE_WINDUP_COLUMN
+	if state_elapsed < MELEE_WINDUP_SECONDS + MELEE_CONTACT_SECONDS:
+		return MELEE_CONTACT_COLUMN
+	return MELEE_RECOVERY_COLUMN
 
 
 func _apply_state_pose() -> void:
