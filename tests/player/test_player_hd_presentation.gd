@@ -10,6 +10,7 @@ const MELEE_ATLAS_PATH: String = "res://assets/sprites/player/hd/player_melee_bo
 const RELIC_ATLAS_PATH: String = "res://assets/sprites/player/hd/player_relic_body_atlas.png"
 const PNG_SIGNATURE: PackedByteArray = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]
 const MINIMUM_MELEE_PHASE_MASK_DIFFERENCE: int = 1200
+const MINIMUM_ALIGNED_RECOVERY_MASK_DIFFERENCE: int = 700
 
 var _player: PlayerController
 var _legacy_visual: PlayerVisual
@@ -138,6 +139,11 @@ func test_melee_body_atlas_has_three_distinct_authored_poses_for_each_facing() -
 			MINIMUM_MELEE_PHASE_MASK_DIFFERENCE,
 			"Recovery must not repeat the wind-up silhouette.",
 		)
+		assert_gt(
+			_centroid_aligned_alpha_mask_difference(image, windup_region, recovery_region),
+			MINIMUM_ALIGNED_RECOVERY_MASK_DIFFERENCE,
+			"Recovery must change the body shape, not merely translate wind-up.",
+		)
 		var windup_bounds: Rect2i = _opaque_bounds(image, windup_region)
 		var contact_bounds: Rect2i = _opaque_bounds(image, contact_region)
 		match row:
@@ -153,6 +159,25 @@ func test_melee_body_atlas_has_three_distinct_authored_poses_for_each_facing() -
 			3:
 				assert_gt(contact_bounds.end.x - 256, windup_bounds.end.x + 8,
 					"East contact must lunge visibly east of wind-up.")
+
+
+func test_recovery_shape_check_rejects_a_translated_windup_copy() -> void:
+	var atlas: Image = PlayerHdPresentation.MELEE_ATLAS_TEXTURE.get_image()
+	var comparison := Image.create(512, 256, false, Image.FORMAT_RGBA8)
+	var windup_region := Rect2i(0, 0, 256, 256)
+	var recovery_region := Rect2i(256, 0, 256, 256)
+	comparison.blit_rect(atlas, windup_region, Vector2i.ZERO)
+	comparison.blit_rect(atlas, windup_region, Vector2i(261, 0))
+	assert_gt(
+		_alpha_mask_difference(comparison, windup_region, recovery_region),
+		MINIMUM_MELEE_PHASE_MASK_DIFFERENCE,
+		"The old unaligned comparison demonstrates the five-pixel translation loophole.",
+	)
+	assert_lt(
+		_centroid_aligned_alpha_mask_difference(comparison, windup_region, recovery_region),
+		MINIMUM_ALIGNED_RECOVERY_MASK_DIFFERENCE,
+		"Alignment compensation must reject a translated copy as the same body shape.",
+	)
 
 
 func test_melee_body_uses_windup_contact_recovery_and_returns_at_the_existing_window() -> void:
@@ -253,6 +278,40 @@ func test_real_player_relic_event_drives_body_pose_without_changing_bolt_contrac
 	assert_eq(display.texture, HD_ATLAS)
 	assert_eq(_player.energy.current_energy, energy_before - _player.energy_bolt_cost)
 	assert_eq(_player.energy_bolt_damage, 1)
+
+
+func _centroid_aligned_alpha_mask_difference(
+	image: Image, first: Rect2i, second: Rect2i
+) -> int:
+	var first_centroid: Vector2 = _opaque_centroid(image, first)
+	var second_centroid: Vector2 = _opaque_centroid(image, second)
+	var second_shift := Vector2i(
+		roundi(first_centroid.x - second_centroid.x),
+		roundi(first_centroid.y - second_centroid.y),
+	)
+	var difference: int = 0
+	for y: int in first.size.y:
+		for x: int in first.size.x:
+			var first_offset := Vector2i(x, y)
+			var second_offset: Vector2i = first_offset - second_shift
+			var first_opaque: bool = image.get_pixelv(first.position + first_offset).a > 0.05
+			var second_opaque: bool = false
+			if Rect2i(Vector2i.ZERO, second.size).has_point(second_offset):
+				second_opaque = image.get_pixelv(second.position + second_offset).a > 0.05
+			if first_opaque != second_opaque:
+				difference += 1
+	return difference
+
+
+func _opaque_centroid(image: Image, region: Rect2i) -> Vector2:
+	var total := Vector2.ZERO
+	var count: int = 0
+	for y: int in region.size.y:
+		for x: int in region.size.x:
+			if image.get_pixel(region.position.x + x, region.position.y + y).a > 0.05:
+				total += Vector2(x, y)
+				count += 1
+	return total / float(count)
 
 
 func _alpha_mask_difference(image: Image, first: Rect2i, second: Rect2i) -> int:
