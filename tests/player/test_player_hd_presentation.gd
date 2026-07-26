@@ -25,6 +25,11 @@ func before_each() -> void:
 func after_each() -> void:
 	for projectile: Node in get_tree().get_nodes_in_group(EnergyBolt.PROJECTILE_GROUP):
 		projectile.free()
+	# A real relic cast also creates the self-cleaning cast fork directly under
+	# this test root. Tests assert immediate body state, not its visual lifetime.
+	for child: Node in get_children():
+		if child is AnimatedSprite2D:
+			child.free()
 
 
 func test_hd_presentation_hides_only_the_legacy_display_driver() -> void:
