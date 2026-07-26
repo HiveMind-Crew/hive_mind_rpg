@@ -7,6 +7,7 @@ const PLAYER_SCENE: PackedScene = preload("res://scenes/player/player.tscn")
 const ATLAS_PATH: String = "res://assets/sprites/player/hd/player_directional_atlas.png"
 const HD_ATLAS: Texture2D = preload("res://assets/sprites/player/hd/player_directional_atlas.png")
 const MELEE_ATLAS_PATH: String = "res://assets/sprites/player/hd/player_melee_body_atlas.png"
+const RELIC_ATLAS_PATH: String = "res://assets/sprites/player/hd/player_relic_body_atlas.png"
 const PNG_SIGNATURE: PackedByteArray = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]
 
 var _player: PlayerController
@@ -19,6 +20,16 @@ func before_each() -> void:
 	add_child_autofree(_player)
 	_legacy_visual = _player.get_node("Body") as PlayerVisual
 	_presentation = _player.get_node("HdPresentation") as PlayerHdPresentation
+
+
+func after_each() -> void:
+	for projectile: Node in get_tree().get_nodes_in_group(EnergyBolt.PROJECTILE_GROUP):
+		projectile.free()
+	# A real relic cast also creates the self-cleaning cast fork directly under
+	# this test root. Tests assert immediate body state, not its visual lifetime.
+	for child: Node in get_children():
+		if child is AnimatedSprite2D:
+			child.free()
 
 
 func test_hd_presentation_hides_only_the_legacy_display_driver() -> void:
@@ -152,6 +163,62 @@ func test_real_player_melee_event_drives_the_body_pose_without_extending_combat(
 	assert_eq(display.texture, PlayerHdPresentation.MELEE_ATLAS_TEXTURE)
 	_presentation._process(_player.melee_duration)
 	assert_eq(display.texture, HD_ATLAS)
+
+
+func test_relic_body_atlas_has_three_authored_cardinal_cast_poses() -> void:
+	var relic_atlas: Texture2D = load(RELIC_ATLAS_PATH) as Texture2D
+	assert_not_null(relic_atlas, "Issue #193 requires a dedicated HD body relic atlas.")
+	if relic_atlas == null:
+		return
+	var file: FileAccess = FileAccess.open(RELIC_ATLAS_PATH, FileAccess.READ)
+	assert_not_null(file)
+	if file == null:
+		return
+	assert_eq(file.get_buffer(PNG_SIGNATURE.size()), PNG_SIGNATURE)
+	file.close()
+	assert_eq(Vector2i(relic_atlas.get_width(), relic_atlas.get_height()), Vector2i(768, 1024))
+	var image: Image = relic_atlas.get_image()
+	for row: int in PlayerHdPresentation.RELIC_DIRECTION_ROWS.size():
+		var charge: int = _opaque_pixel_count(image, Rect2i(0, row * 256, 256, 256))
+		var release: int = _opaque_pixel_count(image, Rect2i(256, row * 256, 256, 256))
+		var recovery: int = _opaque_pixel_count(image, Rect2i(512, row * 256, 256, 256))
+		assert_gt(charge, 0, "Each facing needs a charge pose.")
+		assert_gt(release, 0, "Each facing needs a release pose.")
+		assert_gt(recovery, 0, "Each facing needs a recovery pose.")
+		assert_ne(charge, release, "Release must be a new silhouette, not a relabeled charge cell.")
+
+
+func test_relic_body_uses_charge_release_recovery_and_returns_at_existing_clip_window() -> void:
+	var display: Sprite2D = _presentation.get_display_sprite()
+	var directions: Array[Vector2] = [Vector2.UP, Vector2.RIGHT, Vector2.DOWN, Vector2.LEFT]
+	for direction: Vector2 in directions:
+		_legacy_visual.play_relic(direction)
+		_presentation._process(0.0)
+		assert_eq(display.texture, PlayerHdPresentation.RELIC_ATLAS_TEXTURE)
+		assert_eq(display.region_rect, _presentation._relic_atlas_region_for(
+			_legacy_visual.facing_label, PlayerHdPresentation.RELIC_CHARGE_COLUMN))
+		_presentation._process(PlayerHdPresentation.RELIC_CHARGE_SECONDS)
+		assert_eq(display.region_rect, _presentation._relic_atlas_region_for(
+			_legacy_visual.facing_label, PlayerHdPresentation.RELIC_RELEASE_COLUMN))
+		_presentation._process(PlayerHdPresentation.RELIC_RELEASE_SECONDS)
+		assert_eq(display.region_rect, _presentation._relic_atlas_region_for(
+			_legacy_visual.facing_label, PlayerHdPresentation.RELIC_RECOVERY_COLUMN))
+		_presentation._process(PlayerHdPresentation.RELIC_RECOVERY_SECONDS)
+		assert_eq(display.texture, HD_ATLAS)
+		_legacy_visual._on_clip_finished()
+
+
+func test_real_player_relic_event_drives_body_pose_without_changing_bolt_contract() -> void:
+	var display: Sprite2D = _presentation.get_display_sprite()
+	var energy_before: float = _player.energy.current_energy
+	assert_true(_player.try_relic_ability())
+	assert_eq(_legacy_visual.animation_name, PlayerVisual.RELIC_ANIMATION)
+	_presentation._process(0.0)
+	assert_eq(display.texture, PlayerHdPresentation.RELIC_ATLAS_TEXTURE)
+	_presentation._process(PlayerHdPresentation.RELIC_WINDOW_SECONDS)
+	assert_eq(display.texture, HD_ATLAS)
+	assert_eq(_player.energy.current_energy, energy_before - _player.energy_bolt_cost)
+	assert_eq(_player.energy_bolt_damage, 1)
 
 
 func _opaque_pixel_count(image: Image, region: Rect2i) -> int:
