@@ -56,7 +56,7 @@ func test_relic_cast_and_impact_are_linear_filtered_one_shots() -> void:
 	var parent: Node2D = Node2D.new()
 	add_child_autofree(parent)
 	CombatFxSpawner.spawn_relic_cast(parent, Vector2.ZERO, Vector2.RIGHT)
-	CombatFxSpawner.spawn_relic_impact(parent, Vector2.ZERO)
+	CombatFxSpawner.spawn_relic_impact(parent, Vector2.ZERO, Vector2.DOWN)
 	var cast: AnimatedSprite2D = parent.get_child(0) as AnimatedSprite2D
 	var impact: AnimatedSprite2D = parent.get_child(1) as AnimatedSprite2D
 	assert_not_null(cast)
@@ -67,32 +67,35 @@ func test_relic_cast_and_impact_are_linear_filtered_one_shots() -> void:
 	assert_eq(impact.sprite_frames.get_frame_count(CombatFxSpawner.RELIC_IMPACT), 6)
 	assert_false(impact.sprite_frames.get_animation_loop(CombatFxSpawner.RELIC_IMPACT))
 	assert_eq(impact.texture_filter, CanvasItem.TEXTURE_FILTER_LINEAR)
-	assert_eq(impact.rotation, 0.0)
+	assert_almost_eq(impact.rotation, Vector2.DOWN.angle(), 0.0001)
 
 
-func test_relic_lightning_sheet_keeps_a_centered_charge_knot_branching_trail_and_contained_impact() -> void:
+func test_relic_lightning_sheet_has_no_orb_knot_and_uses_directional_impact() -> void:
 	var image: Image = RELIC_LIGHTNING_TEXTURE.get_image()
-	# The exact collision center stays a bright visual anchor in every looping
-	# frame, but the authored silhouette must be an angular bolt with branching
-	# rearward energy — not the retired circular orb and halo.
+	# The collision center lies on a thin white-hot shaft, not inside a filled orb.
 	for frame: int in CombatFxSpawner.RELIC_FLIGHT_FRAMES:
 		var origin: Vector2i = Vector2i(frame * CombatFxSpawner.RELIC_FLIGHT_CELL.x, CombatFxSpawner.RELIC_FLIGHT_ROW_Y)
-		var core: Color = image.get_pixelv(origin + Vector2i(64, 32))
-		assert_gt(core.a, 0.95, "Flight frame %d keeps an opaque core at collision center." % frame)
-		assert_gt(core.r, 0.8, "Flight frame %d keeps the core white-hot." % frame)
+		var center: Color = image.get_pixelv(origin + Vector2i(64, 32))
+		assert_gt(center.a, 0.95, "Flight frame %d crosses the collision center." % frame)
+		var center_fill: int = _high_alpha_pixel_count(image, Rect2i(origin + Vector2i(57, 25), Vector2i(15, 15)))
+		assert_lt(center_fill, 90, "Flight frame %d must not rebuild a filled circular knot." % frame)
 		var rear_pixels: int = _opaque_pixel_count(image, Rect2i(origin + Vector2i(14, 18), Vector2i(44, 28)))
 		var lead_pixels: int = _opaque_pixel_count(image, Rect2i(origin + Vector2i(78, 18), Vector2i(36, 28)))
-		assert_gt(rear_pixels, 200, "Flight frame %d has a substantial rearward lightning trail." % frame)
-		assert_gt(lead_pixels, 120, "Flight frame %d keeps an angular lightning head ahead of collision center." % frame)
-	# The impact dissipates inside its atlas cell rather than touching an edge.
+		assert_gt(rear_pixels, 200, "Flight frame %d has a substantial jagged rear shaft." % frame)
+		assert_gt(lead_pixels, 120, "Flight frame %d has an elongated leading tip." % frame)
+	# Impact is strongly forward-weighted instead of radially symmetric, and
+	# dissipates inside each atlas cell.
 	for frame: int in CombatFxSpawner.RELIC_IMPACT_FRAMES:
 		var impact_origin: Vector2i = Vector2i(frame * CombatFxSpawner.RELIC_IMPACT_CELL.x, CombatFxSpawner.RELIC_IMPACT_ROW_Y)
+		var forward: int = _opaque_pixel_count(image, Rect2i(impact_origin + Vector2i(64, 20), Vector2i(55, 88)))
+		var rear: int = _opaque_pixel_count(image, Rect2i(impact_origin + Vector2i(9, 20), Vector2i(51, 88)))
+		assert_gt(float(forward), float(rear) * 1.6, "Impact frame %d must remain directional, not radial." % frame)
 		assert_eq(_opaque_pixel_count(image, Rect2i(impact_origin, Vector2i(128, 6))), 0)
 		assert_eq(_opaque_pixel_count(image, Rect2i(impact_origin + Vector2i(0, 122), Vector2i(128, 6))), 0)
 		assert_eq(_opaque_pixel_count(image, Rect2i(impact_origin, Vector2i(6, 128))), 0)
 		assert_eq(_opaque_pixel_count(image, Rect2i(impact_origin + Vector2i(122, 0), Vector2i(6, 128))), 0)
 		assert_gt(_magenta_pixel_count(image, Rect2i(impact_origin, Vector2i(128, 128))), 6,
-			"Impact frame %d retains its magenta charged fragments." % frame)
+			"Impact frame %d retains forward-swept magenta fragments." % frame)
 
 
 func test_relic_cast_rotation_is_truthful_for_all_eight_directions() -> void:
@@ -170,6 +173,15 @@ func _magenta_pixel_count(image: Image, region: Rect2i) -> int:
 		for x: int in region.size.x:
 			var color: Color = image.get_pixelv(region.position + Vector2i(x, y))
 			if color.a > 0.0 and color.r > color.g * 1.2 and color.b > color.g * 1.1:
+				count += 1
+	return count
+
+
+func _high_alpha_pixel_count(image: Image, region: Rect2i) -> int:
+	var count: int = 0
+	for y: int in region.size.y:
+		for x: int in region.size.x:
+			if image.get_pixelv(region.position + Vector2i(x, y)).a >= 0.86:
 				count += 1
 	return count
 

@@ -19,10 +19,10 @@ const RELIC_IMPACT_FPS: float = 20.0
 const QUARTER_TURN: float = PI / 2.0
 
 # Stylized-HD relic-lightning sheet layout (assets/sprites/generate_relic_lightning_fx.py):
-# cast 6×96×96 at y=0, flight 4×128×64 at y=96 (the compact charge knot is
-# centered exactly on collision while the angular branch/trail extends toward
-# -x), impact 6×128×128 at y=160. Frames are authored facing +x and rotate to
-# the true launch direction at runtime.
+# cast 6×96×96 at y=0, flight 4×128×64 at y=96 (a thin jagged shaft crosses
+# the collision center with no filled knot), impact 6×128×128 at y=160 with a
+# forward-weighted slash/fork silhouette. Frames are authored facing +x and
+# rotate to the true launch direction at runtime.
 const RELIC_CAST_CELL: Vector2i = Vector2i(96, 96)
 const RELIC_CAST_FRAMES: int = 6
 const RELIC_FLIGHT_CELL: Vector2i = Vector2i(128, 64)
@@ -31,11 +31,11 @@ const RELIC_FLIGHT_ROW_Y: int = 96
 const RELIC_IMPACT_CELL: Vector2i = Vector2i(128, 128)
 const RELIC_IMPACT_FRAMES: int = 6
 const RELIC_IMPACT_ROW_Y: int = 160
-# Display contracts at the shipped 2× camera: ≈29 px peak cast flare, ≈11 px
-# orb core with a ≈21 px trail, ≈36 px peak impact burst.
+# Display contracts at the shipped 2× camera: ≈29 px peak cast flare, a
+# clearly readable elongated lightning shaft, and a compact directional impact.
 const RELIC_CAST_SCALE: float = 0.35
-const RELIC_FLIGHT_SCALE: float = 0.36
-const RELIC_IMPACT_SCALE: float = 0.3
+const RELIC_FLIGHT_SCALE: float = 0.42
+const RELIC_IMPACT_SCALE: float = 0.33
 const HD_TEXTURE_FILTER: CanvasItem.TextureFilter = CanvasItem.TEXTURE_FILTER_LINEAR
 
 # Stylized-HD combat sheet layout (assets/sprites/generate_combat_fx_hd.py):
@@ -90,9 +90,15 @@ static func spawn_relic_cast(parent: Node, position: Vector2, direction: Vector2
 	)
 
 
-static func spawn_relic_impact(parent: Node, position: Vector2) -> void:
+static func spawn_relic_impact(parent: Node, position: Vector2, direction: Vector2) -> void:
 	_spawn(
-		parent, position, _relic_impact_frames(), RELIC_IMPACT, 0.0, HD_TEXTURE_FILTER, RELIC_IMPACT_SCALE
+		parent,
+		position,
+		_relic_impact_frames(),
+		RELIC_IMPACT,
+		_true_rotation(direction),
+		HD_TEXTURE_FILTER,
+		RELIC_IMPACT_SCALE
 	)
 
 

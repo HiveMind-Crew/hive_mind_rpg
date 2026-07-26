@@ -1,5 +1,5 @@
 extends GutTest
-## Focused issues #169/#190 coverage: the stylized-HD relic-lightning
+## Focused issues #169/#190/#196 coverage: the stylized-HD relic-lightning
 ## presentation must be driven by the real EnergyBolt/PlayerController pathways only — truthful
 ## launch rotation, cast strictly after a real spawn, one impact per bolt, and
 ## no mechanics drift on the scene-authored projectile contract.
@@ -59,7 +59,7 @@ func test_blocked_cast_spawns_no_bolt_and_no_fake_presentation() -> void:
 	assert_eq(_find_fx(CombatFxSpawner.RELIC_IMPACT).size(), 0)
 
 
-func test_flight_visual_rotation_is_truthful_for_all_eight_launch_directions() -> void:
+func test_flight_and_impact_rotation_are_truthful_for_all_eight_launch_directions() -> void:
 	for direction: Vector2 in EIGHT_DIRECTIONS:
 		_energy.regenerate(_energy.max_energy)
 		_player._movement.update(direction, false, 0.016)
@@ -77,7 +77,13 @@ func test_flight_visual_rotation_is_truthful_for_all_eight_launch_directions() -
 		assert_true(flight.is_playing())
 		assert_almost_eq(flight.rotation, expected.angle(), 0.0001)
 		assert_eq(flight.texture_filter, CanvasItem.TEXTURE_FILTER_LINEAR)
-		bolt.free()
+		bolt._end()
+		var impacts: Array[AnimatedSprite2D] = _find_fx(CombatFxSpawner.RELIC_IMPACT)
+		assert_eq(impacts.size(), 1)
+		assert_almost_eq(impacts[0].rotation, expected.angle(), 0.0001,
+			"impact must preserve the bolt's launch direction")
+		impacts[0].free()
+		await get_tree().process_frame
 
 
 func test_ending_a_bolt_spawns_exactly_one_impact_burst() -> void:
