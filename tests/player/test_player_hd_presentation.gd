@@ -10,7 +10,9 @@ const MELEE_ATLAS_PATH: String = "res://assets/sprites/player/hd/player_melee_bo
 const RELIC_ATLAS_PATH: String = "res://assets/sprites/player/hd/player_relic_body_atlas.png"
 const PNG_SIGNATURE: PackedByteArray = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]
 const MINIMUM_MELEE_PHASE_MASK_DIFFERENCE: int = 1200
-const MINIMUM_ALIGNED_RECOVERY_MASK_DIFFERENCE: int = 700
+const MINIMUM_ALIGNED_RECOVERY_MASK_DIFFERENCE: int = 600
+const SUBSTANTIVE_ALPHA_CUTOFF: float = 0.5
+const ALIGNMENT_SEARCH_RADIUS: int = 6
 
 var _player: PlayerController
 var _legacy_visual: PlayerVisual
@@ -140,7 +142,7 @@ func test_melee_body_atlas_has_three_distinct_authored_poses_for_each_facing() -
 			"Recovery must not repeat the wind-up silhouette.",
 		)
 		assert_gt(
-			_centroid_aligned_alpha_mask_difference(image, windup_region, recovery_region),
+			_minimum_aligned_alpha_mask_difference(image, windup_region, recovery_region),
 			MINIMUM_ALIGNED_RECOVERY_MASK_DIFFERENCE,
 			"Recovery must change the body shape, not merely translate wind-up.",
 		)
@@ -168,15 +170,16 @@ func test_recovery_shape_check_rejects_a_translated_windup_copy() -> void:
 	var recovery_region := Rect2i(256, 0, 256, 256)
 	comparison.blit_rect(atlas, windup_region, Vector2i.ZERO)
 	comparison.blit_rect(atlas, windup_region, Vector2i(261, 0))
+	comparison.fill_rect(Rect2i(266, 10, 11, 11), Color.WHITE)
 	assert_gt(
 		_alpha_mask_difference(comparison, windup_region, recovery_region),
 		MINIMUM_MELEE_PHASE_MASK_DIFFERENCE,
 		"The old unaligned comparison demonstrates the five-pixel translation loophole.",
 	)
 	assert_lt(
-		_centroid_aligned_alpha_mask_difference(comparison, windup_region, recovery_region),
+		_minimum_aligned_alpha_mask_difference(comparison, windup_region, recovery_region),
 		MINIMUM_ALIGNED_RECOVERY_MASK_DIFFERENCE,
-		"Alignment compensation must reject a translated copy as the same body shape.",
+		"Translation search must reject a shifted copy with a small disconnected noise patch.",
 	)
 
 
@@ -280,38 +283,51 @@ func test_real_player_relic_event_drives_body_pose_without_changing_bolt_contrac
 	assert_eq(_player.energy_bolt_damage, 1)
 
 
-func _centroid_aligned_alpha_mask_difference(
+func _minimum_aligned_alpha_mask_difference(
 	image: Image, first: Rect2i, second: Rect2i
 ) -> int:
-	var first_centroid: Vector2 = _opaque_centroid(image, first)
-	var second_centroid: Vector2 = _opaque_centroid(image, second)
-	var second_shift := Vector2i(
-		roundi(first_centroid.x - second_centroid.x),
-		roundi(first_centroid.y - second_centroid.y),
+	var first_points: Array[Vector2i] = _substantive_alpha_points(image, first)
+	var second_points: Array[Vector2i] = _substantive_alpha_points(image, second)
+	var first_center: Vector2 = _point_centroid(first_points)
+	var second_center: Vector2 = _point_centroid(second_points)
+	var estimated_shift := Vector2i(
+		roundi(first_center.x - second_center.x),
+		roundi(first_center.y - second_center.y),
 	)
-	var difference: int = 0
-	for y: int in first.size.y:
-		for x: int in first.size.x:
-			var first_offset := Vector2i(x, y)
-			var second_offset: Vector2i = first_offset - second_shift
-			var first_opaque: bool = image.get_pixelv(first.position + first_offset).a > 0.05
-			var second_opaque: bool = false
-			if Rect2i(Vector2i.ZERO, second.size).has_point(second_offset):
-				second_opaque = image.get_pixelv(second.position + second_offset).a > 0.05
-			if first_opaque != second_opaque:
-				difference += 1
-	return difference
+	var local_bounds := Rect2i(Vector2i.ZERO, first.size)
+	var minimum_difference: int = first.size.x * first.size.y
+	for search_y: int in range(-ALIGNMENT_SEARCH_RADIUS, ALIGNMENT_SEARCH_RADIUS + 1):
+		for search_x: int in range(-ALIGNMENT_SEARCH_RADIUS, ALIGNMENT_SEARCH_RADIUS + 1):
+			var shift: Vector2i = estimated_shift + Vector2i(search_x, search_y)
+			var intersection: int = 0
+			for point: Vector2i in first_points:
+				var second_point: Vector2i = point - shift
+				if local_bounds.has_point(second_point):
+					if image.get_pixelv(second.position + second_point).a > SUBSTANTIVE_ALPHA_CUTOFF:
+						intersection += 1
+			var shifted_second_count: int = 0
+			for point: Vector2i in second_points:
+				if local_bounds.has_point(point + shift):
+					shifted_second_count += 1
+			var difference: int = first_points.size() + shifted_second_count - 2 * intersection
+			minimum_difference = mini(minimum_difference, difference)
+	return minimum_difference
 
 
-func _opaque_centroid(image: Image, region: Rect2i) -> Vector2:
-	var total := Vector2.ZERO
-	var count: int = 0
+func _substantive_alpha_points(image: Image, region: Rect2i) -> Array[Vector2i]:
+	var points: Array[Vector2i] = []
 	for y: int in region.size.y:
 		for x: int in region.size.x:
-			if image.get_pixel(region.position.x + x, region.position.y + y).a > 0.05:
-				total += Vector2(x, y)
-				count += 1
-	return total / float(count)
+			if image.get_pixel(region.position.x + x, region.position.y + y).a > SUBSTANTIVE_ALPHA_CUTOFF:
+				points.append(Vector2i(x, y))
+	return points
+
+
+func _point_centroid(points: Array[Vector2i]) -> Vector2:
+	var total := Vector2.ZERO
+	for point: Vector2i in points:
+		total += Vector2(point)
+	return total / float(points.size())
 
 
 func _alpha_mask_difference(image: Image, first: Rect2i, second: Rect2i) -> int:

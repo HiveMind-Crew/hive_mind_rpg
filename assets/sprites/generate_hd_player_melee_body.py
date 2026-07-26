@@ -115,6 +115,11 @@ def _draw_cell(facing_name: str, phase: str) -> Image.Image:
     # Both arms converge on a hand anchor displaced along the live facing.
     shoulders = ((cx-25.0, cy-20.0), (cx+25.0, cy-20.0))
     hand_center = _add((cx, cy-9.0), facing, hand_reach)
+    # Recovery follows through across the body instead of translating the
+    # anticipation silhouette toward the target. This preserves a visibly
+    # distinct top-down shape after camera scaling and directional alignment.
+    if phase == "recovery":
+        hand_center = _offset(hand_center, right, 55.0)
     hands = (_offset(hand_center, right, -hand_spread * 0.5), _offset(hand_center, right, hand_spread * 0.5))
     for shoulder, hand in zip(shoulders, hands):
         elbow = ((shoulder[0] + hand[0]) * 0.52, (shoulder[1] + hand[1]) * 0.52)
