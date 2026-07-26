@@ -113,12 +113,30 @@ func test_melee_body_atlas_has_three_distinct_authored_poses_for_each_facing() -
 	)
 	var image: Image = melee_atlas.get_image()
 	for row: int in PlayerHdPresentation.MELEE_DIRECTION_ROWS.size():
-		var windup: int = _opaque_pixel_count(image, Rect2i(0, row * 256, 256, 256))
-		var contact: int = _opaque_pixel_count(image, Rect2i(256, row * 256, 256, 256))
-		var recovery: int = _opaque_pixel_count(image, Rect2i(512, row * 256, 256, 256))
+		var windup_region := Rect2i(0, row * 256, 256, 256)
+		var contact_region := Rect2i(256, row * 256, 256, 256)
+		var recovery_region := Rect2i(512, row * 256, 256, 256)
+		var windup: int = _opaque_pixel_count(image, windup_region)
+		var contact: int = _opaque_pixel_count(image, contact_region)
+		var recovery: int = _opaque_pixel_count(image, recovery_region)
 		assert_gt(windup, 0, "Each facing needs an authored body/arm wind-up silhouette.")
-		assert_gt(contact, windup, "Contact must visibly extend the body/arms into the strike.")
+		assert_gt(contact, 0, "Contact needs an authored committed-lunge silhouette.")
 		assert_gt(recovery, 0, "Recovery must remain an authored pose, not a static-body pop.")
+		var windup_bounds: Rect2i = _opaque_bounds(image, windup_region)
+		var contact_bounds: Rect2i = _opaque_bounds(image, contact_region)
+		match row:
+			0:
+				assert_lt(contact_bounds.position.y, windup_bounds.position.y - 8,
+					"North contact must lunge visibly north of wind-up.")
+			1:
+				assert_lt(contact_bounds.position.x - 256, windup_bounds.position.x - 8,
+					"West contact must lunge visibly west of wind-up.")
+			2:
+				assert_gt(contact_bounds.end.y, windup_bounds.end.y + 8,
+					"South contact must lunge visibly south of wind-up.")
+			3:
+				assert_gt(contact_bounds.end.x - 256, windup_bounds.end.x + 8,
+					"East contact must lunge visibly east of wind-up.")
 
 
 func test_melee_body_uses_windup_contact_recovery_and_returns_at_the_existing_window() -> void:
@@ -219,6 +237,25 @@ func test_real_player_relic_event_drives_body_pose_without_changing_bolt_contrac
 	assert_eq(display.texture, HD_ATLAS)
 	assert_eq(_player.energy.current_energy, energy_before - _player.energy_bolt_cost)
 	assert_eq(_player.energy_bolt_damage, 1)
+
+
+func _opaque_bounds(image: Image, region: Rect2i) -> Rect2i:
+	var minimum: Vector2i = region.end
+	var maximum: Vector2i = region.position
+	var found: bool = false
+	for y: int in region.size.y:
+		for x: int in region.size.x:
+			var point: Vector2i = region.position + Vector2i(x, y)
+			if image.get_pixelv(point).a <= 0.05:
+				continue
+			found = true
+			minimum.x = mini(minimum.x, point.x)
+			minimum.y = mini(minimum.y, point.y)
+			maximum.x = maxi(maximum.x, point.x)
+			maximum.y = maxi(maximum.y, point.y)
+	if not found:
+		return Rect2i(region.position, Vector2i.ZERO)
+	return Rect2i(minimum, maximum - minimum + Vector2i.ONE)
 
 
 func _opaque_pixel_count(image: Image, region: Rect2i) -> int:
