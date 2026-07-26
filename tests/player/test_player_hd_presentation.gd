@@ -9,6 +9,7 @@ const HD_ATLAS: Texture2D = preload("res://assets/sprites/player/hd/player_direc
 const MELEE_ATLAS_PATH: String = "res://assets/sprites/player/hd/player_melee_body_atlas.png"
 const RELIC_ATLAS_PATH: String = "res://assets/sprites/player/hd/player_relic_body_atlas.png"
 const PNG_SIGNATURE: PackedByteArray = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]
+const MINIMUM_MELEE_PHASE_MASK_DIFFERENCE: int = 1200
 
 var _player: PlayerController
 var _legacy_visual: PlayerVisual
@@ -122,6 +123,21 @@ func test_melee_body_atlas_has_three_distinct_authored_poses_for_each_facing() -
 		assert_gt(windup, 0, "Each facing needs an authored body/arm wind-up silhouette.")
 		assert_gt(contact, 0, "Contact needs an authored committed-lunge silhouette.")
 		assert_gt(recovery, 0, "Recovery must remain an authored pose, not a static-body pop.")
+		assert_gt(
+			_alpha_mask_difference(image, windup_region, contact_region),
+			MINIMUM_MELEE_PHASE_MASK_DIFFERENCE,
+			"Wind-up and contact must have materially different silhouettes.",
+		)
+		assert_gt(
+			_alpha_mask_difference(image, contact_region, recovery_region),
+			MINIMUM_MELEE_PHASE_MASK_DIFFERENCE,
+			"Contact and recovery must have materially different silhouettes.",
+		)
+		assert_gt(
+			_alpha_mask_difference(image, windup_region, recovery_region),
+			MINIMUM_MELEE_PHASE_MASK_DIFFERENCE,
+			"Recovery must not repeat the wind-up silhouette.",
+		)
 		var windup_bounds: Rect2i = _opaque_bounds(image, windup_region)
 		var contact_bounds: Rect2i = _opaque_bounds(image, contact_region)
 		match row:
@@ -237,6 +253,18 @@ func test_real_player_relic_event_drives_body_pose_without_changing_bolt_contrac
 	assert_eq(display.texture, HD_ATLAS)
 	assert_eq(_player.energy.current_energy, energy_before - _player.energy_bolt_cost)
 	assert_eq(_player.energy_bolt_damage, 1)
+
+
+func _alpha_mask_difference(image: Image, first: Rect2i, second: Rect2i) -> int:
+	var difference: int = 0
+	for y: int in first.size.y:
+		for x: int in first.size.x:
+			var offset := Vector2i(x, y)
+			var first_opaque: bool = image.get_pixelv(first.position + offset).a > 0.05
+			var second_opaque: bool = image.get_pixelv(second.position + offset).a > 0.05
+			if first_opaque != second_opaque:
+				difference += 1
+	return difference
 
 
 func _opaque_bounds(image: Image, region: Rect2i) -> Rect2i:
