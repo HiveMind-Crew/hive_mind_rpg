@@ -56,7 +56,7 @@ func test_relic_cast_and_impact_are_linear_filtered_one_shots() -> void:
 	var parent: Node2D = Node2D.new()
 	add_child_autofree(parent)
 	CombatFxSpawner.spawn_relic_cast(parent, Vector2.ZERO, Vector2.RIGHT)
-	CombatFxSpawner.spawn_relic_impact(parent, Vector2.ZERO)
+	CombatFxSpawner.spawn_relic_impact(parent, Vector2.ZERO, Vector2.DOWN)
 	var cast: AnimatedSprite2D = parent.get_child(0) as AnimatedSprite2D
 	var impact: AnimatedSprite2D = parent.get_child(1) as AnimatedSprite2D
 	assert_not_null(cast)
@@ -67,7 +67,7 @@ func test_relic_cast_and_impact_are_linear_filtered_one_shots() -> void:
 	assert_eq(impact.sprite_frames.get_frame_count(CombatFxSpawner.RELIC_IMPACT), 6)
 	assert_false(impact.sprite_frames.get_animation_loop(CombatFxSpawner.RELIC_IMPACT))
 	assert_eq(impact.texture_filter, CanvasItem.TEXTURE_FILTER_LINEAR)
-	assert_eq(impact.rotation, 0.0)
+	assert_almost_eq(impact.rotation, Vector2.DOWN.angle(), 0.0001)
 
 
 func test_relic_lightning_sheet_has_no_orb_knot_and_uses_directional_impact() -> void:

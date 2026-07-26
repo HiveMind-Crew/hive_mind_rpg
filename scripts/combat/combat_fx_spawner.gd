@@ -90,9 +90,15 @@ static func spawn_relic_cast(parent: Node, position: Vector2, direction: Vector2
 	)
 
 
-static func spawn_relic_impact(parent: Node, position: Vector2) -> void:
+static func spawn_relic_impact(parent: Node, position: Vector2, direction: Vector2) -> void:
 	_spawn(
-		parent, position, _relic_impact_frames(), RELIC_IMPACT, 0.0, HD_TEXTURE_FILTER, RELIC_IMPACT_SCALE
+		parent,
+		position,
+		_relic_impact_frames(),
+		RELIC_IMPACT,
+		_true_rotation(direction),
+		HD_TEXTURE_FILTER,
+		RELIC_IMPACT_SCALE
 	)
 
 

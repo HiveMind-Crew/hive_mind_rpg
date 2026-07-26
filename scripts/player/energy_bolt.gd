@@ -52,5 +52,5 @@ func _end() -> void:
 	if _ended:
 		return
 	_ended = true
-	CombatFxSpawner.spawn_relic_impact(get_parent(), global_position)
+	CombatFxSpawner.spawn_relic_impact(get_parent(), global_position, direction)
 	queue_free()
