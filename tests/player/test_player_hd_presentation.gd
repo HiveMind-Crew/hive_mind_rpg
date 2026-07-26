@@ -7,6 +7,7 @@ const PLAYER_SCENE: PackedScene = preload("res://scenes/player/player.tscn")
 const ATLAS_PATH: String = "res://assets/sprites/player/hd/player_directional_atlas.png"
 const HD_ATLAS: Texture2D = preload("res://assets/sprites/player/hd/player_directional_atlas.png")
 const MELEE_ATLAS_PATH: String = "res://assets/sprites/player/hd/player_melee_body_atlas.png"
+const DASH_ATLAS_PATH: String = "res://assets/sprites/player/hd/player_dash_body_atlas.png"
 const RELIC_ATLAS_PATH: String = "res://assets/sprites/player/hd/player_relic_body_atlas.png"
 const PNG_SIGNATURE: PackedByteArray = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]
 const MINIMUM_MELEE_PHASE_MASK_DIFFERENCE: int = 1200
@@ -225,6 +226,59 @@ func test_real_player_melee_event_drives_the_body_pose_without_extending_combat(
 	assert_eq(display.texture, PlayerHdPresentation.MELEE_ATLAS_TEXTURE)
 	_presentation._process(_player.melee_duration)
 	assert_eq(display.texture, HD_ATLAS)
+
+
+func test_dash_body_atlas_has_four_distinct_upright_cardinal_phases() -> void:
+	var dash_atlas: Texture2D = load(DASH_ATLAS_PATH) as Texture2D
+	assert_not_null(dash_atlas, "Issue #195 requires a dedicated HD body dash atlas.")
+	if dash_atlas == null:
+		return
+	assert_eq(Vector2i(dash_atlas.get_width(), dash_atlas.get_height()), Vector2i(1024, 1024))
+	var image: Image = dash_atlas.get_image()
+	for row: int in PlayerHdPresentation.DASH_DIRECTION_ROWS.size():
+		var regions: Array[Rect2i] = []
+		for column: int in 4:
+			var region := Rect2i(column * 256, row * 256, 256, 256)
+			regions.append(region)
+			var bounds: Rect2i = _opaque_bounds(image, region)
+			assert_gt(bounds.size.y, bounds.size.x,
+				"Every dash phase must retain an upright top-down human silhouette.")
+		for column: int in 3:
+			assert_gt(
+				_alpha_mask_difference(image, regions[column], regions[column + 1]),
+				400,
+				"Adjacent dash phases must remain visibly distinct.",
+			)
+
+
+func test_dash_body_uses_four_phases_and_returns_at_existing_dash_window() -> void:
+	var display: Sprite2D = _presentation.get_display_sprite()
+	var directions: Array[Vector2] = [Vector2.UP, Vector2.LEFT, Vector2.DOWN, Vector2.RIGHT]
+	for direction: Vector2 in directions:
+		_legacy_visual.play_dash(direction)
+		_presentation._process(0.0)
+		assert_eq(display.texture, PlayerHdPresentation.DASH_ATLAS_TEXTURE)
+		for column: int in 4:
+			assert_eq(display.region_rect, _presentation._dash_atlas_region_for(
+				_legacy_visual.facing_label, column))
+			_presentation._process(PlayerHdPresentation.DASH_PHASE_SECONDS)
+		assert_eq(display.texture, HD_ATLAS,
+			"Dash body must return at the existing 0.14-second movement boundary.")
+		_legacy_visual._on_clip_finished()
+	assert_almost_eq(PlayerHdPresentation.DASH_WINDOW_SECONDS, _player.dash_duration, 0.0001)
+
+
+func test_real_player_dash_event_drives_body_pose_without_changing_movement_contract() -> void:
+	var display: Sprite2D = _presentation.get_display_sprite()
+	var dash_speed_before: float = _player.dash_speed
+	var dash_duration_before: float = _player.dash_duration
+	_player._movement.update(Vector2.RIGHT, true, 0.0)
+	assert_eq(_legacy_visual.animation_name, PlayerVisual.DASH_ANIMATION)
+	_presentation._process(0.0)
+	assert_eq(display.texture, PlayerHdPresentation.DASH_ATLAS_TEXTURE)
+	assert_eq(_player._movement.state, PlayerMovementStateMachine.State.DASH)
+	assert_eq(_player.dash_speed, dash_speed_before)
+	assert_eq(_player.dash_duration, dash_duration_before)
 
 
 func test_relic_body_atlas_has_three_authored_cardinal_cast_poses() -> void:
