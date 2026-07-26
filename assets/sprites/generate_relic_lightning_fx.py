@@ -95,8 +95,10 @@ def _cast_cell(frame: int) -> Image.Image:
     branches.append(_bolt_points((58.0, 47.0), (57.0 + branch_length, 28.0), phase + 0.7, 2.7, 3))
     branches.append(_bolt_points((62.0, 50.0), (65.0 + branch_length * 0.78, 66.0), phase + 1.8, 2.2, 3))
     _draw_lightning(canvas, branches, 2.1)
+    # Keep the cast origin angular too: a short crossed spark, never a charge orb.
     draw = ImageDraw.Draw(canvas)
-    draw.ellipse((round((origin[0] - 4.0) * SCALE), round((origin[1] - 4.0) * SCALE), round((origin[0] + 4.0) * SCALE), round((origin[1] + 4.0) * SCALE)), fill=WHITE)
+    _line(draw, [(origin[0] - 4.0, origin[1] - 3.0), (origin[0] + 4.0, origin[1] + 3.0)], 2.0, WHITE)
+    _line(draw, [(origin[0] - 3.0, origin[1] + 4.0), (origin[0] + 3.0, origin[1] - 4.0)], 1.5, CYAN)
     return canvas.resize((CAST_CELL, CAST_CELL), Image.Resampling.LANCZOS)
 
 
@@ -104,21 +106,21 @@ def _flight_cell(frame: int) -> Image.Image:
     phase = math.tau * frame / FLIGHT_FRAMES
     width, height = FLIGHT_CELL
     canvas = Image.new("RGBA", (width * SCALE, height * SCALE), (0, 0, 0, 0))
-    # This is the collision-truthful center, not the visual leading tip.
-    core = (width / 2.0, height / 2.0)
-    head = (core[0] + 13.0, core[1] + math.sin(phase) * 1.5)
-    tail_end = (17.0, core[1] + math.cos(phase) * 4.5)
-    main = _bolt_points(tail_end, head, phase, 5.0, 7)
+    # The collision-truthful center lies on the main shaft; it is deliberately
+    # not marked by a filled knot or circular outline. The long forward tip and
+    # broken rear trail carry the gameplay-scale silhouette.
+    center = (width / 2.0, height / 2.0)
+    tip = (103.0, center[1] + math.sin(phase) * 1.5)
+    tail_end = (15.0, center[1] + math.cos(phase) * 4.5)
+    main = (
+        _bolt_points(tail_end, center, phase, 5.5, 4)
+        + _bolt_points(center, tip, phase + 1.7, 4.5, 4)[1:]
+    )
     branches = [main]
-    branches.append(_bolt_points((42.0, core[1] - 1.0), (28.0, core[1] - 15.0), phase + 1.4, 3.0, 3))
-    branches.append(_bolt_points((50.0, core[1] + 2.0), (36.0, core[1] + 14.0), phase + 2.7, 2.8, 3))
-    branches.append(_bolt_points((70.0, core[1] - 1.0), (82.0, core[1] - 10.0), phase + 4.0, 2.0, 3))
-    _draw_lightning(canvas, branches, 1.8)
-    draw = ImageDraw.Draw(canvas)
-    # A compact centered charge knot tells players where the collision is while
-    # angular lines, not a circular outline, carry the silhouette.
-    for radius, color in ((7.0, CYAN_DEEP), (4.6, CYAN), (2.4, WHITE)):
-        draw.ellipse((round((core[0] - radius) * SCALE), round((core[1] - radius) * SCALE), round((core[0] + radius) * SCALE), round((core[1] + radius) * SCALE)), fill=color)
+    branches.append(_bolt_points((39.0, center[1] - 1.0), (24.0, center[1] - 15.0), phase + 1.4, 3.0, 3))
+    branches.append(_bolt_points((48.0, center[1] + 2.0), (31.0, center[1] + 15.0), phase + 2.7, 2.8, 3))
+    branches.append(_bolt_points((76.0, center[1] - 1.0), (91.0, center[1] - 11.0), phase + 4.0, 2.0, 3))
+    _draw_lightning(canvas, branches, 2.3)
     return canvas.resize(FLIGHT_CELL, Image.Resampling.LANCZOS)
 
 
@@ -126,23 +128,25 @@ def _impact_cell(frame: int) -> Image.Image:
     progress = frame / IMPACT_FRAMES
     center = (64.0, 64.0)
     canvas = Image.new("RGBA", (IMPACT_CELL * SCALE, IMPACT_CELL * SCALE), (0, 0, 0, 0))
-    branches: list[list[tuple[float, float]]] = []
-    for index in range(9):
-        angle = math.tau * index / 9.0 + progress * 0.42
-        length = 23.0 + progress * 15.0 + (index % 3) * 2.0
-        endpoint = (center[0] + math.cos(angle) * length, center[1] + math.sin(angle) * length)
-        branches.append(_bolt_points(center, endpoint, progress * 5.0 + index * 0.73, 4.5 - progress * 1.7, 4))
-    _draw_lightning(canvas, branches, 1.8)
+    # Authored toward +x so runtime rotation keeps impact direction truthful.
+    # A spear-like contact slash and two forward forks replace the old radial
+    # sunburst; the short rear split anchors the exact collision point.
+    reach = 28.0 + progress * 10.0
+    paths: list[list[tuple[float, float]]] = [
+        _bolt_points((49.0, 64.0), (64.0 + reach, 64.0), progress * 4.0, 4.0, 5),
+        _bolt_points(center, (83.0 + progress * 8.0, 46.0 - progress * 2.0), progress + 0.8, 3.2, 4),
+        _bolt_points(center, (88.0 + progress * 7.0, 82.0 + progress * 2.0), progress + 2.1, 3.2, 4),
+        _bolt_points(center, (48.0 - progress * 5.0, 51.0), progress + 3.2, 2.5, 3),
+        _bolt_points(center, (45.0 - progress * 4.0, 75.0), progress + 4.3, 2.5, 3),
+    ]
+    _draw_lightning(canvas, paths, 1.8)
     draw = ImageDraw.Draw(canvas)
-    flash = max(2.0, 12.0 - progress * 9.0)
-    draw.ellipse((round((center[0] - flash) * SCALE), round((center[1] - flash) * SCALE), round((center[0] + flash) * SCALE), round((center[1] + flash) * SCALE)), fill=WHITE)
-    # Sparse magenta charged fragments distinguish impact from ordinary cyan hit sparks.
-    for index in range(6):
-        angle = math.tau * (index + 0.35) / 6.0 - progress * 0.3
-        distance = 19.0 + progress * 27.0
-        x = center[0] + math.cos(angle) * distance
-        y = center[1] + math.sin(angle) * distance
-        _line(draw, [(x, y), (x + math.cos(angle) * 5.0, y + math.sin(angle) * 5.0)], 2.2, MAGENTA)
+    # Sparse forward-swept magenta fragments distinguish relic contact without
+    # rebuilding a circular explosion around the collision center.
+    for index in range(5):
+        x = 72.0 + progress * 20.0 + index * 5.0
+        y = 43.0 + index * 10.0 + math.sin(progress * 4.0 + index) * 4.0
+        _line(draw, [(x, y), (x + 7.0, y - 2.0)], 2.0, MAGENTA)
     return canvas.resize((IMPACT_CELL, IMPACT_CELL), Image.Resampling.LANCZOS)
 
 
