@@ -15,6 +15,7 @@ extends Node2D
 const ATLAS_TEXTURE: Texture2D = preload("res://assets/sprites/player/hd/player_directional_atlas.png")
 const MELEE_ATLAS_TEXTURE: Texture2D = preload("res://assets/sprites/player/hd/player_melee_body_atlas.png")
 const RELIC_ATLAS_TEXTURE: Texture2D = preload("res://assets/sprites/player/hd/player_relic_body_atlas.png")
+const DASH_ATLAS_TEXTURE: Texture2D = preload("res://assets/sprites/player/hd/player_dash_body_atlas.png")
 const HD_TEXTURE_FILTER: CanvasItem.TextureFilter = CanvasItem.TEXTURE_FILTER_LINEAR
 const ATLAS_CELL_SIZE: Vector2 = Vector2(256.0, 256.0)
 const MELEE_ATLAS_CELL_SIZE: Vector2 = Vector2(256.0, 256.0)
@@ -51,6 +52,15 @@ const RELIC_WINDOW_SECONDS: float = 0.25
 const RELIC_CHARGE_SECONDS: float = 1.0 / 12.0
 const RELIC_RELEASE_SECONDS: float = 1.0 / 12.0
 const RELIC_RECOVERY_SECONDS: float = 1.0 / 12.0
+## PlayerMovementStateMachine owns the 0.14-second logical dash. These four
+## equal display phases are strictly visual and never extend that state.
+const DASH_DIRECTION_ROWS: Dictionary[StringName, int] = MELEE_DIRECTION_ROWS
+const DASH_LAUNCH_COLUMN: int = 0
+const DASH_STREAK_A_COLUMN: int = 1
+const DASH_STREAK_B_COLUMN: int = 2
+const DASH_RECOVERY_COLUMN: int = 3
+const DASH_WINDOW_SECONDS: float = 0.14
+const DASH_PHASE_SECONDS: float = DASH_WINDOW_SECONDS / 4.0
 ## These presentation phases partition, but never own or extend, the existing
 ## PlayerMeleeAttack 0.12 second combat window.
 const MELEE_WINDOW_SECONDS: float = 0.12
@@ -208,6 +218,17 @@ func _relic_atlas_region_for(facing: StringName, phase_column: int) -> Rect2:
 	)
 
 
+func _dash_atlas_region_for(facing: StringName, phase_column: int) -> Rect2:
+	var row: int = DASH_DIRECTION_ROWS.get(facing, DASH_DIRECTION_ROWS[&"south"])
+	return Rect2(
+		Vector2(
+			MELEE_ATLAS_CELL_SIZE.x * float(phase_column),
+			MELEE_ATLAS_CELL_SIZE.y * float(row),
+		),
+		MELEE_ATLAS_CELL_SIZE,
+	)
+
+
 func _update_atlas_region() -> void:
 	if _is_active_melee_body():
 		_display_sprite.texture = MELEE_ATLAS_TEXTURE
@@ -219,6 +240,12 @@ func _update_atlas_region() -> void:
 		_display_sprite.texture = RELIC_ATLAS_TEXTURE
 		_display_sprite.region_rect = _relic_atlas_region_for(
 			_legacy_visual.facing_label, _relic_phase_column(_state_elapsed)
+		)
+		return
+	if _is_active_dash_body():
+		_display_sprite.texture = DASH_ATLAS_TEXTURE
+		_display_sprite.region_rect = _dash_atlas_region_for(
+			_legacy_visual.facing_label, _dash_phase_column(_state_elapsed)
 		)
 		return
 	_display_sprite.texture = ATLAS_TEXTURE
@@ -253,6 +280,20 @@ func _relic_phase_column(state_elapsed: float) -> int:
 	if state_elapsed < RELIC_CHARGE_SECONDS + RELIC_RELEASE_SECONDS:
 		return RELIC_RELEASE_COLUMN
 	return RELIC_RECOVERY_COLUMN
+
+
+func _is_active_dash_body() -> bool:
+	return _animation_state == PlayerVisual.DASH_ANIMATION and _state_elapsed < DASH_WINDOW_SECONDS
+
+
+func _dash_phase_column(state_elapsed: float) -> int:
+	if state_elapsed < DASH_PHASE_SECONDS:
+		return DASH_LAUNCH_COLUMN
+	if state_elapsed < DASH_PHASE_SECONDS * 2.0:
+		return DASH_STREAK_A_COLUMN
+	if state_elapsed < DASH_PHASE_SECONDS * 3.0:
+		return DASH_STREAK_B_COLUMN
+	return DASH_RECOVERY_COLUMN
 
 
 func _apply_state_pose() -> void:
