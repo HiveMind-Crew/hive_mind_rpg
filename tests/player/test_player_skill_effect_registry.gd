@@ -33,3 +33,12 @@ func test_short_teleport_is_registered_as_a_supported_active_ability() -> void:
 
 	assert_true(fold_step.available)
 	assert_true(PlayerSkillEffectRegistry.supports(fold_step))
+
+
+func test_efficient_motion_is_registered_as_a_supported_dash_modifier() -> void:
+	var tree: SkillTree = load(SKILL_TREE_PATH) as SkillTree
+	var efficient_motion: SkillNode = tree.get_node(&"body_efficient_motion")
+
+	assert_true(efficient_motion.available)
+	assert_true(PlayerSkillEffectRegistry.supports(efficient_motion))
+	assert_false(tree.can_unlock(&"body_efficient_motion", [], 99))

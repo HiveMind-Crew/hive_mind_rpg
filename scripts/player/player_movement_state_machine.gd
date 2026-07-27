@@ -16,6 +16,9 @@ var velocity: Vector2 = Vector2.ZERO
 var dash_cooldown_remaining: float:
 	get:
 		return _dash_cooldown_remaining
+var dash_cooldown: float:
+	get:
+		return _dash_cooldown
 var last_move_direction: Vector2:
 	get:
 		return _last_move_direction
@@ -39,14 +42,14 @@ func _init(
 	friction: float,
 	dash_speed: float,
 	dash_duration: float,
-	dash_cooldown: float
+	dash_cooldown_seconds: float
 ) -> void:
 	_move_speed = maxf(move_speed, 0.0)
 	_acceleration = maxf(acceleration, 0.0)
 	_friction = maxf(friction, 0.0)
 	_dash_speed = maxf(dash_speed, 0.0)
 	_dash_duration = maxf(dash_duration, 0.0)
-	_dash_cooldown = maxf(dash_cooldown, 0.0)
+	_dash_cooldown = maxf(dash_cooldown_seconds, 0.0)
 
 
 func update(input_direction: Vector2, dash_requested: bool, delta: float) -> void:
@@ -89,6 +92,22 @@ func cancel_dash() -> void:
 	velocity = Vector2.ZERO
 	dash_ended.emit()
 	_set_state(State.IDLE)
+
+
+## Adjusts only dash recovery cadence. An active cooldown preserves the same
+## elapsed fraction when the effective cooldown changes: unlocking makes the
+## benefit immediate, while respec/reset removes it without leaving a shorter
+## cooldown behind. It never changes an in-flight dash's speed, distance, or
+## duration.
+func set_dash_cooldown(cooldown: float) -> void:
+	var previous_cooldown: float = _dash_cooldown
+	_dash_cooldown = maxf(cooldown, 0.0)
+	if previous_cooldown <= 0.0 or _dash_cooldown_remaining <= 0.0:
+		return
+	var remaining_fraction: float = clampf(
+		_dash_cooldown_remaining / previous_cooldown, 0.0, 1.0
+	)
+	_dash_cooldown_remaining = _dash_cooldown * remaining_fraction
 
 
 func _start_dash(input_direction: Vector2) -> void:

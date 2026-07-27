@@ -8,6 +8,7 @@ const SUPPORTED_STAT_PARAMETERS: Array[StringName] = [
 	&"max_energy_bonus",
 ]
 const SUPPORTED_ABILITY_MODIFIERS: Dictionary[StringName, Array] = {
+	&"dash": [&"recovery_time_multiplier"],
 	&"starter_relic_bolt": [&"damage_multiplier"],
 }
 const SUPPORTED_UNLOCKED_ABILITIES: Dictionary[StringName, Array] = {

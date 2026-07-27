@@ -180,3 +180,4 @@ Unlock skill tree branches → develop a distinct build → clear zone boss → 
 | 2026-07-13 | 0.5 | Linked canonical v1 visual bible, asset manifest, and reference sheet (issue #82) | Claude + pj200105 |
 | 2026-07-13 | 0.6 | Required live runtime consumers for purchasable skill effects (issue #77) | Codex + MeanGreen256 |
 | 2026-07-17 | 0.7 | Pivoted art direction to stylized HD 2D illustration; pixel-art contracts reclassified as legacy implementation pending the one-screen prototype (issue #139) | Claude + pj200105 |
+| 2026-07-26 | 0.8 | Made the Body branch's Efficient Motion node a live 20% dash-recovery reduction; it changes cooldown only, never dash travel or i-frames (issue #201) | Hermes + pj200105 |
