@@ -62,20 +62,42 @@ func test_efficient_motion_reduces_real_dash_cooldown_and_respec_restores_it() -
 	var base_cooldown: float = _player.dash_cooldown
 	assert_almost_eq(_player.get_effective_dash_cooldown(), base_cooldown, 0.001)
 
+	# Unlocking during a live base cooldown grants the improvement immediately.
+	_player._movement.update(Vector2.RIGHT, true, 0.0)
 	GameState.award_skill_points(3)
 	assert_true(GameState.spend_points(BODY_DEEP_RESERVES))
 	assert_true(GameState.spend_points(BODY_EFFICIENT_MOTION))
 	assert_almost_eq(_player.get_effective_dash_cooldown(), base_cooldown * 0.8, 0.001)
+	assert_almost_eq(_player._movement.dash_cooldown_remaining, base_cooldown * 0.8, 0.001)
 
-	_player._movement.update(Vector2.RIGHT, true, 0.0)
 	_player._movement.update(Vector2.RIGHT, false, _player.dash_duration)
 	_player._movement.finish_frame(Vector2.RIGHT)
 	_player._movement.update(Vector2.RIGHT, false, base_cooldown * 0.8 - _player.dash_duration)
 	_player._movement.update(Vector2.RIGHT, true, 0.0)
 	assert_eq(_player.movement_state, PlayerMovementStateMachine.State.DASH)
 
+	# Respec must restore an active skilled cooldown, not preserve its discount.
 	GameState.respec_skills()
 	assert_almost_eq(_player.get_effective_dash_cooldown(), base_cooldown, 0.001)
+	assert_almost_eq(_player._movement.dash_cooldown_remaining, base_cooldown, 0.001)
+	_player.cancel_dash()
+	_player._movement.update(Vector2.RIGHT, false, base_cooldown * 0.8)
+	_player._movement.update(Vector2.RIGHT, true, 0.0)
+	assert_ne(_player.movement_state, PlayerMovementStateMachine.State.DASH)
+	_player._movement.update(Vector2.RIGHT, false, base_cooldown * 0.2)
+	_player._movement.update(Vector2.RIGHT, true, 0.0)
+	assert_eq(_player.movement_state, PlayerMovementStateMachine.State.DASH)
+
+	# reset_progress follows the same restoration path for a live skilled dash.
+	_player.cancel_dash()
+	_player._movement.update(Vector2.RIGHT, false, base_cooldown)
+	GameState.award_skill_points(3)
+	assert_true(GameState.spend_points(BODY_DEEP_RESERVES))
+	assert_true(GameState.spend_points(BODY_EFFICIENT_MOTION))
+	_player._movement.update(Vector2.RIGHT, true, 0.0)
+	GameState.reset_progress()
+	assert_almost_eq(_player.get_effective_dash_cooldown(), base_cooldown, 0.001)
+	assert_almost_eq(_player._movement.dash_cooldown_remaining, base_cooldown, 0.001)
 
 
 func test_relic_unlock_raises_spawned_bolt_damage() -> void:

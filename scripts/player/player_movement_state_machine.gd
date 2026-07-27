@@ -94,12 +94,20 @@ func cancel_dash() -> void:
 	_set_state(State.IDLE)
 
 
-## Adjusts only future dash recovery cadence. A newly unlocked modifier also
-## clamps an already-running cooldown so the build change is felt immediately;
-## it never changes an in-flight dash's speed, distance, or duration.
+## Adjusts only dash recovery cadence. An active cooldown preserves the same
+## elapsed fraction when the effective cooldown changes: unlocking makes the
+## benefit immediate, while respec/reset removes it without leaving a shorter
+## cooldown behind. It never changes an in-flight dash's speed, distance, or
+## duration.
 func set_dash_cooldown(cooldown: float) -> void:
+	var previous_cooldown: float = _dash_cooldown
 	_dash_cooldown = maxf(cooldown, 0.0)
-	_dash_cooldown_remaining = minf(_dash_cooldown_remaining, _dash_cooldown)
+	if previous_cooldown <= 0.0 or _dash_cooldown_remaining <= 0.0:
+		return
+	var remaining_fraction: float = clampf(
+		_dash_cooldown_remaining / previous_cooldown, 0.0, 1.0
+	)
+	_dash_cooldown_remaining = _dash_cooldown * remaining_fraction
 
 
 func _start_dash(input_direction: Vector2) -> void:

@@ -41,3 +41,4 @@ func test_efficient_motion_is_registered_as_a_supported_dash_modifier() -> void:
 
 	assert_true(efficient_motion.available)
 	assert_true(PlayerSkillEffectRegistry.supports(efficient_motion))
+	assert_false(tree.can_unlock(&"body_efficient_motion", [], 99))
