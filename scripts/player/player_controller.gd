@@ -19,8 +19,10 @@ signal control_enabled_changed(enabled: bool)
 ## Ability id the starter bolt's ABILITY_MODIFIER skill nodes target.
 const RELIC_BOLT_ABILITY_ID: StringName = &"starter_relic_bolt"
 const SHORT_TELEPORT_ABILITY_ID: StringName = &"short_teleport"
+const DASH_ABILITY_ID: StringName = &"dash"
 const ATTACK_STAT: StringName = &"attack"
 const BOLT_DAMAGE_STAT: StringName = &"damage"
+const DASH_RECOVERY_STAT: StringName = &"recovery_time"
 const MAX_HP_STAT: StringName = &"max_hp"
 const MAX_ENERGY_STAT: StringName = &"max_energy"
 
@@ -236,6 +238,10 @@ func get_effective_bolt_damage() -> int:
 	return _effective_bolt_damage
 
 
+func get_effective_dash_cooldown() -> float:
+	return _movement.dash_cooldown
+
+
 func _refresh_skill_effects() -> void:
 	# Effect layer (issue #17): re-derive every skill-affected stat from the
 	# authored baselines + currently unlocked nodes. Runs on unlock, respec,
@@ -252,6 +258,11 @@ func _refresh_skill_effects() -> void:
 		tree, unlocked_ids, RELIC_BOLT_ABILITY_ID, BOLT_DAMAGE_STAT
 	)
 	_effective_bolt_damage = maxi(1, roundi(energy_bolt_damage * bolt_multiplier))
+
+	var dash_recovery_multiplier: float = PlayerStatCalculator.get_ability_multiplier(
+		tree, unlocked_ids, DASH_ABILITY_ID, DASH_RECOVERY_STAT
+	)
+	_movement.set_dash_cooldown(dash_cooldown * dash_recovery_multiplier)
 
 	var max_hp_bonus: float = PlayerStatCalculator.get_stat_bonus(
 		tree, unlocked_ids, MAX_HP_STAT
