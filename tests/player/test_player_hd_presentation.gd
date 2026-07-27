@@ -9,6 +9,7 @@ const HD_ATLAS: Texture2D = preload("res://assets/sprites/player/hd/player_direc
 const MELEE_ATLAS_PATH: String = "res://assets/sprites/player/hd/player_melee_body_atlas.png"
 const DASH_ATLAS_PATH: String = "res://assets/sprites/player/hd/player_dash_body_atlas.png"
 const RELIC_ATLAS_PATH: String = "res://assets/sprites/player/hd/player_relic_body_atlas.png"
+const LOCOMOTION_RESPONSE_ATLAS_PATH: String = "res://assets/sprites/player/hd/player_locomotion_response_atlas.png"
 const PNG_SIGNATURE: PackedByteArray = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]
 const MINIMUM_MELEE_PHASE_MASK_DIFFERENCE: int = 1200
 const MINIMUM_ALIGNED_RECOVERY_MASK_DIFFERENCE: int = 600
@@ -424,6 +425,22 @@ func _opaque_pixel_count(image: Image, region: Rect2i) -> int:
 	return count
 
 
+func test_locomotion_response_atlas_has_four_gait_poses_and_cardinal_hurt_recoil() -> void:
+	var atlas: Texture2D = load(LOCOMOTION_RESPONSE_ATLAS_PATH) as Texture2D
+	assert_not_null(atlas)
+	if atlas == null:
+		return
+	assert_eq(Vector2i(atlas.get_width(), atlas.get_height()), Vector2i(1280, 1024))
+	var image: Image = atlas.get_image()
+	for row: int in PlayerHdPresentation.LOCOMOTION_DIRECTION_ROWS.size():
+		var first_gait := Rect2i(0, row * 256, 256, 256)
+		var second_gait := Rect2i(256, row * 256, 256, 256)
+		var hurt := Rect2i(PlayerHdPresentation.LOCOMOTION_HURT_COLUMN * 256, row * 256, 256, 256)
+		assert_gt(_alpha_mask_difference(image, first_gait, second_gait), 400)
+		assert_gt(_alpha_mask_difference(image, first_gait, hurt), 800,
+			"Hurt recoil must not repeat the locomotion silhouette.")
+
+
 func test_hd_presentation_mirrors_move_state_with_presentation_only_gait() -> void:
 	_legacy_visual.set_facing_direction(Vector2.LEFT)
 	_legacy_visual.play_move()
@@ -431,6 +448,10 @@ func test_hd_presentation_mirrors_move_state_with_presentation_only_gait() -> vo
 
 	var display: Sprite2D = _presentation.get_display_sprite()
 	assert_eq(_legacy_visual.animation_name, PlayerVisual.MOVE_ANIMATION)
+	assert_eq(display.texture, PlayerHdPresentation.LOCOMOTION_RESPONSE_ATLAS_TEXTURE)
+	assert_eq(display.region_rect, _presentation._locomotion_response_atlas_region_for(
+		_legacy_visual.facing_label, _presentation._locomotion_phase_column()
+	))
 	assert_ne(display.position.y, PlayerHdPresentation.BODY_POSITION.y,
 		"Move state adds presentation-only bob.")
 	assert_ne(display.rotation, 0.0, "Move state adds a subtle presentation-only lean.")
@@ -476,6 +497,10 @@ func test_hd_presentation_hurt_and_death_follow_existing_health_driver() -> void
 	var display: Sprite2D = _presentation.get_display_sprite()
 	_legacy_visual._on_health_damaged(1, Vector2.ZERO, 0)
 	_presentation._process(0.0)
+	assert_eq(display.texture, PlayerHdPresentation.LOCOMOTION_RESPONSE_ATLAS_TEXTURE)
+	assert_eq(display.region_rect, _presentation._locomotion_response_atlas_region_for(
+		_legacy_visual.facing_label, PlayerHdPresentation.LOCOMOTION_HURT_COLUMN
+	))
 	assert_eq(display.self_modulate, PlayerHdPresentation.HURT_TINT)
 
 	_legacy_visual.set_facing_direction(Vector2.LEFT)
