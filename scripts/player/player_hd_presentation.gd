@@ -10,12 +10,15 @@ extends Node2D
 ## slash stays the single slash FX owner. Issue #189 adds a deterministic body
 ## pose atlas so melee visibly moves the HD body and arms as well as the weapon.
 ## Issue #193 adds a separate body cast atlas so the same live relic state
-## visibly channels and releases lightning without owning projectile FX.
+## visibly channels and releases lightning without owning projectile FX. Issue #203
+## adds deterministic locomotion and hurt-recoil poses driven only by that same
+## PlayerVisual state owner.
 
 const ATLAS_TEXTURE: Texture2D = preload("res://assets/sprites/player/hd/player_directional_atlas.png")
 const MELEE_ATLAS_TEXTURE: Texture2D = preload("res://assets/sprites/player/hd/player_melee_body_atlas.png")
 const RELIC_ATLAS_TEXTURE: Texture2D = preload("res://assets/sprites/player/hd/player_relic_body_atlas.png")
 const DASH_ATLAS_TEXTURE: Texture2D = preload("res://assets/sprites/player/hd/player_dash_body_atlas.png")
+const LOCOMOTION_RESPONSE_ATLAS_TEXTURE: Texture2D = preload("res://assets/sprites/player/hd/player_locomotion_response_atlas.png")
 const HD_TEXTURE_FILTER: CanvasItem.TextureFilter = CanvasItem.TEXTURE_FILTER_LINEAR
 const ATLAS_CELL_SIZE: Vector2 = Vector2(256.0, 256.0)
 const MELEE_ATLAS_CELL_SIZE: Vector2 = Vector2(256.0, 256.0)
@@ -61,6 +64,15 @@ const DASH_STREAK_B_COLUMN: int = 2
 const DASH_RECOVERY_COLUMN: int = 3
 const DASH_WINDOW_SECONDS: float = 0.14
 const DASH_PHASE_SECONDS: float = DASH_WINDOW_SECONDS / 4.0
+## Issue #203 loops four authored gait poses at presentation speed while the
+## fifth column is the real PlayerVisual HURT state response. No movement clock,
+## control lockout, health, or collision behavior is owned here.
+const LOCOMOTION_DIRECTION_ROWS: Dictionary[StringName, int] = MELEE_DIRECTION_ROWS
+const LOCOMOTION_GAIT_COLUMNS: int = 3
+const LOCOMOTION_SETTLE_COLUMN: int = 3
+const LOCOMOTION_HURT_COLUMN: int = 4
+const LOCOMOTION_PHASE_SECONDS: float = 0.11
+const LOCOMOTION_SETTLE_SECONDS: float = 0.11
 ## These presentation phases partition, but never own or extend, the existing
 ## PlayerMeleeAttack 0.12 second combat window.
 const MELEE_WINDOW_SECONDS: float = 0.12
@@ -94,6 +106,10 @@ var _elapsed: float = 0.0
 # Presentation time since the current logical state began; drives the weapon
 # swing sweep without reading any gameplay timer.
 var _state_elapsed: float = 0.0
+## Move entry begins at authored gait column zero; when the logical driver
+## returns to idle, a short presentation-only settle holds before the base idle.
+var _locomotion_elapsed: float = 0.0
+var _locomotion_settle_elapsed: float = -1.0
 
 
 func _ready() -> void:
@@ -111,6 +127,10 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	_elapsed += delta
 	_state_elapsed += delta
+	if _animation_state == PlayerVisual.MOVE_ANIMATION:
+		_locomotion_elapsed += delta
+	elif _locomotion_settle_elapsed >= 0.0:
+		_locomotion_settle_elapsed += delta
 	if _legacy_visual == null:
 		return
 	_update_atlas_region()
@@ -183,8 +203,16 @@ func _create_facing_accent() -> Polygon2D:
 
 
 func _on_animation_state_changed(next_state: StringName) -> void:
+	var previous_state: StringName = _animation_state
 	_animation_state = next_state
 	_state_elapsed = 0.0
+	if next_state == PlayerVisual.MOVE_ANIMATION:
+		_locomotion_elapsed = 0.0
+		_locomotion_settle_elapsed = -1.0
+	elif previous_state == PlayerVisual.MOVE_ANIMATION and next_state == PlayerVisual.IDLE_ANIMATION:
+		_locomotion_settle_elapsed = 0.0
+	else:
+		_locomotion_settle_elapsed = -1.0
 
 
 func _base_scale() -> float:
@@ -229,6 +257,17 @@ func _dash_atlas_region_for(facing: StringName, phase_column: int) -> Rect2:
 	)
 
 
+func _locomotion_response_atlas_region_for(facing: StringName, phase_column: int) -> Rect2:
+	var row: int = LOCOMOTION_DIRECTION_ROWS.get(facing, LOCOMOTION_DIRECTION_ROWS[&"south"])
+	return Rect2(
+		Vector2(
+			MELEE_ATLAS_CELL_SIZE.x * float(phase_column),
+			MELEE_ATLAS_CELL_SIZE.y * float(row),
+		),
+		MELEE_ATLAS_CELL_SIZE,
+	)
+
+
 func _update_atlas_region() -> void:
 	if _is_active_melee_body():
 		_display_sprite.texture = MELEE_ATLAS_TEXTURE
@@ -248,8 +287,38 @@ func _update_atlas_region() -> void:
 			_legacy_visual.facing_label, _dash_phase_column(_state_elapsed)
 		)
 		return
+	if _animation_state == PlayerVisual.MOVE_ANIMATION:
+		_display_sprite.texture = LOCOMOTION_RESPONSE_ATLAS_TEXTURE
+		_display_sprite.region_rect = _locomotion_response_atlas_region_for(
+			_legacy_visual.facing_label, _locomotion_phase_column()
+		)
+		return
+	if _is_active_locomotion_settle():
+		_display_sprite.texture = LOCOMOTION_RESPONSE_ATLAS_TEXTURE
+		_display_sprite.region_rect = _locomotion_response_atlas_region_for(
+			_legacy_visual.facing_label, LOCOMOTION_SETTLE_COLUMN
+		)
+		return
+	if _animation_state == PlayerVisual.HURT_ANIMATION:
+		_display_sprite.texture = LOCOMOTION_RESPONSE_ATLAS_TEXTURE
+		_display_sprite.region_rect = _locomotion_response_atlas_region_for(
+			_legacy_visual.facing_label, LOCOMOTION_HURT_COLUMN
+		)
+		return
 	_display_sprite.texture = ATLAS_TEXTURE
 	_display_sprite.region_rect = _atlas_region_for(_legacy_visual.facing_label)
+
+
+func _locomotion_phase_column() -> int:
+	return int(floor(_locomotion_elapsed / LOCOMOTION_PHASE_SECONDS)) % LOCOMOTION_GAIT_COLUMNS
+
+
+func _is_active_locomotion_settle() -> bool:
+	return (
+		_animation_state == PlayerVisual.IDLE_ANIMATION
+		and _locomotion_settle_elapsed >= 0.0
+		and _locomotion_settle_elapsed < LOCOMOTION_SETTLE_SECONDS
+	)
 
 
 func _is_active_melee_body() -> bool:
