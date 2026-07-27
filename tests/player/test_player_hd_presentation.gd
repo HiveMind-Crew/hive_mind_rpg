@@ -441,6 +441,26 @@ func test_locomotion_response_atlas_has_four_gait_poses_and_cardinal_hurt_recoil
 			"Hurt recoil must not repeat the locomotion silhouette.")
 
 
+func test_locomotion_starts_at_authored_first_gait_then_settles_before_idle() -> void:
+	var display: Sprite2D = _presentation.get_display_sprite()
+	_legacy_visual.set_facing_direction(Vector2.RIGHT)
+	_legacy_visual.play_move()
+	_presentation._process(0.0)
+	assert_eq(display.texture, PlayerHdPresentation.LOCOMOTION_RESPONSE_ATLAS_TEXTURE)
+	assert_eq(display.region_rect, _presentation._locomotion_response_atlas_region_for(
+		&"east", 0
+	), "A new logical move state starts on authored gait column zero.")
+	_presentation._process(PlayerHdPresentation.LOCOMOTION_PHASE_SECONDS)
+	assert_eq(display.region_rect, _presentation._locomotion_response_atlas_region_for(&"east", 1))
+	_legacy_visual.play_idle()
+	_presentation._process(0.0)
+	assert_eq(display.region_rect, _presentation._locomotion_response_atlas_region_for(
+		&"east", PlayerHdPresentation.LOCOMOTION_SETTLE_COLUMN
+	), "Idle immediately after movement uses the authored settle pose.")
+	_presentation._process(PlayerHdPresentation.LOCOMOTION_SETTLE_SECONDS)
+	assert_eq(display.texture, HD_ATLAS, "Settle returns to held idle without extending gameplay state.")
+
+
 func test_hd_presentation_mirrors_move_state_with_presentation_only_gait() -> void:
 	_legacy_visual.set_facing_direction(Vector2.LEFT)
 	_legacy_visual.play_move()
