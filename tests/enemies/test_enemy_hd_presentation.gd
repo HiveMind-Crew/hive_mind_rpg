@@ -86,6 +86,28 @@ func test_live_facing_and_combat_states_drive_the_static_body() -> void:
 	assert_false(presentation.get_facing_accent().visible)
 
 
+func test_hd_body_uses_live_state_poses_without_changing_enemy_state() -> void:
+	var enemy: EnemyBase = ROSTER_SCENES["fast_flanker"].instantiate() as EnemyBase
+	var target: Node2D = Node2D.new()
+	add_child_autofree(enemy)
+	add_child_autofree(target)
+	target.global_position = enemy.global_position + Vector2.RIGHT * 64.0
+	enemy.set_target(target)
+	var presentation: EnemyHdPresentation = enemy.get_node("HdPresentation") as EnemyHdPresentation
+	var body: Sprite2D = presentation.get_body_sprite()
+	enemy.state = EnemyBase.State.WIND_UP
+	presentation._process(0.0)
+	assert_lt(body.position.x, presentation.body_offset.x, "Wind-up visibly pulls back from the live target.")
+	assert_gt(body.scale.y, body.scale.x, "Wind-up compresses into a readable anticipation pose.")
+	enemy.state = EnemyBase.State.ATTACK
+	presentation._process(0.0)
+	assert_gt(body.position.x, presentation.body_offset.x, "Attack commits forward in the stored live facing.")
+	enemy.state = EnemyBase.State.DEAD
+	presentation._process(0.0)
+	assert_false(presentation.get_facing_accent().visible)
+	assert_almost_eq(absf(body.rotation), deg_to_rad(90.0), 0.001, "Death reads as fallen, not merely tinted.")
+
+
 func test_brute_facing_accent_uses_the_live_shield_direction() -> void:
 	var brute: ShieldedBrute = ROSTER_SCENES["shielded_brute"].instantiate() as ShieldedBrute
 	var target: Node2D = Node2D.new()
