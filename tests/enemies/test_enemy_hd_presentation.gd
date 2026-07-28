@@ -204,7 +204,10 @@ func test_live_facing_and_combat_states_drive_the_static_body() -> void:
 	legacy.self_modulate = Color(1.0, 0.5, 0.5, 1.0)
 	presentation._process(0.0)
 
-	assert_true(presentation.get_body_sprite().flip_h)
+	assert_false(
+		presentation.get_body_sprite().flip_h,
+		"Single-facing derived pose art must not be runtime-mirrored; the accent carries facing."
+	)
 	assert_eq(presentation.get_body_sprite().modulate, EnemyBase.WIND_UP_COLOR)
 	assert_eq(presentation.get_body_sprite().self_modulate, legacy.self_modulate)
 	assert_eq(presentation.get_facing_direction(), Vector2.LEFT)

@@ -14,9 +14,9 @@ extends Node2D
 ## atlas generator bakes those silhouette reads directly into each frame.
 ##
 ## Directional limitation: the pose atlas is derived from a single authored
-## facing portrait. The existing flip_h behavior (facing.x < 0 → mirror sprite)
-## is preserved as-is until dedicated directional side rows are added to the
-## atlas generator. Do not assert cardinal authored art.
+## facing portrait. It is deliberately never runtime-flipped: the existing live
+## facing accent remains the truthful directional cue until dedicated cardinal
+## pose rows are authored.
 
 const HD_TEXTURE_FILTER: CanvasItem.TextureFilter = CanvasItem.TEXTURE_FILTER_LINEAR
 const FACING_COLOR: Color = Color(0.95, 0.18, 0.85, 0.82)
@@ -191,9 +191,9 @@ func _apply_live_presentation() -> void:
 	if _body_sprite == null or _facing_accent == null:
 		return
 	var facing: Vector2 = get_facing_direction()
-	# The pose atlas is single-facing; flip_h mirrors for left-facing enemies,
-	# preserving the current readability contract until directional side rows exist.
-	_body_sprite.flip_h = facing.x < 0.0
+	# Derived single-facing atlas art is never mirrored; facing remains explicit
+	# through the live accent until future authored cardinal pose rows exist.
+	_body_sprite.flip_h = pose_atlas == null and facing.x < 0.0
 	_body_sprite.self_modulate = _legacy_visual.self_modulate
 	_body_sprite.modulate = state_tint_for(_enemy.state)
 	if pose_atlas != null:
