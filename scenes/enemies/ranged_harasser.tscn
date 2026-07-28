@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/ranged_harasser.gd" id="1_enemy"]
 [ext_resource type="SpriteFrames" path="res://assets/sprites/enemies/ranged_harasser_frames.tres" id="7_frames"]
@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" path="res://scenes/enemies/enemy_bolt.tscn" id="6_bolt"]
 [ext_resource type="Script" path="res://scripts/enemies/enemy_hd_presentation.gd" id="8_hd_script"]
 [ext_resource type="Texture2D" path="res://assets/sprites/enemies/hd/ranged_harasser.png" id="9_hd_texture"]
+[ext_resource type="Texture2D" path="res://assets/sprites/enemies/hd/ranged_harasser_poses.png" id="11_atlas"]
 [ext_resource type="Texture2D" path="res://assets/sprites/enemies/hd/enemy_windup_tell.png" id="10_tell"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
@@ -35,6 +36,7 @@ playing = true
 [node name="HdPresentation" type="Node2D" parent="."]
 script = ExtResource("8_hd_script")
 body_texture = ExtResource("9_hd_texture")
+pose_atlas = ExtResource("11_atlas")
 display_height_px = 36.0
 body_offset = Vector2(0, -5)
 

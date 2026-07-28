@@ -85,8 +85,24 @@ Issue #203 adds `assets/sprites/player/hd/player_locomotion_response_atlas.png`,
 
 | Group | Scope | Non-goals |
 |---|---|---|
-| Regular enemy roster | **Production conversion in issue #154:** four distinct transparent illustrated bodies under `assets/sprites/enemies/hd/`; scene-local adapters mirror live facing, telegraph, hit, death, and shield state while legacy SpriteFrames remain hidden mechanical drivers. | AI, attacks, damage, ranges, collision, rewards, or encounter composition. |
+| Regular enemy roster | **Production conversion in issue #154:** four distinct transparent illustrated bodies under `assets/sprites/enemies/hd/`; scene-local adapters mirror live facing, telegraph, hit, death, and shield state while legacy SpriteFrames remain hidden mechanical drivers. **Issue #204 adds per-archetype deterministic 6-row × 4-column pose atlases** (`*_poses.png` in the same folder); `EnemyHdPresentation` selects the atlas row from live `EnemyBase.State` (idle/chase/windup/attack/stagger/death) and the column from `_state_elapsed` (looping for idle/chase/recovery; terminal-at-3 for non-looping states). The prior per-state transform bridge is removed when an atlas is assigned; the generator bakes those silhouette reads directly into each frame. The atlas art is a prototype art transform pipeline — deterministic closed-form derivatives of the issue #154 source portraits; a future pass will replace them with dedicated authored directional rows. | AI, attacks, damage, ranges, collision, rewards, or encounter composition. |
 | Zone boss | **Production conversion in issue #155:** matched dormant/awakened illustrated Rootheart bodies, grounded contact treatment, live slam tell, eight-direction radial cue, and defeat presentation. | Boss AI, phase thresholds, attack timing, projectiles, hitboxes/hurtboxes, rewards, arena collision, boss-door behavior, camera, or progression. |
+
+Issue #204 pose-atlas layout and generator contract: each atlas is produced by
+`assets/sprites/generate_hd_enemy_pose_atlases.py` from the accepted issue #154
+single-portrait source for that archetype. The generator applies deterministic
+PIL transforms (translate, rotate, scale, color-enhance) to each source frame
+and composites them into a sheet of `source_width × 4` columns by
+`source_height × 6` rows, giving one native-size cell per state×frame. Rows 0–5
+map to idle/chase/windup/attack/stagger/death. Columns 0–3 are frames 0–3, with
+each frame expressing progressive anticipation, peak, follow-through, and return.
+`EnemyHdPresentation` uses `Sprite2D.region_enabled = true` and computes the
+`Rect2` from the atlas dimensions at runtime; no hardcoded archetype name or cell
+size lives in the script. The atlas art carries the same OpenAI-generation
+provenance as its source portraits and is a prototype transform pipeline — not
+bespoke directional illustration. Directional limitation: the atlas frames are
+single-facing derivatives; the existing `flip_h` mirror for left-facing enemies
+is preserved until dedicated authored directional side rows replace them.
 
 Issue #155 keeps the Rootheart's existing `BossBase`/`EnemyBase` signals as
 the sole state authority. A scene-local `RootheartHdPresentation` hides only
