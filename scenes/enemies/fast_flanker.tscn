@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/fast_flanker.gd" id="1_enemy"]
 [ext_resource type="SpriteFrames" path="res://assets/sprites/enemies/fast_flanker_frames.tres" id="6_frames"]
@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" path="res://scenes/combat/hitbox.tscn" id="5_hitbox"]
 [ext_resource type="Script" path="res://scripts/enemies/enemy_hd_presentation.gd" id="7_hd_script"]
 [ext_resource type="Texture2D" path="res://assets/sprites/enemies/hd/fast_flanker.png" id="8_hd_texture"]
+[ext_resource type="Texture2D" path="res://assets/sprites/enemies/hd/fast_flanker_poses.png" id="10_atlas"]
 [ext_resource type="Texture2D" path="res://assets/sprites/enemies/hd/enemy_windup_tell.png" id="9_tell"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_body"]
@@ -33,6 +34,7 @@ playing = true
 [node name="HdPresentation" type="Node2D" parent="."]
 script = ExtResource("7_hd_script")
 body_texture = ExtResource("8_hd_texture")
+pose_atlas = ExtResource("10_atlas")
 display_height_px = 30.0
 body_offset = Vector2(0, -3)
 
