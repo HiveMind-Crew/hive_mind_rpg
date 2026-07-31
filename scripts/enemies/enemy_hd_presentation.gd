@@ -46,6 +46,10 @@ const POSE_FRAME_SECONDS: float = 0.10
 
 @export var body_texture: Texture2D
 @export var pose_atlas: Texture2D
+## The generator centers an 80 px-tall portrait in each 128 px pose cell so
+## telegraph transforms keep transparent safety margins. Scale the atlas from
+## this visible content height, not the padded region height.
+@export_range(1.0, 128.0, 1.0) var pose_content_height_px: float = 80.0
 @export_range(1.0, 128.0, 1.0) var display_height_px: float = 32.0
 @export var body_offset: Vector2 = Vector2.ZERO
 @export var legacy_visual_path: NodePath = NodePath("../BodyVisual")
@@ -85,7 +89,7 @@ func _ready() -> void:
 		_body_sprite.texture = pose_atlas
 		_body_sprite.region_enabled = true
 		_body_sprite.region_rect = _atlas_region_for(ATLAS_ROW_IDLE, 0)
-		_body_sprite.scale = Vector2.ONE * (display_height_px / _cell_size.y)
+		_body_sprite.scale = Vector2.ONE * (display_height_px / pose_content_height_px)
 	else:
 		_body_sprite.texture = body_texture
 		var visual_scale: float = display_height_px / float(body_texture.get_height())
@@ -210,7 +214,7 @@ func _apply_atlas_frame() -> void:
 	var row: int = state_to_atlas_row(_enemy.state)
 	var col: int = _atlas_column()
 	_body_sprite.region_rect = _atlas_region_for(row, col)
-	_body_sprite.scale = Vector2.ONE * (display_height_px / _cell_size.y)
+	_body_sprite.scale = Vector2.ONE * (display_height_px / pose_content_height_px)
 	_body_sprite.position = body_offset
 	_body_sprite.rotation = 0.0
 
