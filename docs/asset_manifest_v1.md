@@ -92,17 +92,22 @@ Issue #204 pose-atlas layout and generator contract: each atlas is produced by
 `assets/sprites/generate_hd_enemy_pose_atlases.py` from the accepted issue #154
 single-portrait source for that archetype. The generator applies deterministic
 PIL transforms (translate, rotate, scale, color-enhance) to each source frame
-and composites them into a sheet of `source_width × 4` columns by
-`source_height × 6` rows, giving one native-size cell per state×frame. Rows 0–5
-map to idle/chase/windup/attack/stagger/death. Columns 0–3 are frames 0–3, with
-each frame expressing progressive anticipation, peak, follow-through, and return.
+after uniformly downsampling it to an 80 px visible content height, then
+centering that content in a 128 px cell with 40 px initial horizontal padding.
+It composites the result into a sheet of `padded_cell_width × 4` columns by
+`128 × 6` rows, giving one compact cell per state×frame. Rows 0–5 map to
+idle/chase/windup/attack/stagger/death. Columns 0–3 are frames 0–3, with each
+frame expressing progressive anticipation, peak, follow-through, and return.
 `EnemyHdPresentation` uses `Sprite2D.region_enabled = true` and computes the
 `Rect2` from the atlas dimensions at runtime; no hardcoded archetype name or cell
 size lives in the script. The atlas art carries the same OpenAI-generation
 provenance as its source portraits and is a prototype transform pipeline — not
-bespoke directional illustration. Directional limitation: the atlas frames are
-single-facing derivatives; the existing `flip_h` mirror for left-facing enemies
-is preserved until dedicated authored directional side rows replace them.
+bespoke directional illustration. `EnemyHdPresentation` scales the padded atlas
+from its documented 80 px visible content height so the existing display-height
+contract is preserved. Directional limitation: the atlas frames are
+single-facing derivatives and are never runtime-mirrored; the live facing accent
+remains the truthful directional cue until dedicated authored cardinal pose rows
+replace them.
 
 Issue #155 keeps the Rootheart's existing `BossBase`/`EnemyBase` signals as
 the sole state authority. A scene-local `RootheartHdPresentation` hides only

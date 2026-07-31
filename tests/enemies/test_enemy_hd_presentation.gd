@@ -19,10 +19,10 @@ const EXPECTED_DIMENSIONS: Dictionary[String, Vector2i] = {
 	"shielded_brute": Vector2i(379, 384),
 }
 const EXPECTED_ATLAS_DIMENSIONS: Dictionary[String, Vector2i] = {
-	"melee_chaser": Vector2i(1264, 2304),
-	"fast_flanker": Vector2i(956, 2304),
-	"ranged_harasser": Vector2i(716, 2304),
-	"shielded_brute": Vector2i(1516, 2304),
+	"melee_chaser": Vector2i(584, 768),
+	"fast_flanker": Vector2i(520, 768),
+	"ranged_harasser": Vector2i(468, 768),
+	"shielded_brute": Vector2i(636, 768),
 }
 
 
@@ -58,11 +58,10 @@ func test_roster_uses_distinct_alpha_pngs_and_linear_hd_nodes() -> void:
 			presentation.get_body_sprite().texture_filter,
 			CanvasItem.TEXTURE_FILTER_LINEAR
 		)
-		# Display-height contract: scale × source cell height == display_height_px.
-		# Cell height matches the single-portrait height so the contract holds for both
-		# the legacy body_texture path and the atlas-region path.
+		# Display-height contract: atlas scale is based on its authored visible
+		# content height, not the padded region that protects transformed poses.
 		assert_almost_eq(
-			presentation.get_body_sprite().scale.y * float(texture.get_height()),
+			presentation.get_body_sprite().scale.y * presentation.pose_content_height_px,
 			presentation.display_height_px,
 			0.01
 		)
@@ -111,6 +110,54 @@ func test_state_to_atlas_row_maps_all_states() -> void:
 	assert_eq(EnemyHdPresentation.state_to_atlas_row(EnemyBase.State.RECOVERY), EnemyHdPresentation.ATLAS_ROW_IDLE)
 	assert_eq(EnemyHdPresentation.state_to_atlas_row(EnemyBase.State.STAGGER), EnemyHdPresentation.ATLAS_ROW_STAGGER)
 	assert_eq(EnemyHdPresentation.state_to_atlas_row(EnemyBase.State.DEAD), EnemyHdPresentation.ATLAS_ROW_DEATH)
+
+
+func test_every_roster_scene_maps_live_states_to_its_pose_rows() -> void:
+	var states: Array[EnemyBase.State] = [
+		EnemyBase.State.IDLE,
+		EnemyBase.State.CHASE,
+		EnemyBase.State.WIND_UP,
+		EnemyBase.State.ATTACK,
+		EnemyBase.State.RECOVERY,
+		EnemyBase.State.STAGGER,
+		EnemyBase.State.DEAD,
+	]
+	for enemy_name: String in ROSTER_SCENES:
+		var enemy: EnemyBase = ROSTER_SCENES[enemy_name].instantiate() as EnemyBase
+		add_child_autofree(enemy)
+		var presentation: EnemyHdPresentation = enemy.get_node("HdPresentation") as EnemyHdPresentation
+		var body: Sprite2D = presentation.get_body_sprite()
+		var cell_h: float = body.region_rect.size.y
+		for state: EnemyBase.State in states:
+			enemy.state = state
+			enemy.state_changed.emit(EnemyBase.State.IDLE, state)
+			presentation._process(0.0)
+			var row: int = int(round(body.region_rect.position.y / cell_h))
+			assert_eq(
+				row,
+				EnemyHdPresentation.state_to_atlas_row(state),
+				"%s maps live state %s to its atlas row." % [enemy_name, EnemyBase.State.keys()[state]]
+			)
+
+
+func test_pose_cells_keep_transformed_silhouettes_inside_transparent_margins() -> void:
+	for enemy_name: String in ROSTER_SCENES:
+		var atlas: Texture2D = load("res://assets/sprites/enemies/hd/%s_poses.png" % enemy_name) as Texture2D
+		var image: Image = atlas.get_image()
+		var cell_w: int = roundi(
+			float(image.get_width()) / float(EnemyHdPresentation.ATLAS_COLUMNS)
+		)
+		var cell_h: int = roundi(
+			float(image.get_height()) / float(EnemyHdPresentation.ATLAS_ROWS)
+		)
+		for row: int in EnemyHdPresentation.ATLAS_ROWS:
+			for col: int in EnemyHdPresentation.ATLAS_COLUMNS:
+				var cell: Image = image.get_region(Rect2i(col * cell_w, row * cell_h, cell_w, cell_h))
+				var used: Rect2i = cell.get_used_rect()
+				assert_gt(used.position.x, 0, "%s pose %s/%s must not clip at left." % [enemy_name, row, col])
+				assert_gt(used.position.y, 0, "%s pose %s/%s must not clip at top." % [enemy_name, row, col])
+				assert_lt(used.end.x, cell_w, "%s pose %s/%s must not clip at right." % [enemy_name, row, col])
+				assert_lt(used.end.y, cell_h, "%s pose %s/%s must not clip at bottom." % [enemy_name, row, col])
 
 
 func test_atlas_frame_resets_to_zero_on_state_changed() -> void:
