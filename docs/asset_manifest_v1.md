@@ -100,6 +100,18 @@ with alpha-border correction and per-node linear filtering. The boss's 16 px
 collision radius, attack offsets, timing, burst spawning, rewards, and arena
 geometry are unchanged.
 
+Issue #205 replaces the static phase portraits with two deterministic 768×2048
+Rootheart pose sheets from `assets/sprites/generate_rootheart_pose_atlases.py`.
+Each has three 256×256 animation columns and eight rows (dormant, awakening,
+windup, contact, recovery, burst, hit, defeat), with a 176 px opaque-content
+contract. `RootheartHdPresentation` selects regions only from the live
+`EnemyBase.State`, `BossBase` phase-change, accepted-health-change, and
+already-existing post-slam burst signals; its 0.36-second burst pose is
+display-only and matches the established radial-cue lifetime. A real accepted
+hit briefly selects the hit row while Rootheart's existing poise remains intact. It neither writes state nor changes attack/collision/reward
+or arena ownership. Provenance and deterministic MD5s are recorded in
+`assets/sprites/LICENSES.md`.
+
 Issue #155 Web evidence used the real boss arena at the production `1280×720`
 canvas. The dormant body, awakened cyan/magenta core, amber slam wind-up ring,
 and existing eight-direction burst all remained distinct at the shipped 2×
