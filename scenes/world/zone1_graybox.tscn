@@ -45,6 +45,7 @@ chaser_path = NodePath("../Enemies/ChaserRoomA")
 chaser_visual_path = NodePath("../Enemies/ChaserRoomA/BodyVisual")
 checkpoint_path = NodePath("../Checkpoints/CheckpointEntrance")
 checkpoint_visual_path = NodePath("../Checkpoints/CheckpointEntrance/Visual")
+secret_cover_paths = [NodePath("../Secrets/AlcoveSouthReveal/Cover"), NodePath("../Secrets/AlcoveNorthReveal/Cover")]
 
 [node name="Props" type="Node2D" parent="."]
 

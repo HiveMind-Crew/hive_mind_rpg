@@ -182,11 +182,11 @@ func test_covered_route_scenery_and_exit_gate_visual_are_hidden() -> void:
 			"%s lies outside the covered route." % prop_name
 		)
 		assert_true(prop.visible, "%s must keep its legacy presentation." % prop_name)
-	# Exactly the exit-gate visual + the covered props are hidden, and only
-	# visually: every prop node stays in the tree under Props.
+	# Exactly the exit-gate visual + covered props + both temporary graybox
+	# secret-cover polygons are hidden; every gameplay node stays in its tree.
 	assert_eq(
 		presentation.get_hidden_legacy_scenery().size(),
-		COVERED_ROUTE_PROP_NAMES.size() + 1
+		COVERED_ROUTE_PROP_NAMES.size() + 3
 	)
 	assert_eq(zone.get_zone_props().size(), 12, "No prop node may be removed.")
 
@@ -196,12 +196,19 @@ func test_covered_route_scenery_and_exit_gate_visual_are_hidden() -> void:
 	assert_true(exit_zone.monitoring, "ExitZone must keep sensing the player.")
 	assert_eq(exit_zone.prompt_text, "[E] Return to Hub")
 
-	# Secret-alcove reveal mechanics stay intact: covers are mechanical
-	# (hidden-room reveal), draw above the plate, and keep their pickups.
-	assert_true((zone.get_node("Secrets/AlcoveSouthReveal/Cover") as Polygon2D).visible)
-	assert_true((zone.get_node("Secrets/AlcoveSouthReveal") as Area2D).monitoring)
-	assert_true((zone.get_node("Secrets/AlcoveNorthReveal/Cover") as Polygon2D).visible)
-	assert_true((zone.get_node("Secrets/AlcoveNorthReveal") as Area2D).monitoring)
+	# The painted route is the dormant secret cover; only its legacy gray
+	# polygons are suppressed. Sensors, collision, pickups, and reveal feedback
+	# remain on the live HiddenRoomReveal nodes.
+	for reveal_path: NodePath in [
+		NodePath("Secrets/AlcoveSouthReveal"),
+		NodePath("Secrets/AlcoveNorthReveal"),
+	]:
+		var reveal: HiddenRoomReveal = zone.get_node(reveal_path) as HiddenRoomReveal
+		var cover: Polygon2D = reveal.get_node("Cover") as Polygon2D
+		assert_false(cover.visible, "Legacy graybox cover must not draw over the HD route.")
+		assert_true(reveal.monitoring)
+		assert_not_null(reveal.get_node("CollisionShape2D") as CollisionShape2D)
+		assert_not_null(reveal.get_reveal_feedback())
 	assert_eq(zone.get_secret_pickups().size(), 2)
 
 

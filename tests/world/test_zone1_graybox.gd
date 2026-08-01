@@ -322,7 +322,10 @@ func test_secret_covers_hide_the_alcoves_until_the_player_enters() -> void:
 	assert_eq(reveals.size(), 2, "Each alcove sits behind a hidden-room cover.")
 	for reveal: HiddenRoomReveal in reveals:
 		var cover: CanvasItem = reveal.get_node("Cover") as CanvasItem
-		assert_true(cover.visible, "%s starts covered." % reveal.name)
+		assert_false(
+			cover.visible,
+			"%s legacy cover is suppressed by Zone1HdPresentation; its sensor stays live." % reveal.name
+		)
 
 		reveal.body_entered.emit(player)
 
