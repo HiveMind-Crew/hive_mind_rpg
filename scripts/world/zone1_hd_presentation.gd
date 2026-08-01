@@ -17,8 +17,9 @@ extends Node2D
 ## painted landmarks must never suggest interactions that do not exist). Every
 ## interactable keeps its own live node + visual. Legacy scenery that would
 ## double up with the painted plate (display-only prop sprites and the
-## gate marker polygon) is hidden inside the covered routes; the ExitZone
-## Area2D, its prompt, and all gameplay nodes remain untouched.
+## gate marker polygon, and temporary secret-cover polygons) is hidden inside
+## the painted routes; the ExitZone and HiddenRoomReveal Area2D nodes, prompts,
+## pickups, and all gameplay contracts remain untouched.
 
 ## Copied production-prototype sources; provenance (LemonadeAI /
 ## Flux-2-Klein-9B-GGUF, non-commercial, prototype-only) is recorded in
@@ -75,6 +76,9 @@ const SHRINE_LIT_MODULATE: Color = Color.WHITE
 @export var chaser_visual_path: NodePath
 @export var checkpoint_path: NodePath
 @export var checkpoint_visual_path: NodePath
+## Mechanical secret triggers retain their feedback, but their legacy graybox
+## covers must not draw over the painted Zone 1 route.
+@export var secret_cover_paths: Array[NodePath] = []
 
 var _props_root: Node2D
 var _exit_gate_visual: Polygon2D
@@ -128,6 +132,7 @@ func _ready() -> void:
 	for background_sprite: Sprite2D in _background_sprites:
 		add_child(background_sprite)
 	_hide_covered_legacy_scenery()
+	_hide_legacy_secret_covers()
 	var player_hd_presentation: PlayerHdPresentation = (
 		_player.get_node_or_null("HdPresentation") as PlayerHdPresentation
 	)
@@ -281,9 +286,9 @@ func _get_sprite_world_rect(sprite: Sprite2D) -> Rect2:
 ## marker Polygon2D at the entrance. Visibility only — no node is removed or
 ## reparented, and nothing mechanical is touched: props carry no collision or
 ## script, and the exit interaction lives on the separate ExitZone Area2D
-## (kept monitoring, with its prompt). Props east of the room B seam and the
-## secret-alcove reveal covers (mechanical, drawn above the plate) stay as
-## they are.
+## (kept monitoring, with its prompt). Temporary secret-cover polygons are
+## also hidden because the painted plate already depicts their forest walls;
+## their Area2D sensor and reveal-feedback behavior stay live.
 func _hide_covered_legacy_scenery() -> void:
 	_exit_gate_visual.visible = false
 	_hidden_legacy_scenery = [_exit_gate_visual]
@@ -292,6 +297,19 @@ func _hide_covered_legacy_scenery() -> void:
 		if prop != null and _is_position_covered(prop.position):
 			prop.visible = false
 			_hidden_legacy_scenery.append(prop)
+
+
+## The painted plate already supplies the forest walls around both secret
+## alcoves. Hide only the temporary legacy cover polygons; their Area2D sensor,
+## pickup, and reveal-feedback sprite remain fully live.
+func _hide_legacy_secret_covers() -> void:
+	for cover_path: NodePath in secret_cover_paths:
+		var cover: CanvasItem = get_node_or_null(cover_path) as CanvasItem
+		if cover == null:
+			push_error("Zone1HdPresentation requires valid secret cover paths.")
+			continue
+		cover.hide()
+		_hidden_legacy_scenery.append(cover)
 
 
 func _is_position_covered(world_position: Vector2) -> bool:
