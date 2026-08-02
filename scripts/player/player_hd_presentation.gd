@@ -87,6 +87,15 @@ const MOVE_BOB_HEIGHT_PX: float = 1.2
 const MOVE_BOB_FREQUENCY: float = 11.0
 const MOVE_SWAY_DEGREES: float = 2.5
 const ACTION_SQUASH: Vector2 = Vector2(1.1, 0.9)
+const BODY_Z_INDEX: int = 0
+## Root-relative presentation offsets for the source-derived melee body frames.
+## The weapon owner receives this resolved grip instead of guessing one static
+## anchor while the illustrated body commits and recovers.
+const MELEE_HAND_PHASE_OFFSETS: Array[Vector2] = [
+	Vector2(-1.5, 1.0),
+	Vector2(5.0, -1.0),
+	Vector2(2.5, 3.0),
+]
 const DASH_STRETCH: Vector2 = Vector2(0.9, 1.12)
 const HURT_TINT: Color = Color(1.0, 0.72, 0.72, 1.0)
 const DEAD_TINT: Color = Color(0.35, 0.37, 0.4, 1.0)
@@ -173,6 +182,7 @@ func _create_display_sprite() -> Sprite2D:
 	# The atlas carries authored art for all four cardinals, so the sprite never
 	# runtime-mirrors; facing feedback comes from region selection.
 	sprite.flip_h = false
+	sprite.z_index = BODY_Z_INDEX
 	sprite.scale = Vector2.ONE * _base_scale()
 	sprite.position = BODY_POSITION
 	return sprite
@@ -389,10 +399,40 @@ func _apply_state_pose() -> void:
 
 func _update_weapon() -> void:
 	_weapon.self_modulate = _state_modulate() * _legacy_visual.self_modulate
-	_weapon.update_presentation(_legacy_visual.facing_label, _animation_state, _state_elapsed)
+	_weapon.update_presentation(
+		_legacy_visual.facing_label,
+		_animation_state,
+		_state_elapsed,
+		_resolved_weapon_hand_anchor(),
+	)
 	if _animation_state == PlayerVisual.MOVE_ANIMATION:
 		# Keep the carried weapon attached to the bobbing body silhouette.
 		_weapon.position.y += _move_bob_offset_y()
+
+
+func _resolved_weapon_hand_anchor() -> Vector2:
+	var facing: StringName = _legacy_visual.facing_label
+	var anchor: Vector2 = PlayerWeaponHdPresentation.HELD_HAND_ANCHORS.get(
+		facing, PlayerWeaponHdPresentation.HELD_HAND_ANCHORS[&"south"]
+	)
+	if not _is_active_melee_body():
+		return anchor
+	var forward: Vector2 = _facing_vector(facing)
+	var right: Vector2 = Vector2(-forward.y, forward.x)
+	var hand_offset: Vector2 = MELEE_HAND_PHASE_OFFSETS[_melee_phase_column(_state_elapsed)]
+	return anchor + forward * hand_offset.x + right * hand_offset.y
+
+
+func _facing_vector(facing: StringName) -> Vector2:
+	match facing:
+		&"north":
+			return Vector2.UP
+		&"west":
+			return Vector2.LEFT
+		&"east":
+			return Vector2.RIGHT
+		_:
+			return Vector2.DOWN
 
 
 func _move_bob_offset_y() -> float:

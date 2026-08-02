@@ -150,6 +150,13 @@ func test_melee_body_atlas_has_three_distinct_authored_poses_for_each_facing() -
 		)
 		var windup_bounds: Rect2i = _opaque_bounds(image, windup_region)
 		var contact_bounds: Rect2i = _opaque_bounds(image, contact_region)
+		var recovery_bounds: Rect2i = _opaque_bounds(image, recovery_region)
+		assert_gte(windup_bounds.size.y, 145,
+			"Wind-up must retain the canonical wanderer's readable body scale.")
+		assert_gte(contact_bounds.size.y, 145,
+			"Contact must retain the canonical wanderer's readable body scale.")
+		assert_gte(recovery_bounds.size.y, 145,
+			"Recovery must retain the canonical wanderer's readable body scale.")
 		match row:
 			0:
 				assert_lt(contact_bounds.position.y, windup_bounds.position.y - 8,
@@ -432,6 +439,7 @@ func test_locomotion_response_atlas_has_four_gait_poses_and_cardinal_hurt_recoil
 		return
 	assert_eq(Vector2i(atlas.get_width(), atlas.get_height()), Vector2i(1280, 1024))
 	var image: Image = atlas.get_image()
+	var canonical_image: Image = HD_ATLAS.get_image()
 	for row: int in PlayerHdPresentation.LOCOMOTION_DIRECTION_ROWS.size():
 		var first_gait := Rect2i(0, row * 256, 256, 256)
 		var second_gait := Rect2i(256, row * 256, 256, 256)
@@ -439,6 +447,15 @@ func test_locomotion_response_atlas_has_four_gait_poses_and_cardinal_hurt_recoil
 		assert_gt(_alpha_mask_difference(image, first_gait, second_gait), 400)
 		assert_gt(_alpha_mask_difference(image, first_gait, hurt), 800,
 			"Hurt recoil must not repeat the locomotion silhouette.")
+		var facing: StringName = PlayerHdPresentation.LOCOMOTION_DIRECTION_ROWS.keys()[row]
+		var source_column: int = PlayerHdPresentation.DIRECTION_ATLAS_COLUMNS[facing]
+		var canonical_bounds: Rect2i = _opaque_bounds(canonical_image, Rect2i(source_column * 256, 0, 256, 256))
+		for gait_column: int in PlayerHdPresentation.LOCOMOTION_SETTLE_COLUMN + 1:
+			var gait_bounds: Rect2i = _opaque_bounds(image, Rect2i(gait_column * 256, row * 256, 256, 256))
+			assert_gte(gait_bounds.size.y, canonical_bounds.size.y - 16,
+				"%s gait must retain the canonical illustrated body's readable height." % facing)
+			assert_lte(gait_bounds.size.y, canonical_bounds.size.y + 16,
+				"%s gait must not replace the canonical body with a differently scaled actor." % facing)
 
 
 func test_locomotion_starts_at_authored_first_gait_then_settles_before_idle() -> void:
