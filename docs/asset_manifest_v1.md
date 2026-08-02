@@ -104,10 +104,12 @@ size lives in the script. The atlas art carries the same OpenAI-generation
 provenance as its source portraits and is a prototype transform pipeline — not
 bespoke directional illustration. `EnemyHdPresentation` scales the padded atlas
 from its documented 80 px visible content height so the existing display-height
-contract is preserved. Directional limitation: the atlas frames are
-single-facing derivatives and are never runtime-mirrored; the live facing accent
-remains the truthful directional cue until dedicated authored cardinal pose rows
-replace them.
+contract is preserved. Directional handling: the atlas frames are single-facing
+right-side derivatives, but `EnemyHdPresentation` mirrors them for
+left-dominant live target intent so wind-up/attack silhouettes commit toward the
+target. Up/down-dominant intent stays unflipped (the upright side art is not
+rotated); the live facing accent remains the truthful vertical/diagonal cue
+until dedicated authored cardinal pose rows replace it.
 
 Issue #155 keeps the Rootheart's existing `BossBase`/`EnemyBase` signals as
 the sole state authority. A scene-local `RootheartHdPresentation` hides only
