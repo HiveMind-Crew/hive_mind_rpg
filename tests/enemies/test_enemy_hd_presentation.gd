@@ -251,9 +251,9 @@ func test_live_facing_and_combat_states_drive_the_static_body() -> void:
 	legacy.self_modulate = Color(1.0, 0.5, 0.5, 1.0)
 	presentation._process(0.0)
 
-	assert_false(
+	assert_true(
 		presentation.get_body_sprite().flip_h,
-		"Single-facing derived pose art must not be runtime-mirrored; the accent carries facing."
+		"A left-targeting wind-up mirrors the side-authored body toward the target."
 	)
 	assert_eq(presentation.get_body_sprite().modulate, EnemyBase.WIND_UP_COLOR)
 	assert_eq(presentation.get_body_sprite().self_modulate, legacy.self_modulate)
@@ -265,6 +265,54 @@ func test_live_facing_and_combat_states_drive_the_static_body() -> void:
 	presentation._process(0.0)
 	assert_eq(presentation.get_body_sprite().modulate, EnemyBase.DEAD_COLOR)
 	assert_false(presentation.get_facing_accent().visible)
+
+
+func test_atlas_body_mirrors_for_horizontal_intent_and_clears_on_vertical() -> void:
+	# The pose atlas is authored right-facing. A real left-targeting wind-up and
+	# attack must mirror the illustrated body toward the target (legacy `_side`
+	# convention), and a later up/down transition must drop that flip so no stale
+	# left mirror survives — the upright side art is never re-projected vertically.
+	var enemy: EnemyBase = ROSTER_SCENES["melee_chaser"].instantiate() as EnemyBase
+	var target: Node2D = Node2D.new()
+	add_child_autofree(enemy)
+	add_child_autofree(target)
+	enemy.set_target(target)
+	var presentation: EnemyHdPresentation = (
+		enemy.get_node("HdPresentation") as EnemyHdPresentation
+	)
+	var body: Sprite2D = presentation.get_body_sprite()
+	assert_not_null(presentation.pose_atlas, "Test relies on the atlas presentation path.")
+
+	# Left-targeting wind-up: horizontal intent, body mirrors toward the target.
+	target.global_position = enemy.global_position + Vector2.LEFT * 64.0
+	enemy.state = EnemyBase.State.WIND_UP
+	presentation._process(0.0)
+	assert_eq(presentation.get_facing_direction(), Vector2.LEFT)
+	assert_true(body.flip_h, "Left-facing wind-up mirrors the atlas body toward the target.")
+
+	# Attack lunge keeps facing the target instead of committing right.
+	enemy.state = EnemyBase.State.ATTACK
+	presentation._process(0.0)
+	assert_true(body.flip_h, "Left-facing attack keeps the mirrored body committing left.")
+
+	# Up transition: vertical intent must not retain the stale left mirror, and the
+	# upright art is never rotated into a capsule; the accent carries the cue.
+	target.global_position = enemy.global_position + Vector2.UP * 64.0
+	presentation._process(0.0)
+	assert_eq(presentation.get_facing_direction(), Vector2.UP)
+	assert_false(body.flip_h, "Up-facing intent drops the stale left mirror.")
+	assert_almost_eq(body.rotation, 0.0, 0.001, "Upright side art is not rotated for vertical intent.")
+	assert_lt(
+		presentation.get_facing_accent().position.y, 0.0,
+		"The live accent carries the vertical facing the body cannot mirror."
+	)
+
+	# Down transition: still unflipped, distinct vertical accent direction.
+	target.global_position = enemy.global_position + Vector2.DOWN * 64.0
+	presentation._process(0.0)
+	assert_eq(presentation.get_facing_direction(), Vector2.DOWN)
+	assert_false(body.flip_h, "Down-facing intent stays unflipped.")
+	assert_gt(presentation.get_facing_accent().position.y, 0.0, "Accent points down for down intent.")
 
 
 func test_hd_body_uses_live_state_poses_without_changing_enemy_state() -> void:
@@ -317,9 +365,12 @@ func test_presentation_preserves_each_archetype_collision_and_ai_contract() -> v
 		var presentation: EnemyHdPresentation = (
 			enemy.get_node("HdPresentation") as EnemyHdPresentation
 		)
-		# The adapter introduces no physics body of its own.
+		# The adapter introduces no physics body of its own. Compare through a
+		# widened Node reference: the Godot 4.7 analyzer rejects a statically
+		# always-false `EnemyHdPresentation is CollisionObject2D` as a parse error.
+		var presentation_node: Node = presentation
 		assert_false(
-			presentation is CollisionObject2D,
+			presentation_node is CollisionObject2D,
 			"%s HdPresentation must stay a non-collision Node2D." % enemy_name
 		)
 		# EnemyBase collision contract is untouched by the adapter.

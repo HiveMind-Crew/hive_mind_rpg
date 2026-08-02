@@ -13,10 +13,16 @@ extends Node2D
 ## recoil, death-flatten) is removed when the atlas owns the visual pose; the
 ## atlas generator bakes those silhouette reads directly into each frame.
 ##
-## Directional limitation: the pose atlas is derived from a single authored
-## facing portrait. It is deliberately never runtime-flipped: the existing live
-## facing accent remains the truthful directional cue until dedicated cardinal
-## pose rows are authored.
+## Directional handling: the pose atlas is authored as a single right-facing
+## side portrait. Horizontal (left/right dominant) combat intent mirrors the
+## body toward the target with the same convention the legacy regular-enemy
+## side animations use (see EnemyBase._set_body_visual), so a left-targeting
+## wind-up/attack lunge commits toward its target instead of away from it.
+## Remaining limitation: the upright side art is never re-projected for
+## vertical (up/down dominant) intent — flipping horizontally would say nothing
+## there — so the body stays unflipped for up/down and the live facing accent
+## remains the truthful cue for the vertical and diagonal cardinal component
+## until dedicated cardinal pose rows are authored.
 
 const HD_TEXTURE_FILTER: CanvasItem.TextureFilter = CanvasItem.TEXTURE_FILTER_LINEAR
 const FACING_COLOR: Color = Color(0.95, 0.18, 0.85, 0.82)
@@ -178,6 +184,14 @@ func get_facing_direction() -> Vector2:
 	return _enemy._get_visual_facing_direction()
 
 
+func _body_faces_left(facing: Vector2) -> bool:
+	# Mirror the side-authored body only when horizontal intent dominates, matching
+	# the legacy regular-enemy `_side` rule in EnemyBase._set_body_visual. Up/down
+	# dominant intent returns false so the upright art is never flipped into a
+	# meaningless mirror and no stale left flip carries across a vertical turn.
+	return absf(facing.x) > absf(facing.y) and facing.x < 0.0
+
+
 func _atlas_region_for(row: int, col: int) -> Rect2:
 	return Rect2(
 		Vector2(_cell_size.x * float(col), _cell_size.y * float(row)),
@@ -195,9 +209,11 @@ func _apply_live_presentation() -> void:
 	if _body_sprite == null or _facing_accent == null:
 		return
 	var facing: Vector2 = get_facing_direction()
-	# Derived single-facing atlas art is never mirrored; facing remains explicit
-	# through the live accent until future authored cardinal pose rows exist.
-	_body_sprite.flip_h = pose_atlas == null and facing.x < 0.0
+	# Horizontal combat intent mirrors the side-authored body toward the target
+	# (legacy regular-enemy `_side` convention); vertical intent never flips, so
+	# an up/down transition cannot retain a stale left mirror. The accent still
+	# carries the full cardinal facing for the un-mirrorable vertical component.
+	_body_sprite.flip_h = _body_faces_left(facing)
 	_body_sprite.self_modulate = _legacy_visual.self_modulate
 	_body_sprite.modulate = state_tint_for(_enemy.state)
 	if pose_atlas != null:
