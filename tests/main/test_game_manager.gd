@@ -303,12 +303,20 @@ func test_post_continue_death_returns_to_the_persisted_checkpoint() -> void:
 	var checkpoint: Checkpoint = zone.get_node("Checkpoints/CheckpointRoomC") as Checkpoint
 	assert_true(checkpoint.is_lit(), "Continue relights the persisted checkpoint.")
 
-	# Damage and displace an enemy, then die through the real flow: the death
-	# path must reset the enemy (revive to full health, off its forced spot) and
-	# return the player to the persisted checkpoint. Enemy health is the
-	# deterministic reset signal — the chaser AI keeps moving during the fade-in,
-	# so an exact post-transition position would be brittle.
-	var enemy: EnemyBase = zone.get_node("Enemies/ChaserRoomC") as EnemyBase
+	# Damage and displace a regular enemy owned by a staged encounter room, then
+	# die through the real flow. Enemies now live under their room's Enemies root
+	# (#212), and RespawnController's death path runs EncounterRoom.reset_to_spawn(),
+	# which frees the live enemies and rebuilds fresh, untargeted copies from the
+	# pristine templates. So the death flow must recreate the enemy — not heal the
+	# old instance — meaning we assert through a re-fetched reference, never the
+	# freed one. Enemy health is the deterministic reset signal; the rebuilt copy
+	# stands off the forced position, but the exact spot stays unasserted because a
+	# chaser can move during the fade-in.
+	var room_c: EncounterRoom = (
+		zone.get_node("EncounterRooms/EncounterRoomC") as EncounterRoom
+	)
+	assert_not_null(room_c, "Room C owns its staged enemy set under EncounterRooms.")
+	var enemy: EnemyBase = room_c.get_assigned_enemies()[0] as EnemyBase
 	enemy.health.take_damage(1)
 	assert_lt(
 		enemy.health.current_health, enemy.health.max_health,
@@ -332,13 +340,21 @@ func test_post_continue_death_returns_to_the_persisted_checkpoint() -> void:
 		"Respawn restores the player to full health."
 	)
 	assert_true(player.is_control_enabled(), "Control returns after the respawn transition.")
+	# The room rebuilt its enemy set, so the damaged/displaced instance is gone and
+	# a fresh, full-health copy stands off the forced position. Read the reset enemy
+	# back through the room rather than the freed reference.
+	assert_false(
+		is_instance_valid(enemy),
+		"The death flow freed the damaged enemy instead of reusing it."
+	)
+	var reset_enemy: EnemyBase = room_c.get_assigned_enemies()[0] as EnemyBase
 	assert_eq(
-		enemy.health.current_health, enemy.health.max_health,
-		"The death flow resets displaced enemies to full health."
+		reset_enemy.health.current_health, reset_enemy.health.max_health,
+		"The death flow rebuilt the displaced enemy at full health."
 	)
 	assert_ne(
-		enemy.global_position, displaced_position,
-		"The reset relocated the enemy off its forced position."
+		reset_enemy.global_position, displaced_position,
+		"The rebuilt enemy stands off the forced position."
 	)
 	assert_true(checkpoint.is_lit(), "The persisted checkpoint stays lit through respawn.")
 
