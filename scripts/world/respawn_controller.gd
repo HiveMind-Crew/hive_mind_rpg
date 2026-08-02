@@ -51,6 +51,14 @@ func get_respawn_position() -> Vector2:
 	return _respawn_position
 
 
+## Re-arms the respawn point to a persisted checkpoint on Continue (issue #213)
+## so a later death returns here instead of the authored world spawn that
+## _ready captured. Presentation (lighting the shrine) and save writes are the
+## caller's concern; this only relocates where the next respawn lands.
+func restore_respawn_position(position: Vector2) -> void:
+	_respawn_position = position
+
+
 func is_respawning() -> bool:
 	return _is_respawning
 

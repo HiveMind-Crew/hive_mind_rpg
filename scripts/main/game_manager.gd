@@ -55,6 +55,7 @@ func continue_game() -> void:
 		return
 	_enter_world(world_scene)
 	_place_player_at_checkpoint()
+	_restore_saved_checkpoint()
 
 
 func get_current_world() -> Node2D:
@@ -154,6 +155,29 @@ func _place_player_at_checkpoint() -> void:
 	if camera_limits != null:
 		# The teleport must not smooth-pan the camera across the whole world.
 		camera_limits.snap_to_target()
+
+
+func _restore_saved_checkpoint() -> void:
+	# Continue must persist the run's respawn contract, not just the player's
+	# position (issue #213): a fresh RespawnController armed itself from the
+	# authored world spawn in _ready, so re-arm it from the saved checkpoint and
+	# relight the matching shrine. Without this a post-Continue death would send
+	# the player back to PlayerSpawn instead of the persisted checkpoint.
+	var respawn: RespawnController = (
+		_current_world.get_node_or_null("%RespawnController") as RespawnController
+	)
+	if respawn != null:
+		respawn.restore_respawn_position(SaveManager.checkpoint_position)
+	# Light the authored shrine whose respawn point matches the save, if one
+	# exists. mark_lit() restores presentation only — it never re-emits the
+	# reached signal, so the run is neither re-healed nor re-saved.
+	for node: Node in get_tree().get_nodes_in_group(Checkpoint.CHECKPOINT_GROUP):
+		var checkpoint := node as Checkpoint
+		if checkpoint == null:
+			continue
+		if checkpoint.get_respawn_position().is_equal_approx(SaveManager.checkpoint_position):
+			checkpoint.mark_lit()
+			break
 
 
 func _move_player_to_zone_entrance(world: Node2D) -> void:

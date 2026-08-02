@@ -50,6 +50,15 @@ func is_lit() -> bool:
 	return _lit
 
 
+## Lights the shrine as already-reached without re-announcing it. Continue uses
+## this to restore a saved checkpoint's lit presentation without re-healing,
+## re-arming the respawn point, or writing a duplicate save (issue #213); the
+## RespawnController is re-armed separately from the persisted position.
+func mark_lit() -> void:
+	_lit = true
+	_hd_visual.modulate = lit_color
+
+
 func get_hd_visual() -> Sprite2D:
 	return _hd_visual
 

@@ -257,6 +257,102 @@ func test_startup_continues_into_the_saved_zone_at_the_checkpoint() -> void:
 	_assert_single_player_hud_and_camera("after continue")
 
 
+## Composed regression for issue #213: a run saved through Zone 1's real shrine
+## route, reloaded, and Continued must re-arm the live RespawnController from the
+## persisted checkpoint (not PlayerSpawn) and relight the matching shrine, so a
+## later death — through the real death/fade/reset flow — returns the player
+## there at full health with control restored and enemies reset.
+func test_post_continue_death_returns_to_the_persisted_checkpoint() -> void:
+	# Save through the real route: enter Zone 1 and touch a shrine so its
+	# respawn point is persisted, then tear the run down like a relaunch.
+	var setup_main: GameManager = MAIN_SCENE.instantiate() as GameManager
+	add_child(setup_main)
+	var setup_zone: Zone1Graybox = await _enter_zone1(setup_main)
+	var setup_checkpoint: Checkpoint = (
+		setup_zone.get_node("Checkpoints/CheckpointRoomC") as Checkpoint
+	)
+	var saved_respawn: Vector2 = setup_checkpoint.get_respawn_position()
+	setup_checkpoint.body_entered.emit(setup_main.get_player())
+	assert_eq(
+		SaveManager.checkpoint_position, saved_respawn,
+		"Precondition: the shrine persisted its own respawn point."
+	)
+	remove_child(setup_main)
+	setup_main.free()
+	await wait_process_frames(1)
+	_reload_saved_run()
+
+	# Continue back into the saved world.
+	var main: GameManager = _add_main()
+	await wait_process_frames(2)
+	var zone: Zone1Graybox = main.get_current_world() as Zone1Graybox
+	assert_not_null(zone, "Continue reopens the saved zone.")
+
+	# The persisted checkpoint, not PlayerSpawn, is the armed respawn point, and
+	# the matching shrine is lit without a duplicate save write.
+	var respawn: RespawnController = zone.get_node("%RespawnController") as RespawnController
+	assert_eq(
+		respawn.get_respawn_position(), saved_respawn,
+		"Continue re-arms the respawn point from the saved checkpoint."
+	)
+	var spawn: Marker2D = zone.get_node("PlayerSpawn") as Marker2D
+	assert_ne(
+		respawn.get_respawn_position(), spawn.global_position,
+		"The armed respawn point is the checkpoint, not the authored PlayerSpawn."
+	)
+	var checkpoint: Checkpoint = zone.get_node("Checkpoints/CheckpointRoomC") as Checkpoint
+	assert_true(checkpoint.is_lit(), "Continue relights the persisted checkpoint.")
+
+	# Damage and displace an enemy, then die through the real flow: the death
+	# path must reset the enemy (revive to full health, off its forced spot) and
+	# return the player to the persisted checkpoint. Enemy health is the
+	# deterministic reset signal — the chaser AI keeps moving during the fade-in,
+	# so an exact post-transition position would be brittle.
+	var enemy: EnemyBase = zone.get_node("Enemies/ChaserRoomC") as EnemyBase
+	enemy.health.take_damage(1)
+	assert_lt(
+		enemy.health.current_health, enemy.health.max_health,
+		"Precondition: the enemy is damaged before the player dies."
+	)
+	var displaced_position: Vector2 = enemy.global_position + Vector2(96.0, 0.0)
+	enemy.global_position = displaced_position
+	var player: PlayerController = main.get_player()
+	player.global_position = Vector2(1500.0, 300.0)
+	player.health.take_damage(player.health.max_health)
+
+	await _wait_for_respawn_to_finish(respawn)
+
+	assert_eq(
+		player.global_position, saved_respawn,
+		"A post-Continue death respawns at the persisted checkpoint, not PlayerSpawn."
+	)
+	assert_false(player.health.is_dead, "The respawned player is alive.")
+	assert_eq(
+		player.health.current_health, player.health.max_health,
+		"Respawn restores the player to full health."
+	)
+	assert_true(player.is_control_enabled(), "Control returns after the respawn transition.")
+	assert_eq(
+		enemy.health.current_health, enemy.health.max_health,
+		"The death flow resets displaced enemies to full health."
+	)
+	assert_ne(
+		enemy.global_position, displaced_position,
+		"The reset relocated the enemy off its forced position."
+	)
+	assert_true(checkpoint.is_lit(), "The persisted checkpoint stays lit through respawn.")
+
+
+func _wait_for_respawn_to_finish(respawn: RespawnController) -> void:
+	# Poll the whole death → fade → respawn → fade-in transition rather than
+	# guessing a frame count, so the real fade duration can't make this brittle.
+	var deadline_frames: int = 240
+	while respawn.is_respawning() and deadline_frames > 0:
+		deadline_frames -= 1
+		await wait_physics_frames(1)
+	assert_gt(deadline_frames, 0, "The respawn transition never finished.")
+
+
 func test_startup_with_no_save_boots_into_the_hub() -> void:
 	# before_each clears the scratch save, so this is the fresh-boot path.
 	var main: GameManager = _add_main()
