@@ -306,6 +306,44 @@ func test_hd_body_uses_live_state_poses_without_changing_enemy_state() -> void:
 	assert_eq(enemy.state, EnemyBase.State.DEAD)
 
 
+func test_presentation_preserves_each_archetype_collision_and_ai_contract() -> void:
+	# The HD presentation is a visual-only Node2D child. Attaching it must not
+	# alter any archetype's collision layers/mask, hurt/attack wiring, or
+	# stat-derived combat values — EnemyBase/archetype AI stays authoritative
+	# (issue #204: "preserves collision/AI contracts" for every real archetype).
+	for enemy_name: String in ROSTER_SCENES:
+		var enemy: EnemyBase = ROSTER_SCENES[enemy_name].instantiate() as EnemyBase
+		add_child_autofree(enemy)
+		var presentation: EnemyHdPresentation = (
+			enemy.get_node("HdPresentation") as EnemyHdPresentation
+		)
+		# The adapter introduces no physics body of its own.
+		assert_false(
+			presentation is CollisionObject2D,
+			"%s HdPresentation must stay a non-collision Node2D." % enemy_name
+		)
+		# EnemyBase collision contract is untouched by the adapter.
+		assert_eq(
+			enemy.collision_layer, CollisionLayers.ENEMY_BODY,
+			"%s keeps the enemy-body collision layer." % enemy_name
+		)
+		assert_eq(
+			enemy.collision_mask, CollisionLayers.WORLD,
+			"%s keeps the world collision mask." % enemy_name
+		)
+		# Hurt/attack wiring and stat-derived combat values remain authoritative.
+		assert_not_null(enemy.hurtbox, "%s retains its hurtbox." % enemy_name)
+		assert_not_null(enemy.stats, "%s retains its stats resource." % enemy_name)
+		assert_eq(
+			enemy.attack_hitbox.damage, enemy.stats.attack_damage,
+			"%s attack damage stays stat-driven, not presentation-driven." % enemy_name
+		)
+		assert_eq(
+			enemy.health.max_health, enemy.stats.max_health,
+			"%s max health stays stat-driven." % enemy_name
+		)
+
+
 func test_brute_facing_accent_uses_the_live_shield_direction() -> void:
 	var brute: ShieldedBrute = ROSTER_SCENES["shielded_brute"].instantiate() as ShieldedBrute
 	var target: Node2D = Node2D.new()
