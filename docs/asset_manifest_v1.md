@@ -156,7 +156,13 @@ camera: checkpoint 44 px, travel gate 54 px, pickup 24 px, station 52 px,
 secret-reveal pulse 48 px, and boss door 88 px. The neutral gate and station
 reserve cyan, the checkpoint changes from a dim neutral state to restoration
 green/white, pickups and reveal feedback use cyan, and the sealed boss door
-uses threat-side magenta. Legacy polygons remain hidden in the tree where
+uses threat-side magenta. **Issue #212 adds a shared 69 px-tall encounter-seal
+sprite** (`assets/sprites/world/hd/encounter_seal.png`), generated deterministically
+from `assets/sprites/generate_zone1_encounter_seal.py`: each existing 8×48 room
+collision seam owns one linearly filtered, presentation-only thorn-root boundary
+with restrained magenta corruption and warm-gold lock glyphs. The asset has
+transparent margins and may overhang its seam for readability; it changes no
+room collision, enemy ownership, rewards, or route geometry. Legacy polygons remain hidden in the tree where
 their owning scene previously used them; collision shapes and sensors are
 unchanged. All six PNG imports are lossless, unmipmapped, unpremultiplied-alpha
 textures with alpha-border correction, and every live Sprite2D filters

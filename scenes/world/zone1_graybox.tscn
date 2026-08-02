@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=3]
+[gd_scene load_steps=30 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/zone1_graybox.gd" id="1_zone"]
 [ext_resource type="Script" path="res://scripts/world/zone1_hd_presentation.gd" id="16_hd_presentation"]
@@ -17,6 +17,23 @@
 [ext_resource type="Script" path="res://scripts/world/hidden_room_reveal.gd" id="7_reveal"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/rootheart_colossus.tscn" id="8_boss"]
 [ext_resource type="Texture2D" path="res://assets/sprites/world/hd/interactables/boss_door.png" id="17_boss_door_hd"]
+[ext_resource type="Script" path="res://scripts/world/encounter_room.gd" id="18_encounter"]
+[ext_resource type="Resource" path="res://data/encounters/zone1_room_a_reward.tres" id="19_reward_a"]
+[ext_resource type="Resource" path="res://data/encounters/zone1_room_b_reward.tres" id="20_reward_b"]
+[ext_resource type="Resource" path="res://data/encounters/zone1_room_c_reward.tres" id="21_reward_c"]
+[ext_resource type="Texture2D" path="res://assets/sprites/world/hd/encounter_seal.png" id="22_encounter_seal"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_room_a"]
+size = Vector2(248, 216)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_room_b"]
+size = Vector2(280, 280)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_room_c"]
+size = Vector2(248, 216)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_room_barrier"]
+size = Vector2(8, 48)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_boss_door"]
 size = Vector2(16, 80)
@@ -41,8 +58,8 @@ props_root_path = NodePath("../Props")
 exit_gate_visual_path = NodePath("../ExitGateVisual")
 player_path = NodePath("../Player")
 player_visual_path = NodePath("../Player/Body")
-chaser_path = NodePath("../Enemies/ChaserRoomA")
-chaser_visual_path = NodePath("../Enemies/ChaserRoomA/BodyVisual")
+chaser_path = NodePath("../EncounterRooms/EncounterRoomA/Enemies/ChaserRoomA")
+chaser_visual_path = NodePath("../EncounterRooms/EncounterRoomA/Enemies/ChaserRoomA/BodyVisual")
 checkpoint_path = NodePath("../Checkpoints/CheckpointEntrance")
 checkpoint_visual_path = NodePath("../Checkpoints/CheckpointEntrance/Visual")
 secret_cover_paths = [NodePath("../Secrets/AlcoveSouthReveal/Cover"), NodePath("../Secrets/AlcoveNorthReveal/Cover")]
@@ -156,15 +173,133 @@ unique_name_in_owner = true
 position = Vector2(1528, 248)
 
 [node name="EncounterRooms" type="Node2D" parent="."]
+unique_name_in_owner = true
 
-[node name="EncounterRoomA" type="Marker2D" parent="EncounterRooms" groups=["encounter_rooms"]]
-position = Vector2(408, 248)
+[node name="EncounterRoomA" type="Area2D" parent="EncounterRooms"]
+position = Vector2(400, 240)
+monitorable = false
+script = ExtResource("18_encounter")
+exit_paths = Array[NodePath]([NodePath("BarrierWest"), NodePath("BarrierEast")])
+reward_data = ExtResource("19_reward_a")
 
-[node name="EncounterRoomB" type="Marker2D" parent="EncounterRooms" groups=["encounter_rooms"]]
-position = Vector2(760, 248)
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EncounterRooms/EncounterRoomA"]
+shape = SubResource("RectangleShape2D_room_a")
 
-[node name="EncounterRoomC" type="Marker2D" parent="EncounterRooms" groups=["encounter_rooms"]]
-position = Vector2(1128, 248)
+[node name="Enemies" type="Node2D" parent="EncounterRooms/EncounterRoomA"]
+
+[node name="ChaserRoomA" parent="EncounterRooms/EncounterRoomA/Enemies" instance=ExtResource("4_chaser")]
+position = Vector2(8, -8)
+
+[node name="FlankerRoomA" parent="EncounterRooms/EncounterRoomA/Enemies" instance=ExtResource("13_flanker")]
+position = Vector2(-40, 40)
+
+[node name="BarrierWest" type="StaticBody2D" parent="EncounterRooms/EncounterRoomA"]
+position = Vector2(-128, 8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EncounterRooms/EncounterRoomA/BarrierWest"]
+shape = SubResource("RectangleShape2D_room_barrier")
+
+[node name="SealHdVisual" type="Sprite2D" parent="EncounterRooms/EncounterRoomA/BarrierWest"]
+texture_filter = 2
+scale = Vector2(0.18, 0.18)
+texture = ExtResource("22_encounter_seal")
+
+[node name="BarrierEast" type="StaticBody2D" parent="EncounterRooms/EncounterRoomA"]
+position = Vector2(128, 8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EncounterRooms/EncounterRoomA/BarrierEast"]
+shape = SubResource("RectangleShape2D_room_barrier")
+
+[node name="SealHdVisual" type="Sprite2D" parent="EncounterRooms/EncounterRoomA/BarrierEast"]
+texture_filter = 2
+scale = Vector2(0.18, 0.18)
+texture = ExtResource("22_encounter_seal")
+
+[node name="EncounterRoomB" type="Area2D" parent="EncounterRooms"]
+position = Vector2(768, 240)
+monitorable = false
+script = ExtResource("18_encounter")
+exit_paths = Array[NodePath]([NodePath("BarrierWest"), NodePath("BarrierEast")])
+reward_data = ExtResource("20_reward_b")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EncounterRooms/EncounterRoomB"]
+shape = SubResource("RectangleShape2D_room_b")
+
+[node name="Enemies" type="Node2D" parent="EncounterRooms/EncounterRoomB"]
+
+[node name="ChaserRoomB1" parent="EncounterRooms/EncounterRoomB/Enemies" instance=ExtResource("4_chaser")]
+position = Vector2(-56, -72)
+
+[node name="HarasserRoomB" parent="EncounterRooms/EncounterRoomB/Enemies" instance=ExtResource("11_harasser")]
+position = Vector2(-8, 8)
+
+[node name="BruteRoomB" parent="EncounterRooms/EncounterRoomB/Enemies" instance=ExtResource("12_brute")]
+position = Vector2(72, 8)
+
+[node name="ChaserRoomB2" parent="EncounterRooms/EncounterRoomB/Enemies" instance=ExtResource("4_chaser")]
+position = Vector2(40, 88)
+
+[node name="BarrierWest" type="StaticBody2D" parent="EncounterRooms/EncounterRoomB"]
+position = Vector2(-144, 8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EncounterRooms/EncounterRoomB/BarrierWest"]
+shape = SubResource("RectangleShape2D_room_barrier")
+
+[node name="SealHdVisual" type="Sprite2D" parent="EncounterRooms/EncounterRoomB/BarrierWest"]
+texture_filter = 2
+scale = Vector2(0.18, 0.18)
+texture = ExtResource("22_encounter_seal")
+
+[node name="BarrierEast" type="StaticBody2D" parent="EncounterRooms/EncounterRoomB"]
+position = Vector2(144, 8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EncounterRooms/EncounterRoomB/BarrierEast"]
+shape = SubResource("RectangleShape2D_room_barrier")
+
+[node name="SealHdVisual" type="Sprite2D" parent="EncounterRooms/EncounterRoomB/BarrierEast"]
+texture_filter = 2
+scale = Vector2(0.18, 0.18)
+texture = ExtResource("22_encounter_seal")
+
+[node name="EncounterRoomC" type="Area2D" parent="EncounterRooms"]
+position = Vector2(1136, 240)
+monitorable = false
+script = ExtResource("18_encounter")
+exit_paths = Array[NodePath]([NodePath("BarrierWest"), NodePath("BarrierEast")])
+reward_data = ExtResource("21_reward_c")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EncounterRooms/EncounterRoomC"]
+shape = SubResource("RectangleShape2D_room_c")
+
+[node name="Enemies" type="Node2D" parent="EncounterRooms/EncounterRoomC"]
+
+[node name="ChaserRoomC" parent="EncounterRooms/EncounterRoomC/Enemies" instance=ExtResource("4_chaser")]
+position = Vector2(-8, 40)
+
+[node name="HarasserRoomC" parent="EncounterRooms/EncounterRoomC/Enemies" instance=ExtResource("11_harasser")]
+position = Vector2(48, -40)
+
+[node name="BarrierWest" type="StaticBody2D" parent="EncounterRooms/EncounterRoomC"]
+position = Vector2(-128, 8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EncounterRooms/EncounterRoomC/BarrierWest"]
+shape = SubResource("RectangleShape2D_room_barrier")
+
+[node name="SealHdVisual" type="Sprite2D" parent="EncounterRooms/EncounterRoomC/BarrierWest"]
+texture_filter = 2
+scale = Vector2(0.18, 0.18)
+texture = ExtResource("22_encounter_seal")
+
+[node name="BarrierEast" type="StaticBody2D" parent="EncounterRooms/EncounterRoomC"]
+position = Vector2(128, 8)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="EncounterRooms/EncounterRoomC/BarrierEast"]
+shape = SubResource("RectangleShape2D_room_barrier")
+
+[node name="SealHdVisual" type="Sprite2D" parent="EncounterRooms/EncounterRoomC/BarrierEast"]
+texture_filter = 2
+scale = Vector2(0.18, 0.18)
+texture = ExtResource("22_encounter_seal")
 
 [node name="Secrets" type="Node2D" parent="."]
 
@@ -212,33 +347,6 @@ position = Vector2(136, 200)
 
 [node name="CheckpointRoomC" parent="Checkpoints" instance=ExtResource("3_checkpoint")]
 position = Vector2(1048, 184)
-
-[node name="Enemies" type="Node2D" parent="."]
-unique_name_in_owner = true
-
-[node name="ChaserRoomA" parent="Enemies" groups=["resettable"] instance=ExtResource("4_chaser")]
-position = Vector2(408, 232)
-
-[node name="FlankerRoomA" parent="Enemies" groups=["resettable"] instance=ExtResource("13_flanker")]
-position = Vector2(360, 280)
-
-[node name="ChaserRoomB1" parent="Enemies" groups=["resettable"] instance=ExtResource("4_chaser")]
-position = Vector2(712, 168)
-
-[node name="HarasserRoomB" parent="Enemies" groups=["resettable"] instance=ExtResource("11_harasser")]
-position = Vector2(760, 248)
-
-[node name="BruteRoomB" parent="Enemies" groups=["resettable"] instance=ExtResource("12_brute")]
-position = Vector2(840, 248)
-
-[node name="ChaserRoomB2" parent="Enemies" groups=["resettable"] instance=ExtResource("4_chaser")]
-position = Vector2(808, 328)
-
-[node name="ChaserRoomC" parent="Enemies" groups=["resettable"] instance=ExtResource("4_chaser")]
-position = Vector2(1128, 280)
-
-[node name="HarasserRoomC" parent="Enemies" groups=["resettable"] instance=ExtResource("11_harasser")]
-position = Vector2(1184, 200)
 
 [node name="BossArena" type="Node2D" parent="."]
 

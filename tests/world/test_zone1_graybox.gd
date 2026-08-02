@@ -6,7 +6,10 @@ extends GutTest
 ## SaveManager at a scratch file and resets progression around every test.
 
 const ZONE_SCENE: PackedScene = preload("res://scenes/world/zone1_graybox.tscn")
+const ENCOUNTER_SEAL_PATH: String = "res://assets/sprites/world/hd/encounter_seal.png"
+const ENCOUNTER_SEAL_TEXTURE: Texture2D = preload(ENCOUNTER_SEAL_PATH)
 const TEST_SAVE_PATH: String = "user://test_zone1_savegame.json"
+const PNG_SIGNATURE: PackedByteArray = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]
 
 const CARDINAL_OFFSETS: Array[Vector2i] = [
 	Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN,
@@ -164,9 +167,8 @@ func test_every_point_of_interest_is_reachable_from_the_entrance() -> void:
 		)
 
 
-func test_zone_enemies_stand_on_floor_and_target_the_player() -> void:
+func test_zone_enemies_stand_on_floor_and_stay_dormant_until_entered() -> void:
 	var zone: Zone1Graybox = _add_zone()
-	var player: PlayerController = zone.get_node("Player") as PlayerController
 	var zone_enemies: Array[EnemyBase] = zone.get_zone_enemies()
 
 	assert_gte(zone_enemies.size(), 7, "The three authored encounter rooms use the full regular roster.")
@@ -181,12 +183,53 @@ func test_zone_enemies_stand_on_floor_and_target_the_player() -> void:
 		has_harasser = has_harasser or enemy is RangedHarasser
 		has_brute = has_brute or enemy is ShieldedBrute
 		has_flanker = has_flanker or enemy is FastFlanker
-		assert_eq(enemy.target, player, "%s should hunt the player." % enemy.name)
+		# Enemies belong to a room now: they stay untargeted and idle until the
+		# player physically enters that room (#212).
+		assert_null(enemy.target, "%s must stay dormant before its room is entered." % enemy.name)
+		assert_eq(enemy.state, EnemyBase.State.IDLE, "%s must idle while dormant." % enemy.name)
 		assert_false(zone.is_wall_cell(_cell_of(zone, enemy.global_position)))
 	assert_true(has_chaser, "Zone 1 retains the melee chaser baseline.")
 	assert_true(has_harasser, "Zone 1 includes a ranged harasser encounter.")
 	assert_true(has_brute, "Zone 1 includes a shielded brute encounter.")
 	assert_true(has_flanker, "Zone 1 includes a fast flanker encounter.")
+
+
+## Each room owns exactly its authored enemy set under its own Enemies root, and
+## the placed rooms are real EncounterRoom controllers (not bare markers).
+func test_each_room_owns_only_its_authored_enemy_set() -> void:
+	var zone: Zone1Graybox = _add_zone()
+	var rooms: Array[EncounterRoom] = zone.get_encounter_rooms()
+
+	assert_eq(rooms.size(), 3, "Zone 1 places three real encounter rooms.")
+	var room_a: EncounterRoom = rooms[0]
+	var room_b: EncounterRoom = rooms[1]
+	var room_c: EncounterRoom = rooms[2]
+	assert_eq(room_a.get_assigned_enemies().size(), 2, "Room A owns its melee + flanker pair.")
+	assert_eq(room_b.get_assigned_enemies().size(), 4, "Room B owns the largest split fight.")
+	assert_eq(room_c.get_assigned_enemies().size(), 2, "Room C owns the pre-boss pair.")
+	for room: EncounterRoom in rooms:
+		assert_true(room.is_in_group(EncounterRoom.ENCOUNTER_ROOM_GROUP))
+		assert_true(
+			room.is_in_group(RespawnController.RESETTABLE_GROUP),
+			"%s re-arms through the death respawn flow." % room.name
+		)
+		assert_eq(room.state, EncounterRoom.State.DORMANT, "%s starts dormant." % room.name)
+		assert_false(room.are_exits_sealed(), "%s keeps its barriers open until entered." % room.name)
+
+
+func _player_enter_room(zone: Zone1Graybox, room: EncounterRoom) -> void:
+	# Drive real player entry: teleport the actual player body onto the room
+	# trigger and let the physics overlap fire body_entered.
+	var player: PlayerController = zone.get_node("Player") as PlayerController
+	player.global_position = room.global_position
+	await wait_physics_frames(3)
+
+
+func _clear_room(zone: Zone1Graybox, room: EncounterRoom) -> void:
+	await _player_enter_room(zone, room)
+	for node: Node in room.get_assigned_enemies():
+		(node as EnemyBase).health.take_damage(99999)
+	await wait_physics_frames(1)
 
 
 func test_zone_props_are_authored_non_colliding_set_dressing() -> void:
@@ -242,20 +285,145 @@ func test_boss_door_starts_sealed_and_opens_on_request() -> void:
 	assert_signal_emit_count(zone, "boss_door_opened", 1)
 
 
-func test_clearing_every_encounter_unseals_the_boss_door() -> void:
+func test_encounter_seal_asset_and_scene_contract_are_hd_and_non_mechanical() -> void:
+	var file: FileAccess = FileAccess.open(ENCOUNTER_SEAL_PATH, FileAccess.READ)
+	assert_not_null(file)
+	assert_eq(file.get_buffer(PNG_SIGNATURE.size()), PNG_SIGNATURE)
+	assert_eq(ENCOUNTER_SEAL_TEXTURE.get_size(), Vector2(192.0, 384.0))
+	var image: Image = ENCOUNTER_SEAL_TEXTURE.get_image()
+	var used: Rect2i = image.get_used_rect()
+	assert_gt(used.position.x, 0, "Seal keeps a transparent left margin.")
+	assert_gt(used.position.y, 0, "Seal keeps a transparent top margin.")
+	assert_lt(used.end.x, image.get_width(), "Seal keeps a transparent right margin.")
+	assert_lt(used.end.y, image.get_height(), "Seal keeps a transparent bottom margin.")
+
+	var zone: Zone1Graybox = _add_zone()
+	for room: EncounterRoom in zone.get_encounter_rooms():
+		for barrier_name: StringName in [&"BarrierWest", &"BarrierEast"]:
+			var barrier: StaticBody2D = room.get_node(NodePath(barrier_name)) as StaticBody2D
+			assert_not_null(barrier.get_node_or_null("CollisionShape2D"))
+			assert_null(barrier.get_node_or_null("Visual"), "Legacy rectangle must not remain live.")
+			var seal: Sprite2D = barrier.get_node("SealHdVisual") as Sprite2D
+			assert_eq(seal.texture, ENCOUNTER_SEAL_TEXTURE)
+			assert_eq(seal.texture_filter, CanvasItem.TEXTURE_FILTER_LINEAR)
+			assert_eq(seal.scale, Vector2(0.18, 0.18))
+
+
+func test_entering_a_room_activates_only_it_and_seals_its_barriers() -> void:
+	var zone: Zone1Graybox = _add_zone()
+	var rooms: Array[EncounterRoom] = zone.get_encounter_rooms()
+	var player: PlayerController = zone.get_node("Player") as PlayerController
+
+	await _player_enter_room(zone, rooms[0])
+
+	assert_true(rooms[0].is_active(), "Real player entry activates room A.")
+	assert_true(rooms[0].are_exits_sealed(), "Room A seals its exit barriers on entry.")
+	var barrier: StaticBody2D = rooms[0].get_node("BarrierEast") as StaticBody2D
+	var barrier_shape: CollisionShape2D = barrier.get_node("CollisionShape2D") as CollisionShape2D
+	assert_true(barrier.visible, "Sealed barriers become visible walls.")
+	assert_false(barrier_shape.disabled, "Sealed barriers collide during combat.")
+	for node: Node in rooms[0].get_assigned_enemies():
+		assert_eq((node as EnemyBase).target, player, "Room A enemies wake to the player.")
+
+	# Later rooms stay dormant and untargeted while the player fights room A.
+	for later_index: int in [1, 2]:
+		assert_eq(
+			rooms[later_index].state, EncounterRoom.State.DORMANT,
+			"%s must stay dormant while an earlier room is active." % rooms[later_index].name
+		)
+		for node: Node in rooms[later_index].get_assigned_enemies():
+			assert_null((node as EnemyBase).target, "Dormant rooms never target the player early.")
+
+
+func test_clearing_a_room_reopens_its_barriers_and_leaves_later_rooms_dormant() -> void:
+	var zone: Zone1Graybox = _add_zone()
+	var rooms: Array[EncounterRoom] = zone.get_encounter_rooms()
+
+	await _clear_room(zone, rooms[0])
+
+	assert_true(rooms[0].is_completed(), "Room A completes when its set is cleared.")
+	assert_false(rooms[0].are_exits_sealed(), "Cleared rooms reopen their barriers.")
+	var barrier: StaticBody2D = rooms[0].get_node("BarrierEast") as StaticBody2D
+	assert_false(barrier.visible, "Reopened barriers stop drawing as walls.")
+	assert_false(zone.is_boss_door_open(), "One cleared room does not open the boss door.")
+	for later_index: int in [1, 2]:
+		assert_eq(rooms[later_index].state, EncounterRoom.State.DORMANT)
+
+
+func test_clearing_every_room_unseals_the_boss_door() -> void:
 	var zone: Zone1Graybox = _add_zone()
 	watch_signals(zone)
-	var zone_enemies: Array[EnemyBase] = zone.get_zone_enemies()
+	var rooms: Array[EncounterRoom] = zone.get_encounter_rooms()
 
-	for index: int in zone_enemies.size():
+	for index: int in rooms.size():
 		assert_false(
 			zone.is_boss_door_open(),
-			"Door must stay sealed until the last enemy falls."
+			"Door stays sealed until the authored room contract is met."
 		)
-		zone_enemies[index].health.take_damage(99999)
+		await _clear_room(zone, rooms[index])
 
-	assert_true(zone.is_boss_door_open())
+	assert_true(zone.is_boss_door_open(), "Clearing every placed room unseals the door.")
 	assert_signal_emit_count(zone, "boss_door_opened", 1)
+
+
+func test_room_rewards_award_unique_points_once_and_survive_save_load() -> void:
+	var zone: Zone1Graybox = _add_zone()
+	var rooms: Array[EncounterRoom] = zone.get_encounter_rooms()
+
+	var reward_ids: Array[StringName] = []
+	var expected_total: int = 0
+	for room: EncounterRoom in rooms:
+		assert_not_null(room.reward_data, "%s is an authored milestone room." % room.name)
+		assert_true(room.reward_data.is_valid(), "%s reward must be valid." % room.name)
+		assert_false(reward_ids.has(room.reward_data.reward_id), "Room reward ids must be unique.")
+		reward_ids.append(room.reward_data.reward_id)
+		expected_total += room.reward_data.skill_points
+
+	for room: EncounterRoom in rooms:
+		await _clear_room(zone, room)
+
+	assert_eq(GameState.get_skill_points(), expected_total, "Every room pays its authored points once.")
+	for reward_id: StringName in reward_ids:
+		assert_true(SaveManager.is_milestone_completed(reward_id), "%s persisted." % reward_id)
+
+	# Relaunch the zone against the same save: milestones suppress a second payout.
+	GameState.reset_progress()
+	assert_true(SaveManager.load_game())
+	var reloaded: Zone1Graybox = _add_zone()
+	for room: EncounterRoom in reloaded.get_encounter_rooms():
+		await _clear_room(reloaded, room)
+
+	assert_eq(
+		GameState.get_skill_points(), expected_total,
+		"Re-clearing already-collected rooms in a fresh load pays nothing extra."
+	)
+
+
+func test_dying_re_arms_rooms_without_double_paying_rewards() -> void:
+	var zone: Zone1Graybox = _add_zone()
+	var rooms: Array[EncounterRoom] = zone.get_encounter_rooms()
+	var respawn: RespawnController = zone.get_node("RespawnController") as RespawnController
+
+	await _clear_room(zone, rooms[0])
+	var points_after_first: int = GameState.get_skill_points()
+	assert_gt(points_after_first, 0, "Room A paid on the first clear.")
+
+	# Simulate the die-back loop: every resettable re-arms.
+	respawn.respawn()
+	await wait_physics_frames(1)
+
+	assert_eq(rooms[0].state, EncounterRoom.State.DORMANT, "Room A re-arms after respawn.")
+	assert_eq(rooms[0].get_assigned_enemies().size(), 2, "Rebuilt room A restores its enemy set.")
+	# The rebuilt enemies must not double their HD adapter bodies (#212).
+	var rebuilt: EnemyBase = rooms[0].get_assigned_enemies()[0] as EnemyBase
+	var adapter: Node = rebuilt.get_node("HdPresentation")
+	assert_eq(adapter.get_child_count(), 2, "Revived enemy keeps a single HD body + facing accent.")
+
+	await _clear_room(zone, rooms[0])
+	assert_eq(
+		GameState.get_skill_points(), points_after_first,
+		"Re-clearing a room after death never pays its reward twice."
+	)
 
 
 func test_boss_waits_in_the_arena_and_pays_the_slice_milestone() -> void:
