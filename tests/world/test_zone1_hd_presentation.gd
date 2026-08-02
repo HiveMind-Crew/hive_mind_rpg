@@ -286,7 +286,7 @@ func test_all_hd_nodes_use_per_node_linear_filtering_only() -> void:
 	var floor_walls: TileMapLayer = zone.get_node("FloorWalls") as TileMapLayer
 	assert_eq(floor_walls.texture_filter, CanvasItem.TEXTURE_FILTER_NEAREST)
 	var other_chaser_visual: AnimatedSprite2D = (
-		zone.get_node("Enemies/ChaserRoomB1/BodyVisual") as AnimatedSprite2D
+		zone.get_node("EncounterRooms/EncounterRoomB/Enemies/ChaserRoomB1/BodyVisual") as AnimatedSprite2D
 	)
 	assert_eq(other_chaser_visual.texture_filter, CanvasItem.TEXTURE_FILTER_NEAREST)
 
@@ -297,7 +297,7 @@ func test_only_selected_legacy_display_nodes_are_hidden_and_only_visually() -> v
 
 	var player_body: AnimatedSprite2D = zone.get_node("Player/Body") as AnimatedSprite2D
 	var chaser_visual: AnimatedSprite2D = (
-		zone.get_node("Enemies/ChaserRoomA/BodyVisual") as AnimatedSprite2D
+		zone.get_node("EncounterRooms/EncounterRoomA/Enemies/ChaserRoomA/BodyVisual") as AnimatedSprite2D
 	)
 	var shrine_visual: Polygon2D = (
 		zone.get_node("Checkpoints/CheckpointEntrance/Visual") as Polygon2D
@@ -312,10 +312,10 @@ func test_only_selected_legacy_display_nodes_are_hidden_and_only_visually() -> v
 	# Other regular enemies now carry their own production HD adapter; their
 	# legacy visuals remain hidden state drivers rather than drawing twice.
 	var other_chaser_visual: AnimatedSprite2D = (
-		zone.get_node("Enemies/ChaserRoomB1/BodyVisual") as AnimatedSprite2D
+		zone.get_node("EncounterRooms/EncounterRoomB/Enemies/ChaserRoomB1/BodyVisual") as AnimatedSprite2D
 	)
 	assert_false(other_chaser_visual.visible)
-	assert_not_null(zone.get_node("Enemies/ChaserRoomB1/HdPresentation"))
+	assert_not_null(zone.get_node("EncounterRooms/EncounterRoomB/Enemies/ChaserRoomB1/HdPresentation"))
 	var other_shrine_visual: Polygon2D = (
 		zone.get_node("Checkpoints/CheckpointRoomC/Visual") as Polygon2D
 	)
@@ -332,7 +332,7 @@ func test_only_selected_legacy_display_nodes_are_hidden_and_only_visually() -> v
 	)
 	assert_eq(
 		presentation.get_chaser_sprite().get_parent().get_parent(),
-		zone.get_node("Enemies/ChaserRoomA")
+		zone.get_node("EncounterRooms/EncounterRoomA/Enemies/ChaserRoomA")
 	)
 	assert_eq(
 		presentation.get_shrine_sprite().get_parent(),
@@ -355,7 +355,7 @@ func test_collision_and_gameplay_contracts_are_unchanged() -> void:
 	var camera: Camera2D = player.get_node("Camera2D") as Camera2D
 	assert_eq(camera.zoom, Vector2(2, 2), "Prototype keeps the measured 2x camera.")
 
-	var chaser: EnemyBase = zone.get_node("Enemies/ChaserRoomA") as EnemyBase
+	var chaser: EnemyBase = zone.get_node("EncounterRooms/EncounterRoomA/Enemies/ChaserRoomA") as EnemyBase
 	var chaser_shape: CollisionShape2D = (
 		chaser.get_node("CollisionShape2D") as CollisionShape2D
 	)
@@ -385,7 +385,7 @@ func test_live_mechanical_signals_mirror_onto_static_hd_art() -> void:
 	var zone: Zone1Graybox = _add_zone()
 	var presentation: Zone1HdPresentation = _presentation_of(zone)
 	var player_body: AnimatedSprite2D = zone.get_node("Player/Body") as AnimatedSprite2D
-	var chaser: EnemyBase = zone.get_node("Enemies/ChaserRoomA") as EnemyBase
+	var chaser: EnemyBase = zone.get_node("EncounterRooms/EncounterRoomA/Enemies/ChaserRoomA") as EnemyBase
 
 	var flash_tint: Color = Color(1.0, 0.45, 0.45, 1.0)
 	(player_body as PlayerVisual).set_facing_direction(Vector2.LEFT)

@@ -68,7 +68,7 @@ const FLOOR_RECTS: Array[Rect2i] = [
 @onready var _player_spawn: Marker2D = %PlayerSpawn
 @onready var _player: PlayerController = %Player
 @onready var _boss_door: StaticBody2D = %BossDoor
-@onready var _enemies_root: Node2D = %Enemies
+@onready var _encounter_rooms: Node2D = %EncounterRooms
 @onready var _boss: BossBase = %Boss
 @onready var _camera_limits: CameraLimits = %CameraLimits
 @onready var _respawn_controller: RespawnController = %RespawnController
@@ -86,11 +86,14 @@ func _ready() -> void:
 	_camera_limits.apply_bounds(get_zone_bounds())
 	_respawn_controller.respawn_finished.connect(_camera_limits.snap_to_target)
 	_exit_zone.interacted.connect(_on_exit_zone_interacted)
-	for enemy: EnemyBase in get_zone_enemies():
-		enemy.set_target(_player)
-		enemy.enemy_died.connect(_on_zone_enemy_died)
-	# The boss lives outside the Enemies root on purpose: the door-unseal
-	# count stays keyed to the encounter chasers, not the fight behind it.
+	# Each placed EncounterRoom owns and gates its own enemy set: the enemies stay
+	# dormant and untargeted until the player physically enters the room (#212).
+	# The boss door tracks their authored completion contract, so the zone only
+	# listens for each room clearing rather than targeting enemies globally.
+	for room: EncounterRoom in get_encounter_rooms():
+		room.encounter_completed.connect(_on_encounter_room_completed)
+	# The boss lives outside the encounter rooms on purpose: it hunts the player
+	# immediately, but its door stays keyed to the rooms, not the fight behind it.
 	_boss.set_target(_player)
 
 
@@ -121,12 +124,26 @@ func is_wall_cell(coords: Vector2i) -> bool:
 	return true
 
 
+## The zone's placed encounter rooms in authored route order (west to east).
+func get_encounter_rooms() -> Array[EncounterRoom]:
+	var rooms: Array[EncounterRoom] = []
+	for child: Node in _encounter_rooms.get_children():
+		var room: EncounterRoom = child as EncounterRoom
+		if room != null:
+			rooms.append(room)
+	return rooms
+
+
+## Every regular enemy across the placed encounter rooms. Enemies are owned by
+## their room now, so this aggregates each room's assigned set (the boss stays
+## separate). Reflects live enemies, which a room rebuilds on reset.
 func get_zone_enemies() -> Array[EnemyBase]:
 	var zone_enemies: Array[EnemyBase] = []
-	for child: Node in _enemies_root.get_children():
-		var enemy: EnemyBase = child as EnemyBase
-		if enemy != null:
-			zone_enemies.append(enemy)
+	for room: EncounterRoom in get_encounter_rooms():
+		for node: Node in room.get_assigned_enemies():
+			var enemy: EnemyBase = node as EnemyBase
+			if enemy != null:
+				zone_enemies.append(enemy)
 	return zone_enemies
 
 
@@ -169,10 +186,13 @@ func open_boss_door() -> void:
 	boss_door_opened.emit()
 
 
-func _on_zone_enemy_died() -> void:
-	# Stand-in gate rule until the #23 boss framework takes over the door.
-	for enemy: EnemyBase in get_zone_enemies():
-		if enemy.state != EnemyBase.State.DEAD:
+func _on_encounter_room_completed() -> void:
+	# Authored contract: the boss door unseals once every placed encounter room is
+	# cleared in the same run. reset_to_spawn() re-arms rooms on death (the
+	# die-back loop), so is_completed() reads false for a room the player must
+	# re-clear — but its one-shot reward never re-pays.
+	for room: EncounterRoom in get_encounter_rooms():
+		if not room.is_completed():
 			return
 	open_boss_door()
 

@@ -81,6 +81,16 @@ func _ready() -> void:
 		set_process(false)
 		return
 
+	# EncounterRoom.reset_to_spawn() re-arms a room by rebuilding its enemies from
+	# templates captured after this adapter already added its runtime Body/
+	# FacingAccent. Node.duplicate() copies those owner-less children, so a revived
+	# enemy would render two HD bodies. Drop any stale pair before building so the
+	# adapter stays idempotent across the die-back loop (issue #212).
+	for stale_name: StringName in [&"Body", &"FacingAccent"]:
+		var stale: Node = get_node_or_null(NodePath(stale_name))
+		if stale != null:
+			stale.free()
+
 	_legacy_visual.visible = false
 	_body_sprite = Sprite2D.new()
 	_body_sprite.name = "Body"
