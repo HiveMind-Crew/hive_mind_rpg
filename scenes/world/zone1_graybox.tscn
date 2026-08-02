@@ -1,4 +1,4 @@
-[gd_scene load_steps=29 format=3]
+[gd_scene load_steps=30 format=3]
 
 [ext_resource type="Script" path="res://scripts/world/zone1_graybox.gd" id="1_zone"]
 [ext_resource type="Script" path="res://scripts/world/zone1_hd_presentation.gd" id="16_hd_presentation"]
@@ -21,6 +21,7 @@
 [ext_resource type="Resource" path="res://data/encounters/zone1_room_a_reward.tres" id="19_reward_a"]
 [ext_resource type="Resource" path="res://data/encounters/zone1_room_b_reward.tres" id="20_reward_b"]
 [ext_resource type="Resource" path="res://data/encounters/zone1_room_c_reward.tres" id="21_reward_c"]
+[ext_resource type="Texture2D" path="res://assets/sprites/world/hd/encounter_seal.png" id="22_encounter_seal"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_room_a"]
 size = Vector2(248, 216)
@@ -198,9 +199,10 @@ position = Vector2(-128, 8)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="EncounterRooms/EncounterRoomA/BarrierWest"]
 shape = SubResource("RectangleShape2D_room_barrier")
 
-[node name="Visual" type="Polygon2D" parent="EncounterRooms/EncounterRoomA/BarrierWest"]
-polygon = PackedVector2Array(-4, -24, 4, -24, 4, 24, -4, 24)
-color = Color(0.42, 0.55, 0.3, 1)
+[node name="SealHdVisual" type="Sprite2D" parent="EncounterRooms/EncounterRoomA/BarrierWest"]
+texture_filter = 2
+scale = Vector2(0.18, 0.18)
+texture = ExtResource("22_encounter_seal")
 
 [node name="BarrierEast" type="StaticBody2D" parent="EncounterRooms/EncounterRoomA"]
 position = Vector2(128, 8)
@@ -208,9 +210,10 @@ position = Vector2(128, 8)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="EncounterRooms/EncounterRoomA/BarrierEast"]
 shape = SubResource("RectangleShape2D_room_barrier")
 
-[node name="Visual" type="Polygon2D" parent="EncounterRooms/EncounterRoomA/BarrierEast"]
-polygon = PackedVector2Array(-4, -24, 4, -24, 4, 24, -4, 24)
-color = Color(0.42, 0.55, 0.3, 1)
+[node name="SealHdVisual" type="Sprite2D" parent="EncounterRooms/EncounterRoomA/BarrierEast"]
+texture_filter = 2
+scale = Vector2(0.18, 0.18)
+texture = ExtResource("22_encounter_seal")
 
 [node name="EncounterRoomB" type="Area2D" parent="EncounterRooms"]
 position = Vector2(768, 240)
@@ -242,9 +245,10 @@ position = Vector2(-144, 8)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="EncounterRooms/EncounterRoomB/BarrierWest"]
 shape = SubResource("RectangleShape2D_room_barrier")
 
-[node name="Visual" type="Polygon2D" parent="EncounterRooms/EncounterRoomB/BarrierWest"]
-polygon = PackedVector2Array(-4, -24, 4, -24, 4, 24, -4, 24)
-color = Color(0.42, 0.55, 0.3, 1)
+[node name="SealHdVisual" type="Sprite2D" parent="EncounterRooms/EncounterRoomB/BarrierWest"]
+texture_filter = 2
+scale = Vector2(0.18, 0.18)
+texture = ExtResource("22_encounter_seal")
 
 [node name="BarrierEast" type="StaticBody2D" parent="EncounterRooms/EncounterRoomB"]
 position = Vector2(144, 8)
@@ -252,9 +256,10 @@ position = Vector2(144, 8)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="EncounterRooms/EncounterRoomB/BarrierEast"]
 shape = SubResource("RectangleShape2D_room_barrier")
 
-[node name="Visual" type="Polygon2D" parent="EncounterRooms/EncounterRoomB/BarrierEast"]
-polygon = PackedVector2Array(-4, -24, 4, -24, 4, 24, -4, 24)
-color = Color(0.42, 0.55, 0.3, 1)
+[node name="SealHdVisual" type="Sprite2D" parent="EncounterRooms/EncounterRoomB/BarrierEast"]
+texture_filter = 2
+scale = Vector2(0.18, 0.18)
+texture = ExtResource("22_encounter_seal")
 
 [node name="EncounterRoomC" type="Area2D" parent="EncounterRooms"]
 position = Vector2(1136, 240)
@@ -280,9 +285,10 @@ position = Vector2(-128, 8)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="EncounterRooms/EncounterRoomC/BarrierWest"]
 shape = SubResource("RectangleShape2D_room_barrier")
 
-[node name="Visual" type="Polygon2D" parent="EncounterRooms/EncounterRoomC/BarrierWest"]
-polygon = PackedVector2Array(-4, -24, 4, -24, 4, 24, -4, 24)
-color = Color(0.42, 0.55, 0.3, 1)
+[node name="SealHdVisual" type="Sprite2D" parent="EncounterRooms/EncounterRoomC/BarrierWest"]
+texture_filter = 2
+scale = Vector2(0.18, 0.18)
+texture = ExtResource("22_encounter_seal")
 
 [node name="BarrierEast" type="StaticBody2D" parent="EncounterRooms/EncounterRoomC"]
 position = Vector2(128, 8)
@@ -290,9 +296,10 @@ position = Vector2(128, 8)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="EncounterRooms/EncounterRoomC/BarrierEast"]
 shape = SubResource("RectangleShape2D_room_barrier")
 
-[node name="Visual" type="Polygon2D" parent="EncounterRooms/EncounterRoomC/BarrierEast"]
-polygon = PackedVector2Array(-4, -24, 4, -24, 4, 24, -4, 24)
-color = Color(0.42, 0.55, 0.3, 1)
+[node name="SealHdVisual" type="Sprite2D" parent="EncounterRooms/EncounterRoomC/BarrierEast"]
+texture_filter = 2
+scale = Vector2(0.18, 0.18)
+texture = ExtResource("22_encounter_seal")
 
 [node name="Secrets" type="Node2D" parent="."]
 

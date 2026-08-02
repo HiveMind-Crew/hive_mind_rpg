@@ -6,7 +6,10 @@ extends GutTest
 ## SaveManager at a scratch file and resets progression around every test.
 
 const ZONE_SCENE: PackedScene = preload("res://scenes/world/zone1_graybox.tscn")
+const ENCOUNTER_SEAL_PATH: String = "res://assets/sprites/world/hd/encounter_seal.png"
+const ENCOUNTER_SEAL_TEXTURE: Texture2D = preload(ENCOUNTER_SEAL_PATH)
 const TEST_SAVE_PATH: String = "user://test_zone1_savegame.json"
+const PNG_SIGNATURE: PackedByteArray = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]
 
 const CARDINAL_OFFSETS: Array[Vector2i] = [
 	Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN,
@@ -280,6 +283,30 @@ func test_boss_door_starts_sealed_and_opens_on_request() -> void:
 	assert_false(door.visible)
 	assert_true(door_shape.disabled)
 	assert_signal_emit_count(zone, "boss_door_opened", 1)
+
+
+func test_encounter_seal_asset_and_scene_contract_are_hd_and_non_mechanical() -> void:
+	var file: FileAccess = FileAccess.open(ENCOUNTER_SEAL_PATH, FileAccess.READ)
+	assert_not_null(file)
+	assert_eq(file.get_buffer(PNG_SIGNATURE.size()), PNG_SIGNATURE)
+	assert_eq(ENCOUNTER_SEAL_TEXTURE.get_size(), Vector2(192.0, 384.0))
+	var image: Image = ENCOUNTER_SEAL_TEXTURE.get_image()
+	var used: Rect2i = image.get_used_rect()
+	assert_gt(used.position.x, 0, "Seal keeps a transparent left margin.")
+	assert_gt(used.position.y, 0, "Seal keeps a transparent top margin.")
+	assert_lt(used.end.x, image.get_width(), "Seal keeps a transparent right margin.")
+	assert_lt(used.end.y, image.get_height(), "Seal keeps a transparent bottom margin.")
+
+	var zone: Zone1Graybox = _add_zone()
+	for room: EncounterRoom in zone.get_encounter_rooms():
+		for barrier_name: StringName in [&"BarrierWest", &"BarrierEast"]:
+			var barrier: StaticBody2D = room.get_node(NodePath(barrier_name)) as StaticBody2D
+			assert_not_null(barrier.get_node_or_null("CollisionShape2D"))
+			assert_null(barrier.get_node_or_null("Visual"), "Legacy rectangle must not remain live.")
+			var seal: Sprite2D = barrier.get_node("SealHdVisual") as Sprite2D
+			assert_eq(seal.texture, ENCOUNTER_SEAL_TEXTURE)
+			assert_eq(seal.texture_filter, CanvasItem.TEXTURE_FILTER_LINEAR)
+			assert_eq(seal.scale, Vector2(0.18, 0.18))
 
 
 func test_entering_a_room_activates_only_it_and_seals_its_barriers() -> void:
