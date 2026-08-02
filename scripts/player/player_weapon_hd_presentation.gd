@@ -30,9 +30,10 @@ const FACING_ANGLES: Dictionary[StringName, float] = {
 	&"south": PI * 0.5,
 	&"west": PI,
 }
-## facing_label -> hand anchor relative to the presentation root, chosen so the
-## grip sits on the body silhouette at the 42 px display-height contract.
-const HAND_ANCHORS: Dictionary[StringName, Vector2] = {
+## The presentation parent resolves the active body frame's hand position and
+## passes it in each update. These are only safe held-pose fallbacks for direct
+## scene inspection; melee frames never rely on a fixed per-facing anchor.
+const HELD_HAND_ANCHORS: Dictionary[StringName, Vector2] = {
 	&"north": Vector2(5.0, -10.0),
 	&"east": Vector2(5.0, -7.0),
 	&"south": Vector2(-5.0, -5.0),
@@ -58,10 +59,10 @@ const SWING_SWEEP_SECONDS: float = 0.12
 const WINDUP_SECONDS: float = 0.04
 const CONTACT_SECONDS: float = 0.04
 const RECOVERY_SECONDS: float = 0.04
-## North-facing swings read behind the body; every other facing in front.
-const BEHIND_BODY_FACING: StringName = &"north"
-const WEAPON_Z_BEHIND: int = -1
-const WEAPON_Z_FRONT: int = 0
+## The physical sword must remain readable over every active body frame. It is a
+## local child of PlayerHdPresentation, so this positive relative layer cannot
+## affect world ordering while it prevents north/action art from occluding it.
+const WEAPON_Z_FRONT: int = 1
 
 
 func _init() -> void:
@@ -82,15 +83,19 @@ func _init() -> void:
 ## Mirrors the already-decided PlayerVisual state onto the weapon display.
 ## state_elapsed is the presentation time since the current state began.
 func update_presentation(
-	facing: StringName, animation_state: StringName, state_elapsed: float
+	facing: StringName, animation_state: StringName, state_elapsed: float,
+	hand_anchor: Vector2 = Vector2.INF,
 ) -> void:
 	visible = animation_state != PlayerVisual.DEATH_ANIMATION
 	if not visible:
 		return
 	var facing_angle: float = FACING_ANGLES.get(facing, FACING_ANGLES[&"south"])
 	var tilt_sign: float = FACING_TILT_SIGNS.get(facing, 1.0)
-	position = HAND_ANCHORS.get(facing, HAND_ANCHORS[&"south"])
-	z_index = WEAPON_Z_BEHIND if facing == BEHIND_BODY_FACING else WEAPON_Z_FRONT
+	position = (
+		HELD_HAND_ANCHORS.get(facing, HELD_HAND_ANCHORS[&"south"])
+		if hand_anchor == Vector2.INF else hand_anchor
+	)
+	z_index = WEAPON_Z_FRONT
 	# PlayerVisual keeps its authored four-frame melee clip alive beyond the
 	# 0.12s gameplay swing. The weapon must not advertise a recovery after the
 	# hitbox has closed, so it returns to its held pose at that real boundary.

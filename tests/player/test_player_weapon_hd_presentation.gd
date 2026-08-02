@@ -15,6 +15,16 @@ const FACING_EXPECTATIONS: Array[Array] = [
 	[Vector2.DOWN, &"south", PI * 0.5],
 	[Vector2.LEFT, &"west", PI],
 ]
+## Independent, authored grip landmarks in player-root pixels for each selected
+## melee atlas phase. These are intentionally literal expected values rather
+## than calling the resolver under test, so a bad facing/phase registration
+## cannot self-validate.
+const EXPECTED_MELEE_GRIPS: Dictionary[StringName, Array] = {
+	&"north": [Vector2(6.0, -8.5), Vector2(4.0, -15.0), Vector2(8.0, -12.5)],
+	&"east": [Vector2(3.5, -6.0), Vector2(10.0, -8.0), Vector2(7.5, -4.0)],
+	&"south": [Vector2(-6.0, -6.5), Vector2(-4.0, 0.0), Vector2(-8.0, -2.5)],
+	&"west": [Vector2(-3.5, -8.0), Vector2(-10.0, -6.0), Vector2(-7.5, -10.0)],
+}
 
 var _player: PlayerController
 var _legacy_visual: PlayerVisual
@@ -137,14 +147,11 @@ func test_rest_pose_follows_facing_for_all_four_directions() -> void:
 			0.001,
 			"%s rest pose must tilt down-forward off the facing axis" % facing,
 		)
-		assert_eq(_weapon.position, PlayerWeaponHdPresentation.HAND_ANCHORS[facing])
+		assert_eq(_weapon.position, PlayerWeaponHdPresentation.HELD_HAND_ANCHORS[facing])
 		assert_false(_weapon.flip_h, "Facing comes from rotation, never a horizontal mirror.")
 		assert_false(_weapon.flip_v, "Held pose never flips; only mirrored sweeps may.")
-		if facing == &"north":
-			assert_eq(_weapon.z_index, PlayerWeaponHdPresentation.WEAPON_Z_BEHIND,
-				"North-facing weapon reads behind the body.")
-		else:
-			assert_eq(_weapon.z_index, PlayerWeaponHdPresentation.WEAPON_Z_FRONT)
+		assert_eq(_weapon.z_index, PlayerWeaponHdPresentation.WEAPON_Z_FRONT,
+			"The physical sword stays explicitly in front of the body for every facing.")
 
 
 func test_melee_has_hand_anchored_windup_contact_and_recovery_for_all_four_facings() -> void:
@@ -160,13 +167,15 @@ func test_melee_has_hand_anchored_windup_contact_and_recovery_for_all_four_facin
 			"Mirrored sweeps flip the authored leading edge onto the leading side.")
 		assert_almost_eq(_weapon.rotation, facing_angle - tilt_sign * half_arc, 0.001,
 			"%s swing must start on the wind-up side of the facing" % facing)
-		assert_eq(_weapon.position, PlayerWeaponHdPresentation.HAND_ANCHORS[facing],
-			"%s wind-up remains pivoted at its authored hand anchor" % facing)
+		var expected_grips: Array = EXPECTED_MELEE_GRIPS[facing]
+		assert_eq(_weapon.position, expected_grips[0] as Vector2,
+			"%s wind-up must use its authored atlas grip landmark." % facing)
 
 		_presentation._process(PlayerWeaponHdPresentation.WINDUP_SECONDS)
 		assert_eq(_weapon.region_rect, PlayerWeaponHdPresentation.CONTACT_REGION,
 			"%s must change to its authored contact pose after wind-up" % facing)
-		assert_eq(_weapon.position, PlayerWeaponHdPresentation.HAND_ANCHORS[facing])
+		assert_eq(_weapon.position, expected_grips[1] as Vector2,
+			"%s contact must use its authored atlas grip landmark." % facing)
 		_presentation._process(PlayerWeaponHdPresentation.CONTACT_SECONDS * 0.5)
 		assert_almost_eq(_weapon.rotation, facing_angle, 0.001,
 			"%s contact must cross the exact play_melee facing angle" % facing)
@@ -174,7 +183,8 @@ func test_melee_has_hand_anchored_windup_contact_and_recovery_for_all_four_facin
 		_presentation._process(PlayerWeaponHdPresentation.CONTACT_SECONDS * 0.5)
 		assert_eq(_weapon.region_rect, PlayerWeaponHdPresentation.RECOVERY_REGION,
 			"%s must enter recovery instead of holding the contact pose" % facing)
-		assert_eq(_weapon.position, PlayerWeaponHdPresentation.HAND_ANCHORS[facing])
+		assert_eq(_weapon.position, expected_grips[2] as Vector2,
+			"%s recovery must use its authored atlas grip landmark." % facing)
 		_presentation._process(PlayerWeaponHdPresentation.RECOVERY_SECONDS)
 		# The presentation ends with the real 0.12s melee window even though the
 		# legacy body clip may remain action-locked through its fourth frame.

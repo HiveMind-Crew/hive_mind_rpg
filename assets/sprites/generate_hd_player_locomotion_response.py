@@ -1,123 +1,120 @@
 #!/usr/bin/env python3
-"""Build issue #203's deterministic HD player locomotion/response atlas.
+"""Build the source-derived HD player locomotion/response atlas for issue #224.
 
-The 1280x1024 straight-alpha sheet has walk-A, passing, walk-B, settle, and
-hurt-recoil columns across north/west/south/east rows. It is display-only:
-PlayerVisual still owns logical move/hurt/death state and collision never moves.
+Every runtime frame is deliberately derived from the accepted illustrated
+``player_directional_atlas.png`` rather than redrawing a second character. This
+keeps the hooded teal wanderer's silhouette, costume, palette, and material
+language continuous from idle into movement. The logical PlayerVisual remains
+the state owner; this sheet changes display art only.
 """
 from __future__ import annotations
 
 from pathlib import Path
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageChops, ImageDraw
 
 ROOT = Path(__file__).resolve().parent / "player" / "hd"
+SOURCE = ROOT / "player_directional_atlas.png"
+OUTPUT = ROOT / "player_locomotion_response_atlas.png"
 CELL = 256
-SCALE = 4
-PHASES = ("walk_a", "passing", "walk_b", "settle", "hurt")
 FACINGS = ("north", "west", "south", "east")
-DIRECTIONS = {"north": (0.0, -1.0), "west": (-1.0, 0.0), "south": (0.0, 1.0), "east": (1.0, 0.0)}
-OUTLINE = (17, 29, 39, 235)
-DARK = (20, 71, 82, 255)
-MID = (35, 119, 128, 255)
-LIGHT = (86, 166, 167, 255)
-LEATHER = (92, 55, 34, 255)
-SKIN = (214, 158, 119, 255)
-HAIR = (61, 43, 38, 255)
-HURT_ACCENT = (255, 119, 102, 220)
+SOURCE_COLUMNS = {"north": 0, "west": 1, "south": 2, "east": 3}
+DIRECTIONS = {"north": (0, -1), "west": (-1, 0), "south": (0, 1), "east": (1, 0)}
+PHASES = ("walk_a", "passing", "walk_b", "settle", "hurt")
+# Per phase: local forward translation, bob, body lean degrees, and an optional
+# restrained facing-side cloth echo. Values stay modest so animation communicates
+# gait/weight without turning the upright top-down body into a rotating capsule.
+PHASE_MOTION = {
+    # Values are source-pixel offsets. At the 42px shipped display contract the
+    # split lower-cloak motion below resolves to a visible 2–4px planted gait,
+    # instead of the sub-pixel translate/rotate that #224 replaced.
+    "walk_a": (-3, -4, -2.0, 0),
+    "passing": (0, 3, 0.0, 0),
+    "walk_b": (3, -4, 2.0, 0),
+    "settle": (0, 2, -0.8, 0),
+    "hurt": (-12, 7, -4.0, 0),
+}
+LOWER_CLOAK_START_Y = 156
+GAIT_LOWER_STEP_PX = 14
+CLOTH_ECHO = (65, 159, 163, 105)
+HURT_ACCENT = (255, 119, 102, 205)
 
 
-def _scaled(points: list[tuple[float, float]]) -> list[tuple[int, int]]:
-    return [(round(x * SCALE), round(y * SCALE)) for x, y in points]
+def _source_cell(facing: str) -> Image.Image:
+    source = Image.open(SOURCE).convert("RGBA")
+    x = SOURCE_COLUMNS[facing] * CELL
+    return source.crop((x, 0, x + CELL, CELL))
 
 
-def _line(draw: ImageDraw.ImageDraw, points: list[tuple[float, float]], width: float, fill: tuple[int, ...]) -> None:
-    draw.line(_scaled(points), fill=fill, width=round(width * SCALE), joint="curve")
-
-
-def _ellipse(draw: ImageDraw.ImageDraw, center: tuple[float, float], radius: tuple[float, float], fill: tuple[int, ...]) -> None:
-    x, y = center
-    rx, ry = radius
-    draw.ellipse((round((x-rx)*SCALE), round((y-ry)*SCALE), round((x+rx)*SCALE), round((y+ry)*SCALE)), fill=fill)
-
-
-def _add(point: tuple[float, float], vector: tuple[float, float], amount: float) -> tuple[float, float]:
-    return point[0] + vector[0] * amount, point[1] + vector[1] * amount
-
-
-def _offset(point: tuple[float, float], right: tuple[float, float], amount: float) -> tuple[float, float]:
-    return _add(point, right, amount)
-
-
-def _motion(phase: str) -> tuple[float, float, float, float]:
-    # torso shift, lead stride, arm swing, body bob
-    return {
-        "walk_a": (3.0, 27.0, 24.0, -5.0),
-        "passing": (7.0, 8.0, 4.0, 2.0),
-        "walk_b": (3.0, -27.0, -24.0, -5.0),
-        "settle": (0.0, -8.0, -4.0, 1.0),
-        "hurt": (-16.0, 12.0, -14.0, 8.0),
-    }[phase]
-
-
-def _draw_cell(facing_name: str, phase: str) -> Image.Image:
-    facing = DIRECTIONS[facing_name]
-    right = (-facing[1], facing[0])
-    torso_shift, stride, arm_swing, bob = _motion(phase)
-    actor = (128.0, 137.0 + bob)
-    torso_center = _add(actor, facing, torso_shift)
-    canvas = Image.new("RGBA", (CELL * SCALE, CELL * SCALE), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(canvas)
-    _ellipse(draw, (128.0, 174.0), (39.0, 10.0), (8, 15, 20, 55))
-
-    # Feet and legs establish a readable weight transfer without rotating the
-    # top-down human sideways. Hurt braces against the incoming facing.
-    rear_foot = _offset(_add(actor, facing, -stride), right, -23.0)
-    lead_foot = _offset(_add(actor, facing, stride), right, 23.0)
-    hips = ((113.0, 160.0 + bob), (143.0, 160.0 + bob))
-    for hip, foot in zip(hips, (rear_foot, lead_foot)):
-        knee = ((hip[0] + foot[0]) * 0.5, (hip[1] + foot[1]) * 0.5)
-        _line(draw, [hip, knee, foot], 20.0, OUTLINE)
-        _line(draw, [hip, knee, foot], 11.0, DARK)
-        _ellipse(draw, foot, (11.0, 7.0), OUTLINE)
-        _ellipse(draw, foot, (7.0, 4.0), LEATHER)
-
-    cx, cy = torso_center
-    cloak = [(cx-29, cy-38), (cx-38, cy+5), (cx-24, cy+44), (cx-7, cy+55), (cx+17, cy+51), (cx+38, cy+9), (cx+29, cy-38)]
-    draw.polygon(_scaled(cloak), fill=OUTLINE)
-    inner = [(cx-24, cy-32), (cx-31, cy+6), (cx-18, cy+37), (cx-3, cy+47), (cx+13, cy+43), (cx+31, cy+7), (cx+23, cy-32)]
-    draw.polygon(_scaled(inner), fill=MID)
-    draw.polygon(_scaled([(cx-4, cy-28), (cx+16, cy-23), (cx+20, cy+27), (cx+1, cy+40)]), fill=LIGHT)
-    _line(draw, [(cx-27, cy+10), (cx+27, cy+10)], 4.0, LEATHER)
-    head = (cx, cy-54)
-    _ellipse(draw, head, (21.0, 20.0), OUTLINE)
-    _ellipse(draw, head, (17.0, 16.0), SKIN)
-    _ellipse(draw, (head[0]-2.0, head[1]-9.0), (18.0, 9.0), HAIR)
-
-    shoulders = ((cx-25.0, cy-20.0), (cx+25.0, cy-20.0))
-    hands = (
-        _offset(_add((cx, cy-7.0), facing, arm_swing), right, -19.0),
-        _offset(_add((cx, cy-7.0), facing, -arm_swing * 0.75), right, 19.0),
+def _place_transformed(source: Image.Image, dx: int, dy: int, angle: float) -> Image.Image:
+    # A transparent rotation of the actual approved source preserves authored
+    # rendering detail. Translation is composited separately so no wraparound
+    # pixels enter a neighboring atlas cell.
+    transformed = source.rotate(
+        angle,
+        resample=Image.Resampling.BICUBIC,
+        center=(CELL / 2, CELL / 2),
+        fillcolor=(0, 0, 0, 0),
     )
-    for shoulder, hand in zip(shoulders, hands):
-        elbow = ((shoulder[0] + hand[0]) * 0.5, (shoulder[1] + hand[1]) * 0.5)
-        _line(draw, [shoulder, elbow, hand], 17.0, OUTLINE)
-        _line(draw, [shoulder, elbow, hand], 10.0, DARK)
-        _ellipse(draw, hand, (6.5, 6.5), SKIN)
+    frame = Image.new("RGBA", (CELL, CELL), (0, 0, 0, 0))
+    frame.alpha_composite(transformed, (dx, dy))
+    return frame
+
+
+def _draw_hurt_slash(frame: Image.Image) -> None:
+    draw = ImageDraw.Draw(frame)
+    draw.line([(100, 118), (153, 145)], fill=HURT_ACCENT, width=3)
+
+
+def _draw_cell(facing: str, phase: str) -> Image.Image:
+    forward, bob, angle, _ = PHASE_MOTION[phase]
+    direction = DIRECTIONS[facing]
+    right = (-direction[1], direction[0])
+    source = _source_cell(facing)
+    frame = Image.new("RGBA", (CELL, CELL), (0, 0, 0, 0))
+    if phase in ("walk_a", "walk_b"):
+        # Preserve the illustrated hood/torso exactly while moving only the
+        # planted cloak/boots. At game scale this reads as a visible step and
+        # weight transfer, not an unrelated second character or a full-sheet
+        # sub-pixel slide.
+        upper = source.copy()
+        lower = source.copy()
+        # Feather the cloak split so the visible gait changes the planted lower
+        # silhouette without ever exposing a hard horizontal crop seam.
+        upper_mask = Image.new("L", (CELL, CELL), 0)
+        lower_mask = Image.new("L", (CELL, CELL), 0)
+        upper_draw = ImageDraw.Draw(upper_mask)
+        lower_draw = ImageDraw.Draw(lower_mask)
+        for y in range(CELL):
+            blend = max(0.0, min(1.0, (y - LOWER_CLOAK_START_Y + 18) / 36.0))
+            upper_alpha = round((1.0 - blend) * 255.0)
+            lower_alpha = 255 - upper_alpha
+            upper_draw.line([(0, y), (CELL, y)], fill=upper_alpha)
+            lower_draw.line([(0, y), (CELL, y)], fill=lower_alpha)
+        upper.putalpha(ImageChops.multiply(upper.getchannel("A"), upper_mask))
+        lower.putalpha(ImageChops.multiply(lower.getchannel("A"), lower_mask))
+        step_sign = -1 if phase == "walk_a" else 1
+        lower_shift_x = right[0] * GAIT_LOWER_STEP_PX * step_sign + direction[0] * forward
+        lower_shift_y = right[1] * GAIT_LOWER_STEP_PX * step_sign + direction[1] * forward + bob
+        frame.alpha_composite(lower, (lower_shift_x, lower_shift_y))
+        frame.alpha_composite(_place_transformed(upper, 0, bob, angle))
+    else:
+        frame.alpha_composite(_place_transformed(source, direction[0] * forward, direction[1] * forward + bob, angle))
     if phase == "hurt":
-        # A short red diagonal crack is a response cue, not a combat hit FX.
-        _line(draw, [(cx-31.0, cy-12.0), (cx+25.0, cy+20.0)], 3.0, HURT_ACCENT)
-    return canvas.resize((CELL, CELL), Image.Resampling.LANCZOS)
+        _draw_hurt_slash(frame)
+    return frame
 
 
 def main() -> None:
     ROOT.mkdir(parents=True, exist_ok=True)
+    if not SOURCE.is_file():
+        raise FileNotFoundError(f"missing canonical player source: {SOURCE}")
     sheet = Image.new("RGBA", (CELL * len(PHASES), CELL * len(FACINGS)), (0, 0, 0, 0))
     for row, facing in enumerate(FACINGS):
         for column, phase in enumerate(PHASES):
             sheet.alpha_composite(_draw_cell(facing, phase), (column * CELL, row * CELL))
-    sheet.save(ROOT / "player_locomotion_response_atlas.png", format="PNG", optimize=False, compress_level=9)
-    print("wrote deterministic HD player locomotion/response atlas")
+    sheet.save(OUTPUT, format="PNG", optimize=False, compress_level=9)
+    print(f"wrote source-derived HD player locomotion atlas: {OUTPUT}")
 
 
 if __name__ == "__main__":
