@@ -30,6 +30,57 @@ theme = ExtResource("2_theme")
 theme_override_constants/margin_left = 20
 theme_override_constants/margin_top = 18
 
+[node name="DesktopControlLegend" type="PanelContainer" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -500.0
+offset_top = 18.0
+offset_right = -20.0
+offset_bottom = 60.0
+grow_horizontal = 0
+theme = ExtResource("2_theme")
+mouse_filter = 2
+
+[node name="Margin" type="MarginContainer" parent="DesktopControlLegend"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 7
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 7
+
+[node name="Actions" type="HBoxContainer" parent="DesktopControlLegend/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="MeleeKeybind" type="Label" parent="DesktopControlLegend/Margin/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.52, 1)
+theme_override_font_sizes/font_size = 15
+text = "[J] Attack"
+
+[node name="RelicKeybind" type="Label" parent="DesktopControlLegend/Margin/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 15
+text = "[K] Relic"
+
+[node name="DashKeybind" type="Label" parent="DesktopControlLegend/Margin/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.82, 0.92, 0.86, 1)
+theme_override_font_sizes/font_size = 15
+text = "[Space] Dash"
+
+[node name="UseKeybind" type="Label" parent="DesktopControlLegend/Margin/Actions"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.82, 0.92, 0.86, 1)
+theme_override_font_sizes/font_size = 15
+text = "[E] Use"
+
 [node name="PanelContainer" type="PanelContainer" parent="MarginContainer"]
 layout_mode = 2
 

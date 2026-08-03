@@ -28,6 +28,14 @@ func test_bind_immediately_displays_current_values() -> void:
 	assert_eq((_hud.get_node("%EnergyLabel") as Label).text, "Energy 80/80")
 
 
+func test_desktop_combat_legend_exposes_live_input_map_bindings() -> void:
+	assert_eq((_hud.get_node("%MeleeKeybind") as Label).text, "[J] Attack")
+	assert_eq((_hud.get_node("%RelicKeybind") as Label).text, "[K] Relic")
+	assert_eq((_hud.get_node("%DashKeybind") as Label).text, "[Space] Dash")
+	assert_eq((_hud.get_node("%UseKeybind") as Label).text, "[E] Use")
+	assert_true((_hud.get_node("DesktopControlLegend") as Control).mouse_filter == Control.MOUSE_FILTER_IGNORE)
+
+
 func test_health_bar_updates_from_signal() -> void:
 	assert_true(_health.take_damage(3))
 
